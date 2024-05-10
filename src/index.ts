@@ -59,7 +59,7 @@ interface LanguageServiceBenchmark {
   start: number
   end: number
   quickInfoDurations: number[]
-  // completionsDurations: number[]
+  completionsDurations: number[]
 }
 
 interface LanguageServiceSingleMeasurement {
@@ -100,7 +100,7 @@ function createLanguageServiceTestMatrix(
       ts.sys.readFile(fileName)!,
       compilerOptions.target || ts.ScriptTarget.Latest,
     )
-    const identifiers = getIdentifiers(sourceFile)
+    const identifiers = getIdentifiers(sourceFile).reverse()
     uniquePositionCount += identifiers.length
     for (let i = 0; i < iterations; i++) {
       for (const identifier of identifiers) {
@@ -114,7 +114,7 @@ function createLanguageServiceTestMatrix(
             identifierText: identifier.getText(sourceFile),
             line: lineAndCharacter.line,
             offset: lineAndCharacter.character,
-            // completionsDurations: [],
+            completionsDurations: [],
             quickInfoDurations: [],
           }
           positionMap.set(start, benchmark)
@@ -137,12 +137,15 @@ function createLanguageServiceTestMatrix(
     uniquePositionCount,
     addMeasurement: (measurement: LanguageServiceSingleMeasurement) => {
       const benchmark = fileMap.get(measurement.fileName)!.get(measurement.start)!
-      // benchmark.completionsDurations.push(measurement.completionsDuration)
+      benchmark.completionsDurations.push(measurement.completionsDuration)
       benchmark.quickInfoDurations.push(measurement.quickInfoDuration)
     },
     getAllBenchmarks: (): LanguageServiceBenchmark[] => {
       return Array.from(fileMap.values()).flatMap(map => Array.from(map.values()))
-        .filter(benchmark => /* benchmark.completionsDurations.length > 0 || */ benchmark.quickInfoDurations.length > 0)
+        .filter(benchmark =>
+          benchmark.completionsDurations.length > 0 ||
+          benchmark.quickInfoDurations.length > 0
+        )
     },
   }
 }
@@ -160,13 +163,13 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
 
   log({ openFiles, testPaths })
 
-  await Promise.allSettled(matrix.inputs.map(async (input) => {
+  for (const input of matrix.inputs) {
     const positionMeasurement = await measureLanguageService(input)
     matrix.addMeasurement(positionMeasurement)
-  }))
+  }
 
   const benchmarks = matrix.getAllBenchmarks()
-  const allMeasures = Array.from(benchmarks.values()).flatMap(b => b.quickInfoDurations)
+  const allMeasures = Array.from(benchmarks.values()).flatMap(b => [...b.completionsDurations, ...b.quickInfoDurations])
   const baseline = allMeasures.reduce((a, b) => a + b, 0) / allMeasures.length
 
   const map: Record<string, vscode.Diagnostic[]> = {}
@@ -174,7 +177,8 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
     map[benchmark.fileName] ||= []
     log(benchmark)
 
-    const duration = benchmark.quickInfoDurations.reduce((a, b) => a + b, 0) / benchmark.quickInfoDurations.length
+    const durations = [...benchmark.completionsDurations, ...benchmark.quickInfoDurations]
+    const duration = durations.reduce((a, b) => a + b, 0) / durations.length
     const proportionalTime = duration / baseline
 
     if (proportionalTime > 1) {
@@ -207,13 +211,13 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
   log('updated benchmarks')
 }
 
-// async function getCompletionsAtPosition(fileName: string, line: number, offset: number): Promise<boolean> {
-//   performance.mark('beforeCompletions')
-//   const completions = await vscode.commands.executeCommand('typescript.tsserverRequest', 'completionInfo', { file: fileName, line, offset } satisfies server.protocol.CompletionsRequestArgs) as server.protocol.CompletionInfoResponse
-//   performance.mark('afterCompletions')
-//   performance.measure('completionsMeasurement', 'beforeCompletions', 'afterCompletions')
-//   return !!completions // && completions.entries.length > 0
-// }
+async function getCompletionsAtPosition(fileName: string, line: number, offset: number): Promise<boolean> {
+  performance.mark('beforeCompletions')
+  const completions = await vscode.commands.executeCommand('typescript.tsserverRequest', 'completionInfo', { file: fileName, line, offset } satisfies server.protocol.CompletionsRequestArgs) as server.protocol.CompletionInfoResponse
+  performance.mark('afterCompletions')
+  performance.measure('completionsMeasurement', 'beforeCompletions', 'afterCompletions')
+  return completions && completions.success
+}
 
 async function getQuickInfoAtPosition(fileName: string, line: number, offset: number): Promise<boolean> {
   performance.mark('beforeQuickInfo')
@@ -224,7 +228,7 @@ async function getQuickInfoAtPosition(fileName: string, line: number, offset: nu
   } satisfies server.protocol.FileLocationRequestArgs) as server.protocol.QuickInfoResponse
   performance.mark('afterQuickInfo')
   performance.measure('quickInfoMeasurement', 'beforeQuickInfo', 'afterQuickInfo')
-  return !!quickInfo
+  return quickInfo && quickInfo.success
 }
 
 async function measureLanguageService(args: MeasureLanguageServiceChildProcessArgs): Promise<LanguageServiceSingleMeasurement> {
@@ -241,10 +245,18 @@ async function measureLanguageService(args: MeasureLanguageServiceChildProcessAr
   })
 
   observer.observe({ entryTypes: ['measure'] })
+
+  await vscode.commands.executeCommand('typescript.tsserverRequest', 'emit-output', {
+    file: args.fileName,
+    forced: true,
+    richResponse: true
+  } satisfies server.protocol.CompileOnSaveEmitFileRequestArgs) as server.protocol.CompileOnSaveEmitFileResponse
+
   await Promise.all([
-    // getCompletionsAtPosition(args.fileName, args.line, args.offset),
+    getCompletionsAtPosition(args.fileName, args.line, args.offset),
     getQuickInfoAtPosition(args.fileName, args.line, args.offset),
   ])
+
   await new Promise(resolve => setTimeout(resolve, 0))
   observer.disconnect()
 
