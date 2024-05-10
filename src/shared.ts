@@ -18,12 +18,17 @@ export async function getTsconfigFile(path: string) {
   for (let i = pathSegments.length; i > 0; i--) {
     const path = pathSegments.slice(0, i).join('/')
     const tsConfigFile = files.find(file => file.fsPath.startsWith(path))
-    if (tsConfigFile) {
+    if (tsConfigFile)
       return tsConfigFile
-    }
   }
 
   return files[0]
+}
+
+const formatDiagnosticsHost: FormatDiagnosticsHost = {
+  getCanonicalFileName: fileName => fileName,
+  getNewLine: () => os.EOL,
+  getCurrentDirectory: () => process.cwd(),
 }
 
 export async function getParsedCommandLine(filename: string) {
@@ -45,10 +50,4 @@ export async function getParsedCommandLine(filename: string) {
     },
   )!
   return parsedCommandLine
-}
-
-const formatDiagnosticsHost: FormatDiagnosticsHost = {
-  getCanonicalFileName: fileName => fileName,
-  getNewLine: () => os.EOL,
-  getCurrentDirectory: () => process.cwd(),
 }
