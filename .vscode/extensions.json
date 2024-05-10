@@ -2,7 +2,7 @@
   "recommendations": [
     "amodio.tsl-problem-matcher",
     "dbaeumer.vscode-eslint",
-    "publisher-slug.ext-slug",
+    "tsperf.tracer",
     "vue.volar"
   ]
 }
