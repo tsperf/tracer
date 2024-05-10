@@ -27,6 +27,7 @@
     "vscode": "^1.70.0"
   },
   "activationEvents": [
+    "onLanguage:typescript",
     "workspaceContains:tsconfig.json"
   ],
   "contributes": {
@@ -38,12 +39,9 @@
     ]
   },
   "scripts": {
-    "build": "nr ui:build && rollup -c",
+    "build": "rollup -c",
     "dev": "nr build --watch",
-    "ui:dev": "nuxt dev ui",
-    "ui:build": "nuxt build ui",
     "lint": "eslint .",
-    "prepare": "nuxi prepare ui",
     "vscode:prepublish": "nr build",
     "publish": "vsce publish --no-dependencies",
     "pack": "vsce package --no-dependencies",

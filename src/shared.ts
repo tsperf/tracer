@@ -7,13 +7,27 @@ import ts from 'typescript'
 
 import { log } from './logger'
 
-export async function getTsconfigFile() {
-  const [tsConfigFile] = await vscode.workspace.findFiles('**/tsconfig.json')
-  return tsConfigFile
+export async function getTsconfigFile(path: string) {
+  let files = await vscode.workspace.findFiles('**/tsconfig.json', '**​/node_modules/**')
+  files = files.sort((a, b) => b.fsPath.length - a.fsPath.length)
+    .filter(p => !p.fsPath.includes('node_modules'))
+
+  log({ path, files })
+
+  const pathSegments = path.split('/')
+  for (let i = pathSegments.length; i > 0; i--) {
+    const path = pathSegments.slice(0, i).join('/')
+    const tsConfigFile = files.find(file => file.fsPath.startsWith(path))
+    if (tsConfigFile) {
+      return tsConfigFile
+    }
+  }
+
+  return files[0]
 }
 
-export async function getParsedCommandLine() {
-  const tsConfigFile = await getTsconfigFile()
+export async function getParsedCommandLine(path: string) {
+  const tsConfigFile = await getTsconfigFile(path)
   const parsedCommandLine = ts.getParsedCommandLineOfConfigFile(
     tsConfigFile.fsPath,
     {},

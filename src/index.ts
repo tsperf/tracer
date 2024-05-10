@@ -22,9 +22,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const collection = vscode.languages.createDiagnosticCollection('tsperf')
   const run = debounce(runDiagnostics, 500)
-  run(collection)
+  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((event) => {
+    if (path.isAbsolute(event.fileName) && /\.tsx?$/.test(event.fileName)) {
+      run(collection, event.fileName)
+    }
+  }))
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
-    run(collection)
+    if (path.isAbsolute(event.document.fileName) && /\.tsx?$/.test(event.document.fileName)) {
+      run(collection, event.document.fileName)
+    }
   }))
 }
 
@@ -111,7 +117,7 @@ function createLanguageServiceTestMatrix(
           const lineAndCharacter = ts.getLineAndCharacterOfPosition(sourceFile, start)
           const previousLine = ts.getLineAndCharacterOfPosition(sourceFile, start - lineAndCharacter.character)
           const benchmark: LanguageServiceBenchmark = {
-            fileName: vscode.workspace.asRelativePath(testPath),
+            fileName: testPath,
             start: lineAndCharacter.character,
             end: identifier.getEnd() - (start - lineAndCharacter.character),
             identifierText: identifier.getText(sourceFile),
@@ -157,7 +163,6 @@ const DEFAULT_CRASH_RECOVERY_MAX_OLD_SPACE_SIZE = 4096
 const DEFAULT_CHILD_RESTART_TASK_INTERVAL = 1_000_000
 interface RunWithListeningChildProcessesOptions<In> {
   readonly inputs: readonly In[]
-  readonly commandLineArgs: string[]
   readonly workerFile: string
   readonly nProcesses: number
   readonly cwd: string
@@ -172,7 +177,6 @@ interface RunWithListeningChildProcessesOptions<In> {
 
 function runWithListeningChildProcesses<In extends Serializable>({
   inputs,
-  commandLineArgs,
   workerFile,
   nProcesses,
   cwd,
@@ -299,7 +303,7 @@ function runWithListeningChildProcesses<In extends Serializable>({
 
       const startChild = async (taskAction: () => void, execArgv: string[]) => {
         try {
-          child = fork(workerFile, commandLineArgs, { cwd, execArgv: await getChildProcessExecArgv(i, execArgv) })
+          child = fork(workerFile, [], { cwd, execArgv: await getChildProcessExecArgv(i, execArgv) })
           runningChildren.add(child)
         }
         catch (e) {
@@ -543,22 +547,21 @@ const enum CrashRecoveryState {
   Crashed,
 }
 
-async function runDiagnostics(collection: vscode.DiagnosticCollection) {
-  const tsConfigFile = await getTsconfigFile()
+async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
+  const tsConfigFile = await getTsconfigFile(filePath)
   const rootDir = path.dirname(tsConfigFile.fsPath)
 
   const openFiles = vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath)
 
-  const parsedCommandLine = await getParsedCommandLine()!
+  const parsedCommandLine = await getParsedCommandLine(filePath)!
   const testPaths = getTestFileNames(parsedCommandLine.fileNames).filter(path => openFiles.includes(path))
 
-  const matrix = createLanguageServiceTestMatrix(testPaths, rootDir, parsedCommandLine.options, 5, parsedCommandLine)
+  const matrix = createLanguageServiceTestMatrix(testPaths, rootDir, parsedCommandLine.options, 1, parsedCommandLine)
 
   log({ openFiles, testPaths })
 
   await runWithListeningChildProcesses({
     inputs: matrix.inputs,
-    commandLineArgs: [],
     workerFile: workerPath,
     nProcesses: 10,
     crashRecovery: false,
@@ -578,8 +581,7 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection) {
 
   const map: Record<string, vscode.Diagnostic[]> = {}
   for (const benchmark of benchmarks) {
-    const absolutePath = path.join(rootDir, benchmark.fileName)
-    map[absolutePath] ||= []
+    map[benchmark.fileName] ||= []
 
     const duration = benchmark.quickInfoDurations.reduce((a, b) => a + b, 0) / benchmark.quickInfoDurations.length
 
@@ -588,22 +590,20 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection) {
 
     const comparisonPercentage = Math.round(proportionalTime * 100) - 100
 
-    if (comparisonPercentage > 1.5) {
+    if (proportionalTime > 1.5) {
+      const sign = comparisonPercentage > 1 ? '+' : ''
+      const logLevel = proportionalTime > 2 ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
+
       const range = new vscode.Range(
         new vscode.Position(benchmark.line, benchmark.start),
         new vscode.Position(benchmark.line, benchmark.end),
       )
-
-      const diagnostic = new vscode.Diagnostic(
-        range,
-        `${comparisonPercentage > 1 ? '+' : ''}${comparisonPercentage}%`,
-        proportionalTime > 2 ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Information,
-      )
+      const diagnostic = new vscode.Diagnostic(range, `${sign}${comparisonPercentage}%`, logLevel)
 
       diagnostic.source = 'tsperf'
       diagnostic.code = 102
       
-      map[absolutePath].push(diagnostic)
+      map[benchmark.fileName].push(diagnostic)
     }
   }
 
