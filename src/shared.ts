@@ -1,9 +1,9 @@
 import * as os from 'node:os'
 import process from 'node:process'
+import path from 'node:path'
 
 import * as vscode from 'vscode'
 import type { FormatDiagnosticsHost } from 'typescript'
-import ts from 'typescript'
 
 import { log } from './logger'
 
@@ -26,8 +26,10 @@ export async function getTsconfigFile(path: string) {
   return files[0]
 }
 
-export async function getParsedCommandLine(path: string) {
-  const tsConfigFile = await getTsconfigFile(path)
+export async function getParsedCommandLine(filename: string) {
+  const tsPath = path.join(path.dirname(vscode.extensions.getExtension('vscode.typescript-language-features')!.extensionPath), 'node_modules/typescript')
+  const ts = require(tsPath) as typeof import('typescript')
+  const tsConfigFile = await getTsconfigFile(filename)
   const parsedCommandLine = ts.getParsedCommandLineOfConfigFile(
     tsConfigFile.fsPath,
     {},
