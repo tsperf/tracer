@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "amodio.tsl-problem-matcher",
+    "dbaeumer.vscode-eslint",
+    "publisher-slug.ext-slug",
+    "vue.volar"
+  ]
+}

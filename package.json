@@ -1,0 +1,75 @@
+{
+  "publisher": "publisher-slug",
+  "name": "ext-slug",
+  "displayName": "ext-slug",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.1.0",
+  "description": "",
+  "license": "MIT",
+  "homepage": "https://github.com/publisher-slug/ext-slug#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/publisher-slug/ext-slug"
+  },
+  "bugs": {
+    "url": "https://github.com/publisher-slug/ext-slug/issues"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/index.js",
+  "icon": "res/icon.png",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "activationEvents": [
+    "workspaceContains:tsconfig.json"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "title": "Open Sample Webview",
+        "command": "publisher-slug.preview"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "nr ui:build && rollup -c",
+    "dev": "nr build --watch",
+    "ui:dev": "nuxt dev ui",
+    "ui:build": "nuxt build ui",
+    "lint": "eslint .",
+    "prepare": "nuxi prepare ui",
+    "vscode:prepublish": "nr build",
+    "publish": "vsce publish --no-dependencies",
+    "pack": "vsce package --no-dependencies",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit && pnpm --filter ui typecheck",
+    "release": "bumpp && nr publish"
+  },
+  "dependencies": {
+    "perfect-debounce": "^1.0.0",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.17.0",
+    "@antfu/ni": "^0.21.12",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^18.19.33",
+    "@types/vscode": "^1.89.0",
+    "@vscode/vsce": "^2.26.1",
+    "bumpp": "^9.4.1",
+    "d3": "^7.9.0",
+    "d3-flame-graph": "^4.1.3",
+    "eslint": "^9.2.0",
+    "open": "^10.1.0",
+    "rollup": "^4.17.2",
+    "rollup-plugin-esbuild": "^6.1.1",
+    "rollup-plugin-vue": "^6.0.0",
+    "vitest": "^1.6.0"
+  }
+}

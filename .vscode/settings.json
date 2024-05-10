@@ -1,0 +1,4 @@
+{
+  "npm.packageManager": "pnpm",
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+}
