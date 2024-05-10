@@ -584,26 +584,27 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection) {
     const duration = benchmark.quickInfoDurations.reduce((a, b) => a + b, 0) / benchmark.quickInfoDurations.length
 
     const proportionalTime = duration / baseline
-
-    log('uri from diagnostics', vscode.Uri.file(absolutePath))
     log(benchmark)
-
-    const range = new vscode.Range(
-      new vscode.Position(benchmark.line, benchmark.start),
-      new vscode.Position(benchmark.line, benchmark.end),
-    )
 
     const comparisonPercentage = Math.round(proportionalTime * 100) - 100
 
-    const diagnostic = new vscode.Diagnostic(
-      range,
-      `${comparisonPercentage > 1 ? '+' : ''}${comparisonPercentage}%`,
-      proportionalTime > 2 ? vscode.DiagnosticSeverity.Error : proportionalTime > 1.5 ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information,
-    )
-    diagnostic.source = 'tsperf'
-    diagnostic.code = 102
+    if (comparisonPercentage > 1.5) {
+      const range = new vscode.Range(
+        new vscode.Position(benchmark.line, benchmark.start),
+        new vscode.Position(benchmark.line, benchmark.end),
+      )
 
-    map[absolutePath].push(diagnostic)
+      const diagnostic = new vscode.Diagnostic(
+        range,
+        `${comparisonPercentage > 1 ? '+' : ''}${comparisonPercentage}%`,
+        proportionalTime > 2 ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Information,
+      )
+
+      diagnostic.source = 'tsperf'
+      diagnostic.code = 102
+      
+      map[absolutePath].push(diagnostic)
+    }
   }
 
   for (const file in map) {
