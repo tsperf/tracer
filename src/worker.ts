@@ -3,20 +3,18 @@ import * as assert from 'node:assert'
 import fs from 'node:fs'
 import process from 'node:process'
 
-import ts from 'typescript'
+import type TS from 'typescript'
 
-import type { LanguageServiceSingleMeasurement, MeasureLanguageServiceArgs } from './index'
+import type { LanguageServiceSingleMeasurement, MeasureLanguageServiceArgs, MeasureLanguageServiceChildProcessArgs } from './index'
 
 export const workerPath = __filename
 
-let commandLine: ts.ParsedCommandLine | undefined
-let languageServiceHost: ts.LanguageServiceHost | undefined
-let languageService: ts.LanguageService | undefined
+let ts: typeof import('typescript')
+let commandLine: TS.ParsedCommandLine | undefined
+let languageServiceHost: TS.LanguageServiceHost | undefined
+let languageService: TS.LanguageService | undefined
 
-function createLanguageServiceHost(
-  compilerOptions: ts.CompilerOptions,
-  testPaths: string[],
-): ts.LanguageServiceHost {
+function createLanguageServiceHost(compilerOptions: TS.CompilerOptions, testPaths: string[]): TS.LanguageServiceHost {
   let version = 0
   return {
     directoryExists: ts.sys.directoryExists,
@@ -43,7 +41,7 @@ function ensureExists(...pathNames: string[]): string {
   throw new Error(`File or directory does not exist: ${pathNamesPrint}`)
 }
 
-function getCompletionsAtPosition(languageService: ts.LanguageService, fileName: string, pos: number): boolean {
+function getCompletionsAtPosition(languageService: TS.LanguageService, fileName: string, pos: number): boolean {
   performance.mark('beforeCompletions')
   const completions = languageService.getCompletionsAtPosition(fileName, pos, undefined)
   performance.mark('afterCompletions')
@@ -51,7 +49,7 @@ function getCompletionsAtPosition(languageService: ts.LanguageService, fileName:
   return !!completions && completions.entries.length > 0
 }
 
-function getQuickInfoAtPosition(languageService: ts.LanguageService, fileName: string, pos: number): boolean {
+function getQuickInfoAtPosition(languageService: TS.LanguageService, fileName: string, pos: number): boolean {
   performance.mark('beforeQuickInfo')
   const quickInfo = languageService.getQuickInfoAtPosition(fileName, pos)
   performance.mark('afterQuickInfo')
@@ -59,10 +57,7 @@ function getQuickInfoAtPosition(languageService: ts.LanguageService, fileName: s
   return !!quickInfo
 }
 
-async function measureLanguageService(
-  languageService: ts.LanguageService,
-  args: MeasureLanguageServiceArgs,
-): Promise<LanguageServiceSingleMeasurement> {
+async function measureLanguageService(languageService: TS.LanguageService, args: MeasureLanguageServiceArgs): Promise<LanguageServiceSingleMeasurement> {
   return {
     fileName: args.fileName,
     start: args.start,
@@ -100,15 +95,11 @@ async function measureLanguageService(
 }
 
 if (process.send) {
-  process.on('message', async (message: unknown) => {
+  process.on('message', async (message: MeasureLanguageServiceChildProcessArgs) => {
     commandLine ||= message.commandLine
-    if (!languageServiceHost || !languageService) {
-      languageServiceHost = createLanguageServiceHost(commandLine!.options, commandLine!.fileNames)
-      languageService = ts.createLanguageService(languageServiceHost)
-      // Warm up - make sure functions are compiled
-      getCompletionsAtPosition(languageService, message.fileName, message.start)
-      getQuickInfoAtPosition(languageService, message.fileName, message.start)
-    }
+    ts ||= require(message.tsPath)
+    languageServiceHost ||= createLanguageServiceHost(commandLine!.options, commandLine!.fileNames)
+    languageService ||= ts.createLanguageService(languageServiceHost)
 
     const positionMeasurement = await measureLanguageService(languageService, message)
     process.send!(positionMeasurement)

@@ -2,36 +2,34 @@ import assert from 'node:assert'
 import path from 'node:path'
 import type { ChildProcess, Serializable } from 'node:child_process'
 import { fork } from 'node:child_process'
-
 import { Socket } from 'node:net'
+
+import type { CompilerOptions, Node, ParsedCommandLine, SourceFile } from 'typescript'
 import { debounce } from 'perfect-debounce'
-import ts from 'typescript'
+
 import * as vscode from 'vscode'
 
 import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
 import { workerPath } from './worker'
 
+let ts: typeof import('typescript')
+let tsPath: string
+
 export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
 
-  // const typescriptConfiguration = vscode.workspace.getConfiguration('typescript')
-  // const typescriptPath = typescriptConfiguration.get('tsdk')
-  // const pkgJson = vscode.extensions.getExtension('vscode.typescript-language-features')?.packageJSON
-  // outputChannel.appendLine(`TypeScript Version: ${JSON.stringify(pkgJson || {})}`)
+  tsPath = path.join(path.dirname(vscode.extensions.getExtension('vscode.typescript-language-features')!.extensionPath), 'node_modules/typescript')
+  ts = require(tsPath)
 
   const collection = vscode.languages.createDiagnosticCollection('tsperf')
-  const run = debounce(runDiagnostics, 500)
-  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((event) => {
-    if (path.isAbsolute(event.fileName) && /\.tsx?$/.test(event.fileName)) {
-      run(collection, event.fileName)
-    }
-  }))
-  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
-    if (path.isAbsolute(event.document.fileName) && /\.tsx?$/.test(event.document.fileName)) {
-      run(collection, event.document.fileName)
-    }
-  }))
+  
+  const _run = debounce(runDiagnostics, 500)
+  const run = (filenames: string[]) => Promise.all(getTestFileNames(filenames).map(file => _run(collection, file)))
+
+  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((event) => run([event.fileName])))
+  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => run([event.document.fileName])))
+  run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
 }
 
 export function deactivate() {}
@@ -46,8 +44,8 @@ function getTestFileNames(fileNames: readonly string[]) {
   })
 }
 
-function getIdentifiers(sourceFile: ts.SourceFile) {
-  const identifiers: ts.Node[] = []
+function getIdentifiers(sourceFile: SourceFile) {
+  const identifiers: Node[] = []
   ts.forEachChild(sourceFile, function visit(node) {
     if (ts.isIdentifier(node))
       identifiers.push(node)
@@ -81,26 +79,27 @@ export interface MeasureLanguageServiceArgs
 }
 
 export interface MeasureLanguageServiceChildProcessArgs extends MeasureLanguageServiceArgs {
-  commandLine: ts.ParsedCommandLine
+  commandLine: ParsedCommandLine
+  tsPath: string
   [key: string]: any
 }
 
 function createLanguageServiceTestMatrix(
-  testPaths: string[],
+  fileNames: string[],
   packageDirectory: string,
-  compilerOptions: ts.CompilerOptions,
+  compilerOptions: CompilerOptions,
   iterations: number,
-  commandLine: ts.ParsedCommandLine,
+  commandLine: ParsedCommandLine,
 ) {
   const fileMap = new Map<string, Map<number, LanguageServiceBenchmark>>()
   const inputs: MeasureLanguageServiceChildProcessArgs[] = []
   let uniquePositionCount = 0
-  for (const testPath of testPaths) {
+  for (const fileName of fileNames) {
     const positionMap = new Map<number, LanguageServiceBenchmark>()
-    fileMap.set(testPath, positionMap)
+    fileMap.set(fileName, positionMap)
     const sourceFile = ts.createSourceFile(
-      testPath,
-      ts.sys.readFile(testPath)!,
+      fileName,
+      ts.sys.readFile(fileName)!,
       compilerOptions.target || ts.ScriptTarget.Latest,
     )
     // Reverse: more complex examples are usually near the end of test files,
@@ -115,9 +114,8 @@ function createLanguageServiceTestMatrix(
         const start = identifier.getStart(sourceFile)
         if (i === 0) {
           const lineAndCharacter = ts.getLineAndCharacterOfPosition(sourceFile, start)
-          const previousLine = ts.getLineAndCharacterOfPosition(sourceFile, start - lineAndCharacter.character)
           const benchmark: LanguageServiceBenchmark = {
-            fileName: testPath,
+            fileName: fileName,
             start: lineAndCharacter.character,
             end: identifier.getEnd() - (start - lineAndCharacter.character),
             identifierText: identifier.getText(sourceFile),
@@ -130,8 +128,9 @@ function createLanguageServiceTestMatrix(
         }
         inputs.push({
           commandLine,
-          fileName: testPath,
+          fileName: fileName,
           start,
+          tsPath,
           packageDirectory,
         })
       }
@@ -146,33 +145,22 @@ function createLanguageServiceTestMatrix(
       benchmark.quickInfoDurations.push(measurement.quickInfoDuration)
     },
     getAllBenchmarks: (): LanguageServiceBenchmark[] => {
-      return Array.prototype.concat
-        .apply(
-          [],
-          Array.from(fileMap.values()).map(map => Array.from(map.values())),
-        )
-        .filter(
-          (benchmark: LanguageServiceBenchmark) =>
-            benchmark.completionsDurations.length > 0 || benchmark.quickInfoDurations.length > 0,
-        )
+      return Array.from(fileMap.values()).flatMap(map => Array.from(map.values()))
+        .filter((benchmark) => benchmark.completionsDurations.length > 0 || benchmark.quickInfoDurations.length > 0)
     },
   }
 }
 
-const DEFAULT_CRASH_RECOVERY_MAX_OLD_SPACE_SIZE = 4096
 const DEFAULT_CHILD_RESTART_TASK_INTERVAL = 1_000_000
 interface RunWithListeningChildProcessesOptions<In> {
   readonly inputs: readonly In[]
   readonly workerFile: string
   readonly nProcesses: number
   readonly cwd: string
-  readonly crashRecovery?: boolean
-  readonly crashRecoveryMaxOldSpaceSize?: number
   readonly childRestartTaskInterval?: number
   readonly softTimeoutMs?: number
   handleOutput: (output: LanguageServiceSingleMeasurement, processIndex: number | undefined) => void
   handleStart?: (input: In, processIndex: number | undefined) => void
-  handleCrash?: (input: In, state: CrashRecoveryState, processIndex: number | undefined) => void
 }
 
 function runWithListeningChildProcesses<In extends Serializable>({
@@ -181,11 +169,8 @@ function runWithListeningChildProcesses<In extends Serializable>({
   nProcesses,
   cwd,
   handleOutput,
-  crashRecovery,
-  crashRecoveryMaxOldSpaceSize = DEFAULT_CRASH_RECOVERY_MAX_OLD_SPACE_SIZE,
-  childRestartTaskInterval = DEFAULT_CHILD_RESTART_TASK_INTERVAL,
   handleStart,
-  handleCrash,
+  childRestartTaskInterval = DEFAULT_CHILD_RESTART_TASK_INTERVAL,
   softTimeoutMs = Number.POSITIVE_INFINITY,
 }: RunWithListeningChildProcessesOptions<In>): Promise<void> {
   return new Promise(async (resolve, reject) => {
@@ -194,7 +179,6 @@ function runWithListeningChildProcesses<In extends Serializable>({
     let tasksSoFar = 0
     let rejected = false
     const runningChildren = new Set<ChildProcess>()
-    const maxOldSpaceSize = getMaxOldSpaceSize(process.execArgv) || 0
     const startTime = Date.now()
     for (let i = 0; i < nProcesses; i++) {
       if (inputIndex === inputs.length) {
@@ -204,25 +188,17 @@ function runWithListeningChildProcesses<In extends Serializable>({
 
       const processIndex = nProcesses > 1 ? i + 1 : undefined
       let child: ChildProcess
-      let crashRecoveryState = CrashRecoveryState.Normal
       let currentInput: In
 
       const onMessage = (outputMessage: unknown) => {
         try {
           tasksSoFar++
-          const oldCrashRecoveryState = crashRecoveryState
-          crashRecoveryState = CrashRecoveryState.Normal
           handleOutput(outputMessage as LanguageServiceSingleMeasurement, processIndex)
           if (inputIndex === inputs.length || Date.now() - startTime > softTimeoutMs) {
             stopChild(/* done */ true)
           }
           else {
-            if (oldCrashRecoveryState !== CrashRecoveryState.Normal) {
-              // retry attempt succeeded, restart the child for further tests.
-              console.log(`${processIndex}> Restarting...`)
-              restartChild(nextTask, process.execArgv)
-            }
-            else if (tasksSoFar >= childRestartTaskInterval) {
+            if (tasksSoFar >= childRestartTaskInterval) {
               // restart the child to avoid memory leaks.
               stopChild(/* done */ false)
               startChild(nextTask, process.execArgv)
@@ -243,52 +219,10 @@ function runWithListeningChildProcesses<In extends Serializable>({
           return
 
         try {
-          // treat any unhandled closures of the child as a crash
-          if (crashRecovery) {
-            switch (crashRecoveryState) {
-              case CrashRecoveryState.Normal:
-                crashRecoveryState = CrashRecoveryState.Retry
-                break
-              case CrashRecoveryState.Retry:
-                // skip crash recovery if we're already passing a value for --max_old_space_size that
-                // is >= crashRecoveryMaxOldSpaceSize
-                crashRecoveryState
-                  = maxOldSpaceSize < crashRecoveryMaxOldSpaceSize
-                    ? CrashRecoveryState.RetryWithMoreMemory
-                    : (crashRecoveryState = CrashRecoveryState.Crashed)
-                break
-              default:
-                crashRecoveryState = CrashRecoveryState.Crashed
-            }
-          }
-          else {
-            crashRecoveryState = CrashRecoveryState.Crashed
-          }
-
-          if (handleCrash)
-            handleCrash(currentInput, crashRecoveryState, processIndex)
-
-          switch (crashRecoveryState) {
-            case CrashRecoveryState.Retry:
-              await restartChild(resumeTask, process.execArgv)
-              break
-            case CrashRecoveryState.RetryWithMoreMemory:
-              await restartChild(resumeTask, [
-                ...getExecArgvWithoutMaxOldSpaceSize(),
-                `--max_old_space_size=${crashRecoveryMaxOldSpaceSize}`,
-              ])
-              break
-            case CrashRecoveryState.Crashed:
-              crashRecoveryState = CrashRecoveryState.Normal
-              if (inputIndex === inputs.length || Date.now() - startTime > softTimeoutMs)
-                stopChild(/* done */ true)
-              else
-                await restartChild(nextTask, process.execArgv)
-
-              break
-            default:
-              assert.fail(`${processIndex}> Unexpected crashRecoveryState: ${crashRecoveryState}`)
-          }
+          if (inputIndex === inputs.length || Date.now() - startTime > softTimeoutMs)
+            stopChild(/* done */ true)
+          else
+            await restartChild(nextTask, process.execArgv)
         }
         catch (e) {
           onError(e as Error)
@@ -417,35 +351,6 @@ function runWithListeningChildProcesses<In extends Serializable>({
   })
 }
 
-function getMaxOldSpaceSize(argv: readonly string[]): number | undefined {
-  const arg = getMaxOldSpaceSizeArg(argv)
-  return arg && arg.value
-}
-
-const maxOldSpaceSizeRegExp = /^--max[-_]old[-_]space[-_]size(?:$|=(\d+))/
-
-interface MaxOldSpaceSizeArgument {
-  index: number
-  size: number
-  value: number | undefined
-}
-
-let execArgvWithoutMaxOldSpaceSize: readonly string[] | undefined
-
-function getExecArgvWithoutMaxOldSpaceSize(): readonly string[] {
-  if (!execArgvWithoutMaxOldSpaceSize) {
-    // remove --max_old_space_size from execArgv
-    const execArgv = process.execArgv.slice()
-    let maxOldSpaceSizeArg = getMaxOldSpaceSizeArg(execArgv)
-    while (maxOldSpaceSizeArg) {
-      execArgv.splice(maxOldSpaceSizeArg.index, maxOldSpaceSizeArg.size)
-      maxOldSpaceSizeArg = getMaxOldSpaceSizeArg(execArgv)
-    }
-    execArgvWithoutMaxOldSpaceSize = execArgv
-  }
-  return execArgvWithoutMaxOldSpaceSize
-}
-
 async function getChildProcessExecArgv(portOffset = 0, execArgv = process.execArgv) {
   const debugArg = execArgv.findIndex(
     arg => arg === '--inspect' || arg === '--inspect-brk' || arg.startsWith('--inspect='),
@@ -528,25 +433,6 @@ function doFindFreePort(startPort: number, giveUpAfter: number, clb: (port: numb
   }
 }
 
-function getMaxOldSpaceSizeArg(argv: readonly string[]): MaxOldSpaceSizeArgument | undefined {
-  for (let index = 0; index < argv.length; index++) {
-    const match = maxOldSpaceSizeRegExp.exec(argv[index])
-    if (match) {
-      const value = match[1] ? Number.parseInt(match[1], 10) : argv[index + 1] ? Number.parseInt(argv[index + 1], 10) : undefined
-      const size = match[1] ? 1 : 2 // tslint:disable-line:no-magic-numbers
-      return { index, size, value }
-    }
-  }
-  return undefined
-}
-
-const enum CrashRecoveryState {
-  Normal,
-  Retry,
-  RetryWithMoreMemory,
-  Crashed,
-}
-
 async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
   const tsConfigFile = await getTsconfigFile(filePath)
   const rootDir = path.dirname(tsConfigFile.fsPath)
@@ -564,12 +450,8 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
     inputs: matrix.inputs,
     workerFile: workerPath,
     nProcesses: 10,
-    crashRecovery: false,
     cwd: rootDir,
     softTimeoutMs: 10 * 1000,
-    handleCrash: (input) => {
-      log('Failed measurement on request:', JSON.stringify(input, undefined, 2))
-    },
     handleOutput: (measurement: LanguageServiceSingleMeasurement) => {
       matrix.addMeasurement(measurement)
     },
@@ -582,23 +464,25 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
   const map: Record<string, vscode.Diagnostic[]> = {}
   for (const benchmark of benchmarks) {
     map[benchmark.fileName] ||= []
-
-    const duration = benchmark.quickInfoDurations.reduce((a, b) => a + b, 0) / benchmark.quickInfoDurations.length
-
-    const proportionalTime = duration / baseline
     log(benchmark)
 
-    const comparisonPercentage = Math.round(proportionalTime * 100) - 100
+    const duration = benchmark.quickInfoDurations.reduce((a, b) => a + b, 0) / benchmark.quickInfoDurations.length
+    const proportionalTime = duration / baseline
 
-    if (proportionalTime > 1.5) {
+    if (proportionalTime > 1) {
+      const comparisonPercentage = Math.round(proportionalTime * 100) - 100
       const sign = comparisonPercentage > 1 ? '+' : ''
-      const logLevel = proportionalTime > 2 ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
+      const logLevel = proportionalTime > 2
+        ? vscode.DiagnosticSeverity.Error
+        : proportionalTime > 1.2
+          ? vscode.DiagnosticSeverity.Warning
+          : vscode.DiagnosticSeverity.Information
 
       const range = new vscode.Range(
         new vscode.Position(benchmark.line, benchmark.start),
         new vscode.Position(benchmark.line, benchmark.end),
       )
-      const diagnostic = new vscode.Diagnostic(range, `${sign}${comparisonPercentage}%`, logLevel)
+      const diagnostic = new vscode.Diagnostic(range, `${Math.round(duration)}ms (${sign}${comparisonPercentage}%)`, logLevel)
 
       diagnostic.source = 'tsperf'
       diagnostic.code = 102
