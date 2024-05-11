@@ -33,6 +33,7 @@ const formatDiagnosticsHost: FormatDiagnosticsHost = {
 
 export async function getParsedCommandLine(filename: string) {
   const tsPath = path.join(path.dirname(vscode.extensions.getExtension('vscode.typescript-language-features')!.extensionPath), 'node_modules/typescript')
+  // eslint-disable-next-line ts/no-require-imports, ts/no-var-requires
   const ts = require(tsPath) as typeof import('typescript')
   const tsConfigFile = await getTsconfigFile(filename)
   const parsedCommandLine = ts.getParsedCommandLineOfConfigFile(

@@ -24,14 +24,11 @@ jobs:
           node-version: 18
           cache: pnpm
 
-      - name: Setup
-        run: npm i -g @antfu/ni
-
       - name: Install
-        run: nci
+        run: pnpm i
 
       - name: Lint
-        run: nr lint
+        run: pnpm lint
 
   typecheck:
     runs-on: ubuntu-latest
@@ -47,14 +44,11 @@ jobs:
           node-version: 18
           cache: pnpm
 
-      - name: Setup
-        run: npm i -g @antfu/ni
-
       - name: Install
-        run: nci
+        run: pnpm i
 
       - name: Typecheck
-        run: nr typecheck
+        run: pnpm typecheck
 
   test:
     runs-on: ${{ matrix.os }}
@@ -77,14 +71,11 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
 
-      - name: Setup
-        run: npm i -g @antfu/ni
-
       - name: Install
-        run: nci
+        run: pnpm i
 
       - name: Build
-        run: nr build
+        run: pnpm build
 
       - name: Test
-        run: nr test
+        run: pnpm test

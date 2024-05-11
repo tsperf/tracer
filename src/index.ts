@@ -16,6 +16,8 @@ export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
 
   tsPath = path.join(path.dirname(vscode.extensions.getExtension('vscode.typescript-language-features')!.extensionPath), 'node_modules/typescript')
+
+  // eslint-disable-next-line ts/no-require-imports
   ts = require(tsPath)
 
   const collection = vscode.languages.createDiagnosticCollection('tsperf')
@@ -143,8 +145,8 @@ function createLanguageServiceTestMatrix(
     getAllBenchmarks: (): LanguageServiceBenchmark[] => {
       return Array.from(fileMap.values()).flatMap(map => Array.from(map.values()))
         .filter(benchmark =>
-          benchmark.completionsDurations.length > 0 ||
-          benchmark.quickInfoDurations.length > 0
+          benchmark.completionsDurations.length > 0
+          || benchmark.quickInfoDurations.length > 0,
         )
     },
   }
@@ -249,7 +251,7 @@ async function measureLanguageService(args: MeasureLanguageServiceChildProcessAr
   await vscode.commands.executeCommand('typescript.tsserverRequest', 'emit-output', {
     file: args.fileName,
     forced: true,
-    richResponse: true
+    richResponse: true,
   } satisfies server.protocol.CompileOnSaveEmitFileRequestArgs) as server.protocol.CompileOnSaveEmitFileResponse
 
   await Promise.all([
