@@ -1,0 +1,45 @@
+{
+  "name": "ts-trace-viewer-ssr",
+  "version": "0.0.1",
+  "private": false,
+  "description": "front end for ts-trace-viewer",
+  "productName": "ts-trace-viewer-ssr",
+  "author": "typeholes <typeholes@protonmail.net>",
+  "license": "MIT",
+  "engines": {
+    "node": "^20 || ^18 || ^16",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  },
+  "scripts": {
+    "lint": "eslint --ext .js,.ts,.vue ./",
+    "test": "echo \"No test specified\" && exit 0",
+    "dev": "quasar dev",
+    "build": "quasar build"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.4",
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
+    "@types/vscode": "^1.89.0",
+    "axios": "^1.2.1",
+    "quasar": "^2.16.0",
+    "vue": "^3.4.18",
+    "vue-router": "^4.0.12",
+    "zod": "^3.23.7"
+  },
+  "devDependencies": {
+    "@quasar/app-vite": "^1.9.0",
+    "@types/node": "^12.20.21",
+    "@typescript-eslint/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^5.10.0",
+    "autoprefixer": "^10.4.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "prettier": "^2.5.1",
+    "typescript": "^4.5.4",
+    "vite-plugin-checker": "^0.6.4",
+    "vue-tsc": "^1.8.22"
+  }
+}

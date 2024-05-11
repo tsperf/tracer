@@ -8,6 +8,9 @@ import * as vscode from 'vscode'
 
 import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
+import { registerCommands } from './contributions'
+import { startServer } from './server/server'
+import { initDiagnostics } from './traceDiagnostics'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -28,6 +31,10 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(event => run([event.fileName])))
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => run([event.document.fileName])))
   run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
+
+  registerCommands(context)
+  initDiagnostics(context)
+  startServer()
 }
 
 export function deactivate() {}
@@ -44,7 +51,7 @@ function getTestFileNames(fileNames: readonly string[]) {
 
 function getIdentifiers(sourceFile: SourceFile) {
   const identifiers: Node[] = []
-  ts.forEachChild(sourceFile, function visit(node) {
+  ts.forEachChild(sourceFile, function visit(node): undefined {
     if (ts.isIdentifier(node))
       identifiers.push(node)
     else

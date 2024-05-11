@@ -18,7 +18,8 @@
   "categories": [
     "Other"
   ],
-  "main": "./dist/index.js",
+  "t-main": "./dist/index.js",
+  "main": "./out/src/index.js",
   "icon": "res/icon.png",
   "files": [
     "dist"
@@ -30,14 +31,54 @@
     "onLanguage:typescript",
     "workspaceContains:tsconfig.json"
   ],
+  "contributes": {
+    "configuration": {
+      "title": "tsperf.tracer",
+      "properties": {
+        "tsperf.tracer.checkTimeWarning": {
+          "type": "number",
+          "default": 1,
+          "description": "Warn when type check times exceed this number of seconds"
+        },
+        "tsperf.tracer.port": {
+          "type": "number",
+          "default": 3000,
+          "description": "port to run local web server on"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "tsperf.tracer.openInBrowser",
+        "title": "Open trace view in browser",
+        "icon": {
+          "dark": "resources/todo.svg",
+          "light": "resources/todo.svg"
+        }
+      },
+      {
+        "command": "tsperf.tracer.runTrace",
+        "title": "tsc trace",
+        "icon": {
+          "dark": "resources/todo.svg",
+          "light": "resources/todo.svg"
+        }
+      }
+    ]
+  },
   "scripts": {
-    "build": "rollup -c",
-    "dev": "nr build --watch",
+    "vscode:prepublish": "npm run compile && mkdir -p out/src/server/static && cp -pr spa/dist/spa/* out/src/server/static/  ",
+    "compile": "tsc -p ./",
+    "dev": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "test": "node ./out/test/runTest.js",
+    "t-build": "rollup -c",
+    "t-dev": "nr build --watch",
     "lint": "eslint .",
-    "vscode:prepublish": "nr build",
-    "publish": "vsce publish --no-dependencies",
-    "package": "vsce package --no-dependencies",
-    "test": "vitest",
+    "t-vscode:prepublish": "nr build",
+    "t-publish": "vsce publish --no-dependencies",
+    "t-package": "vsce package --no-dependencies",
+    "t-test": "vitest",
     "typecheck": "tsc --noEmit && pnpm --filter ui typecheck",
     "release": "bumpp && nr publish"
   },
@@ -60,5 +101,12 @@
     "rollup-plugin-vue": "^6.0.0",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@fastify/static": "^7.0.4",
+    "@fastify/websocket": "^10.0.1",
+    "@trpc/client": "11.0.0-rc.366",
+    "@trpc/server": "11.0.0-rc.366",
+    "fastify": "^4.27.0"
   }
 }
