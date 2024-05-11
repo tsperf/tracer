@@ -18,8 +18,7 @@
   "categories": [
     "Other"
   ],
-  "t-main": "./dist/index.js",
-  "main": "./out/src/index.js",
+  "main": "./dist/index.js",
   "icon": "res/icon.png",
   "files": [
     "dist"
@@ -67,9 +66,10 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile && mkdir -p out/src/server/static && cp -pr spa/dist/spa/* out/src/server/static/  ",
-    "compile": "tsc -p ./",
-    "dev": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile && npm run build-spa  ",
+    "compile": "esbuild --bundle --outfile=dist/index.js  --platform=node --external:vscode src/index.ts",
+    "dev": "esbuild --watch --bundle --outfile=dist/index.js  --platform=node --external:vscode src/index.ts",
+    "build-spa": "cd spa && quasar build && cd .. &&  mkdir -p dist/static && cp -pr spa/dist/spa/* dist/static/ ",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
     "t-build": "rollup -c",
