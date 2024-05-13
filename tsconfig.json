@@ -4,11 +4,11 @@
     "lib": [
       "esnext"
     ],
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "module": "CommonJS",
     "strict": true,
     "strictNullChecks": true,
+    "outDir": "out",
+    "sourceMap": true,
     "esModuleInterop": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
@@ -16,6 +16,7 @@
   "exclude": [
     "examples/*",
     "node_modules",
-    "ui"
+    "ui",
+    "spa"
   ]
 }

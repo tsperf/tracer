@@ -1,0 +1,19 @@
+{
+  "name": "ui",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@nuxt/devtools": "latest",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "nuxt": "^3.11.2"
+  },
+  "devDependencies": {
+    "@types/vscode-webview": "^1.57.5"
+  }
+}

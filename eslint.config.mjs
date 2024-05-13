@@ -4,5 +4,7 @@ export default antfu({
   stylistic: true,
   ignores: [
     'playground/**',
+    'spa/.quasar/**',
+    'out/**',
   ],
 })

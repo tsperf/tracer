@@ -30,9 +30,47 @@
     "onLanguage:typescript",
     "workspaceContains:tsconfig.json"
   ],
+  "contributes": {
+    "configuration": {
+      "title": "tsperf.tracer",
+      "properties": {
+        "tsperf.tracer.checkTimeWarning": {
+          "type": "number",
+          "default": 1,
+          "description": "Warn when type check times exceed this number of seconds"
+        },
+        "tsperf.tracer.port": {
+          "type": "number",
+          "default": 3000,
+          "description": "port to run local web server on"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "tsperf.tracer.openInBrowser",
+        "title": "Open trace view in browser",
+        "icon": {
+          "dark": "resources/todo.svg",
+          "light": "resources/todo.svg"
+        }
+      },
+      {
+        "command": "tsperf.tracer.runTrace",
+        "title": "tsc trace",
+        "icon": {
+          "dark": "resources/todo.svg",
+          "light": "resources/todo.svg"
+        }
+      }
+    ]
+  },
   "scripts": {
+    "pretest": "npm run compile && npm run lint",
     "build": "rollup -c",
-    "dev": "nr build --watch",
+    "dev": "nr build --watch --sourcemap",
+    "ui:dev": "nuxt dev ui",
+    "ui:build": "nuxt build ui",
     "lint": "eslint .",
     "vscode:prepublish": "nr build",
     "publish": "vsce publish --no-dependencies",
@@ -41,6 +79,7 @@
     "typecheck": "tsc --noEmit && pnpm --filter ui typecheck",
     "release": "bumpp && nr publish"
   },
+  "dependencies": {},
   "devDependencies": {
     "@antfu/eslint-config": "^2.17.0",
     "@antfu/ni": "^0.21.12",
