@@ -10,9 +10,16 @@ const dummyVscode: WebviewApi<unknown> = {
 export default defineNuxtPlugin(() => {
   const vscode = typeof acquireVsCodeApi === 'undefined' ? dummyVscode : acquireVsCodeApi()
 
+  const messageLog = useState('messageLog', () => [] as Messages.Message[])
+  function sendMessage(message: Messages.Message) {
+    messageLog.value.unshift(message)
+    vscode.postMessage(message)
+  }
+
   return {
     provide: {
-      vscode,
+      sendMessage,
+      messageLog,
       Messages,
     },
   }

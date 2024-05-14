@@ -4,12 +4,13 @@ import type { TraceLine } from '~/src/traceData'
 
 const props = defineProps<{ line: TraceLine }>()
 
-const vscode = useNuxtApp().$vscode
+const sendMessage = useNuxtApp().$sendMessage
 
 function goto(fileName: string | undefined, pos: number | undefined) {
   if (!fileName || !pos)
     return
-  vscode.postMessage({ message: 'gotoPosition', fileName, pos })
+
+  sendMessage({ message: 'gotoPosition', fileName, pos })
 }
 </script>
 

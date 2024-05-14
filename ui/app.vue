@@ -1,10 +1,10 @@
 <script setup lang="ts">
-const vscode = useNuxtApp().$vscode
+const sendMessage = useNuxtApp().$sendMessage
 const Messages = useNuxtApp().$Messages
 const colorMode = useColorMode()
 
 function ping() {
-  vscode.postMessage({ message: 'ping' })
+  sendMessage({ message: 'ping' })
 }
 
 const secondButtonLabel = ref('Another button')
@@ -55,6 +55,8 @@ onMounted(() => {
     <div>
       <tree-root />
     </div>
+
+    <dev-controls />
   </div>
 </template>
 
