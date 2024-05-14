@@ -25,5 +25,12 @@ export const gotoLocation = z.object({
 })
 export type GotoLocation = z.infer<typeof gotoPosition>
 
+export const traceFile = z.object({
+  message: z.literal('traceFile'),
+  fileName: z.string(),
+  traceString: z.string(),
+})
+export type TraceFile = z.infer<typeof traceFile>
+
 export type Message = z.infer<typeof message>
-export const message = z.union([ping, pong, gotoLocation, gotoPosition])
+export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFile])

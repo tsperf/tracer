@@ -8,5 +8,8 @@
   ],
   "eslint.experimental.useFlatConfig": true,
   "eslint.format.enable": true,
-  "eslint.lintTask.enable": false
+  "eslint.lintTask.enable": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  }
 }

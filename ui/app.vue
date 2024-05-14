@@ -52,6 +52,9 @@ onMounted(() => {
     </div>
 
     <file-manager />
+    <div>
+      <tree-root />
+    </div>
   </div>
 </template>
 

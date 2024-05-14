@@ -46,6 +46,12 @@
         }
       }
     },
+    "commandPalette": [
+      {
+        "command": "tsperf.tracer.sendTrace",
+        "when": "!notebookEditorFocused && editorLangId == 'json'"
+      }
+    ],
     "commands": [
       {
         "command": "tsperf.tracer.openInBrowser",
@@ -62,6 +68,11 @@
           "dark": "resources/todo.svg",
           "light": "resources/todo.svg"
         }
+      },
+      {
+        "command": "tsperf.tracer.sendTrace",
+        "title": "Send Trace to Trace Viewer",
+        "when": "!notebookEditorFocused && editorLangId == 'json'"
       }
     ]
   },

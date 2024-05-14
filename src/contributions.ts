@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { prepareWebView } from './webview'
+import { getTracePanel, prepareWebView } from './webview'
 
 const commandHandlers = {
   'tsperf.tracer.runTrace':
@@ -8,6 +8,21 @@ const commandHandlers = {
     },
   'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => {
     prepareWebView(context)
+  },
+  'tsperf.tracer.sendTrace': () => () => {
+    const panel = getTracePanel()
+    if (!panel) {
+      vscode.window.showWarningMessage('Trace webview not opened')
+      return
+    }
+
+    const document = vscode.window.activeTextEditor?.document
+
+    if (!document)
+      return
+    const fileName = document.fileName
+    const traceString = document.getText()
+    panel.webview.postMessage({ message: 'traceFile', fileName, traceString })
   },
 } as const
 

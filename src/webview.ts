@@ -7,6 +7,9 @@ import html from '../ui/dist/200.html?raw'
 import { handleMessage } from './handleMessages'
 
 let panel: ReturnType<typeof vscode.window.createWebviewPanel>
+export function getTracePanel() {
+  return panel
+}
 
 export function prepareWebView(context: vscode.ExtensionContext) {
   let ret: vscode.Disposable | undefined
