@@ -1,3 +1,5 @@
+import * as Messages from '../../messages/src/messages'
+
 export default defineNuxtPlugin(() => {
   // allow development with hmr
   if (typeof acquireVsCodeApi === 'undefined')
@@ -6,6 +8,7 @@ export default defineNuxtPlugin(() => {
   return {
     provide: {
       vscode: acquireVsCodeApi(),
+      Messages,
     },
   }
 })

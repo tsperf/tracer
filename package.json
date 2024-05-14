@@ -79,7 +79,6 @@
     "typecheck": "tsc --noEmit && pnpm --filter ui typecheck",
     "release": "bumpp && nr publish"
   },
-  "dependencies": {},
   "devDependencies": {
     "@antfu/eslint-config": "^2.17.0",
     "@antfu/ni": "^0.21.12",

@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 // @ts-expect-error raw loader
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
+import { handleMessage } from './handleMessages'
 
 let panel: ReturnType<typeof vscode.window.createWebviewPanel>
 
@@ -30,10 +31,7 @@ export function prepareWebView(context: vscode.ExtensionContext) {
     panel.webview.html = processedHTML
 
     panel.webview.onDidReceiveMessage((message) => {
-      if (message === 'ping') {
-        vscode.window.showInformationMessage('Pinged from webview')
-        panel.webview.postMessage('pong')
-      }
+      handleMessage(panel, message)
     })
 
     ret = panel

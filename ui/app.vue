@@ -1,24 +1,16 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-
-const nuxtApp = useNuxtApp()
-
-const vscode = nuxtApp.$vscode
+const vscode = useNuxtApp().$vscode
+const Messages = useNuxtApp().$Messages
 
 function ping() {
-  vscode.postMessage('ping')
+  vscode.postMessage({ message: 'ping' })
 }
 
 const secondButtonLabel = ref('Another button')
 
-const err = ref('')
-
 function handleMessage(e: MessageEvent<unknown>) {
-  err.value = ''
-  if (typeof e.data === 'string')
-    secondButtonLabel.value = e.data
-  else
-    err.value = JSON.stringify(e.data, null, 2)
+  if (Messages.pong.safeParse(e.data).success)
+    secondButtonLabel.value = 'pong'
 }
 
 onMounted(() => {
