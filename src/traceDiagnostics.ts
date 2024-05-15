@@ -83,12 +83,11 @@ vscode.workspace.onDidChangeConfiguration((e) => {
 })
 
 export async function gotoPosition(fileName: string, pos: number) {
-  const vs = vscode
-  const uri = vs.Uri.file(fileName)
-  const document = await vs.workspace.openTextDocument(uri)
+  const uri = vscode.Uri.file(fileName)
+  const document = await vscode.workspace.openTextDocument(uri)
   const position = document.positionAt(pos)
-  const location = new vs.Location(uri, position)
-  vs.commands.executeCommand(
+  const location = new vscode.Location(uri, position)
+  vscode.commands.executeCommand(
     'editor.action.goToLocations',
     uri,
     position,

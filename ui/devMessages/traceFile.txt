@@ -1451,7 +1451,7 @@
 {\"pid\":1,\"tid\":1,\"ph\":\"E\",\"cat\":\"check\",\"ts\":1712370.225906372,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/gtr.d.ts\"}},
 {\"pid\":1,\"tid\":1,\"ph\":\"B\",\"cat\":\"check\",\"ts\":1712388.1258964539,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/ltr.d.ts\"}},
 {\"pid\":1,\"tid\":1,\"ph\":\"E\",\"cat\":\"check\",\"ts\":1712439.5258426666,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/ltr.d.ts\"}},
-{\"pid\":1,\"tid\":1,\"ph\":\"B\",\"cat\":\"check\",\"ts\":1712463.42587471,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/intersects.d.ts\"}},
+{\"pid\":1,\"tid\":1,\"ph\":\"B\",\"cat\":\"check\",\"ts\":1712464.42587471,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/intersects.d.ts\"}},
 {\"pid\":1,\"tid\":1,\"ph\":\"E\",\"cat\":\"check\",\"ts\":1712481.9259643555,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/intersects.d.ts\"}},
 {\"pid\":1,\"tid\":1,\"ph\":\"B\",\"cat\":\"check\",\"ts\":1712498.6259937286,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/simplify.d.ts\"}},
 {\"pid\":1,\"tid\":1,\"ph\":\"E\",\"cat\":\"check\",\"ts\":1712517.0259475708,\"name\":\"checkSourceFile\",\"args\":{\"path\":\"/home/hw/projects/tracer/node_modules/@types/semver/ranges/simplify.d.ts\"}},

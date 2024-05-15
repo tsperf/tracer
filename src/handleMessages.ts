@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as Messages from '../messages/src/messages'
+import { gotoPosition } from './traceDiagnostics'
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
   const parsed = Messages.message.safeParse(message)
@@ -16,6 +17,8 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       break
     case 'pong': break
     case 'gotoLocation': break
-    case 'gotoPosition': break
+    case 'gotoPosition': {
+      gotoPosition(data.fileName, data.pos)
+    }
   }
 }

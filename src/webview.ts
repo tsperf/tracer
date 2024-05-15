@@ -16,7 +16,7 @@ export function prepareWebView(context: vscode.ExtensionContext) {
   if (!panel) {
     panel = vscode.window.createWebviewPanel(
       'vueWebView',
-      'Webview',
+      'Trace Viewer',
       vscode.ViewColumn.One,
       { enableScripts: true, retainContextWhenHidden: true },
     )

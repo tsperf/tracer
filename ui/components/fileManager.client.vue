@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import vscodeApiClient from '~/plugins/vscode-api.client'
 import { type TraceData, traceData } from '~/src/traceData'
 import { type Tree, toTree } from '~/src/traceTree'
 
@@ -38,13 +37,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    v-for="(_data, fileName) in files" :key="fileName"
-  >
-    <div>{{ fileName }}</div>
-    <!-- <pre>{{ _data }}</pre> -->
+  <div>
+    <div
+      v-for="(_data, fileName) in files" :key="fileName"
+    >
+      <div>{{ fileName }}</div>
+    </div>
     <vscode-button @click="processTraces">
       Process Traces
     </vscode-button>
+    <div />
   </div>
 </template>

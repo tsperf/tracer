@@ -77,7 +77,7 @@
     ]
   },
   "scripts": {
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run ui:build && npm run build && npm run lint",
     "build": "rollup -c",
     "dev": "nr build --watch --sourcemap",
     "ui:dev": "nuxt dev ui",
