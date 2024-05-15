@@ -5,8 +5,8 @@ const props = defineProps<{ line: TypeLine }>()
 </script>
 
 <template>
-  <q-card class="q-pl-md">
-    <div class="row justify-between">
+  <UContainer class="border">
+    <div class="flex flex-row justify-start gap-x-2">
       <div class="col-1">
         ts: {{ Math.round(line.ts ?? 0) }}
       </div>
@@ -26,5 +26,5 @@ const props = defineProps<{ line: TypeLine }>()
     <div v-if="line.display" class="q-pl-md">
       {{ props.line.display }}
     </div>
-  </q-card>
+  </UContainer>
 </template>

@@ -19,7 +19,7 @@ export default defineNuxtConfig({
       isCustomElement: tag => tag.startsWith('vscode-'),
     },
   },
-  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/color-mode'],
+  modules: ['@nuxt/ui'],
   app: {
 
     head: {

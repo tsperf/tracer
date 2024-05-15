@@ -6,9 +6,9 @@ const tree = useState<Tree>('traceTree')
 </script>
 
 <template>
-  <div v-if="tree">
+  <UContainer v-if="tree">
     {{ tree.children.length }}
     {{ tree.children.filter(x => x.children.length > 0).length }}
-    <TreeNode :tree="tree" :depth="0" />
-  </div>
+    <TreeNode :tree="tree" :depth="0" :is-in-check="false" />
+  </UContainer>
 </template>

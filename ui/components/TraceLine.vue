@@ -17,19 +17,14 @@ function goto(fileName: string | undefined, pos: number | undefined) {
 <template>
   <div>
     <div class="column">
-      <div class="row">
+      <div class="flex flex-row">
         <div>
           {{ props.line.name }} :
           {{ Math.round(line.dur ?? 0 / 1000) / 1000 }}
           {{ line.args?.path }}
           : {{ line.args?.pos }}
         </div>
-        <vscode-button
-          v-if="line.args?.path && line.args?.pos"
-          @click="goto(line.args?.path, line.args?.pos)"
-        >
-          goto
-        </vscode-button>
+        <UIcon primary name="i-heroicons-arrow-left-on-rectangle" @click="goto(line.args?.path, line.args?.pos)" />
       </div>
     </div>
   </div>

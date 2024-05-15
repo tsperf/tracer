@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nuxt/devtools": "latest",
+    "@nuxt/ui": "^2.16.0",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "nuxt": "^3.11.2"
   },
