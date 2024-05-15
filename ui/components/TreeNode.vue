@@ -15,7 +15,15 @@ function typesInNode(x: Tree): number {
   return x.children.filter(x => 'id' in x.line).length + x.children.map(typesInNode).reduce((a, b) => a + b, 0)
 }
 
-const show = props.isInCheck || ('name' in props.tree.line && props.tree.line.name.startsWith('check'))
+const filters = useState<{ startsWith: string, sourceFileName: string, position: number }>('treeFilters')
+
+const show = computed(() =>
+  props.isInCheck
+  || (('name' in props.tree.line && props.tree.line.name.startsWith(filters.value.startsWith))
+  && (!filters.value.sourceFileName || ((props.tree.line.args?.path ?? '').endsWith(filters.value.sourceFileName)))
+  && (!(filters.value.position > 0) || ((props.tree.line.args?.pos ?? 0) === filters.value.position))
+  ),
+)
 
 const typeCnt = computed(() => children.value.types.length)
 const childrenTypeCnt = computed(() => children.value.tree.map(typesInNode).reduce((a, b) => a + b, 0))

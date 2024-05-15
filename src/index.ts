@@ -10,6 +10,7 @@ import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
 import { registerCommands } from './contributions'
 import { initDiagnostics } from './traceDiagnostics'
+import { setPanelContext } from './webview'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -31,6 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => run([event.document.fileName])))
   run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
 
+  setPanelContext(context)
   registerCommands(context)
   initDiagnostics(context)
 }

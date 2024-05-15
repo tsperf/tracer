@@ -54,6 +54,10 @@
     ],
     "commands": [
       {
+        "command": "tsperf.tracer.gotoTracePosition",
+        "title": "Goto position in trace"
+      },
+      {
         "command": "tsperf.tracer.openInBrowser",
         "title": "Open trace view in browser",
         "icon": {

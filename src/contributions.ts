@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { getTracePanel, prepareWebView } from './webview'
+import { getTracePanel, postMessage, prepareWebView } from './webview'
 
 const commandHandlers = {
   'tsperf.tracer.runTrace':
@@ -9,11 +9,12 @@ const commandHandlers = {
   'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => {
     prepareWebView(context)
   },
-  'tsperf.tracer.sendTrace': () => () => {
-    const panel = getTracePanel()
+  'tsperf.tracer.gotoTracePosition': () => gotoTracePosition,
+  'tsperf.tracer.sendTrace': (context: vscode.ExtensionContext) => () => {
+    let panel = getTracePanel()
     if (!panel) {
-      vscode.window.showWarningMessage('Trace webview not opened')
-      return
+      prepareWebView(context, false)
+      panel = getTracePanel()
     }
 
     const document = vscode.window.activeTextEditor?.document
@@ -22,7 +23,7 @@ const commandHandlers = {
       return
     const fileName = document.fileName
     const traceString = document.getText()
-    panel.webview.postMessage({ message: 'traceFile', fileName, traceString })
+    postMessage({ message: 'traceFile', fileName, traceString })
   },
 } as const
 
@@ -36,4 +37,15 @@ export function registerCommands(context: vscode.ExtensionContext) {
     if (disposable)
       context.subscriptions.push(disposable)
   }
+}
+
+function gotoTracePosition() {
+  const editor = vscode.window.activeTextEditor
+  if (!editor)
+    return
+
+  const start = editor.selection.start
+  const startOffset = editor.document.offsetAt(start)
+  postMessage({ message: 'gotoTracePosition', fileName: editor.document.fileName, position: startOffset - 1 })
+  getTracePanel()?.reveal()
 }

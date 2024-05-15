@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
 import * as Messages from '../messages/src/messages'
-import { gotoPosition } from './traceDiagnostics'
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
   const parsed = Messages.message.safeParse(message)
@@ -21,4 +20,18 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       gotoPosition(data.fileName, data.pos)
     }
   }
+}
+async function gotoPosition(fileName: string, pos: number) {
+  const uri = vscode.Uri.file(fileName)
+  const document = await vscode.workspace.openTextDocument(uri)
+  const position = document.positionAt(pos + 1)
+  const location = new vscode.Location(uri, position)
+  vscode.commands.executeCommand(
+    'editor.action.goToLocations',
+    uri,
+    position,
+    [location],
+    'goto',
+    'location not found',
+  )
 }

@@ -1,6 +1,3 @@
-/* eslint-disable no-var */
-/* eslint-disable vars-on-top */
-/* eslint-disable ts/no-namespace */
 import * as vscode from 'vscode'
 
 let diagnosticCollection: vscode.DiagnosticCollection
@@ -35,32 +32,9 @@ export async function addTraceDiagnostic(
   diagnosticCollection.set(uri, diagnostics)
 }
 
-declare namespace globalThis {
-  var tsTraceViewer: {
-    durationWarning: number
-    addTraceDiagnostic: (
-      fileName: string,
-      pos: number,
-      end: number,
-      duration: number
-    ) => void
-    clearTraceDiagnostic: () => void
-    gotoPosition: (fileName: string, pos: number) => void
-  }
-}
-
 let durationWarning = 1 * 1000 * 1000
 export function getDurationWarning() {
   return durationWarning
-}
-globalThis.tsTraceViewer = {
-  ...(globalThis.tsTraceViewer ?? {}),
-  ...{
-    durationWarning,
-    addTraceDiagnostic,
-    clearTraceDiagnostic: clearTaceDiagnostics,
-    gotoPosition,
-  },
 }
 const limitKey = 'checkTimeWarning'
 
@@ -73,7 +47,6 @@ function setLimit() {
       : 1)
       * 1000
       * 1000
-  globalThis.tsTraceViewer.durationWarning = durationWarning
 }
 setLimit()
 
@@ -81,21 +54,6 @@ vscode.workspace.onDidChangeConfiguration((e) => {
   if (e.affectsConfiguration('tsperf.tracer'))
     setLimit()
 })
-
-export async function gotoPosition(fileName: string, pos: number) {
-  const uri = vscode.Uri.file(fileName)
-  const document = await vscode.workspace.openTextDocument(uri)
-  const position = document.positionAt(pos)
-  const location = new vscode.Location(uri, position)
-  vscode.commands.executeCommand(
-    'editor.action.goToLocations',
-    uri,
-    position,
-    [location],
-    'goto',
-    'location not found',
-  )
-}
 
 const configuration = vscode.workspace.getConfiguration('tsperf.tracer')
 export const serverPort = configuration.get<number>('port') ?? 3000

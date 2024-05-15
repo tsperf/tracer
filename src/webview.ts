@@ -4,20 +4,29 @@ import * as vscode from 'vscode'
 // @ts-expect-error raw loader
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
+import type { Message } from '../messages/src/messages'
 import { handleMessage } from './handleMessages'
 
+let holdContext: vscode.ExtensionContext | undefined
+export function setPanelContext(extensionContext: vscode.ExtensionContext) {
+  holdContext = extensionContext
+}
 let panel: ReturnType<typeof vscode.window.createWebviewPanel>
+
 export function getTracePanel() {
   return panel
 }
 
-export function prepareWebView(context: vscode.ExtensionContext) {
+export function prepareWebView(context: vscode.ExtensionContext | undefined = holdContext, show = true) {
+  if (!context)
+    throw new Error('context was not passed or set')
+
   let ret: vscode.Disposable | undefined
   if (!panel) {
     panel = vscode.window.createWebviewPanel(
       'vueWebView',
       'Trace Viewer',
-      vscode.ViewColumn.One,
+      { viewColumn: vscode.ViewColumn.One, preserveFocus: !show },
       { enableScripts: true, retainContextWhenHidden: true },
     )
 
@@ -39,6 +48,16 @@ export function prepareWebView(context: vscode.ExtensionContext) {
 
     ret = panel
   }
-  panel.reveal()
+
+  if (show)
+    panel.reveal()
+
   return ret
+}
+
+export function postMessage(message: Message) {
+  if (!panel)
+    prepareWebView()
+
+  panel.webview.postMessage(message)
 }
