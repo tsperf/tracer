@@ -46,5 +46,6 @@ const exampleUsage8 = exampleUsage7<{ Output: number }>()
 const exampleUsage9 = exampleUsage8<{ Output: number }>()
 const exampleUsage10 = exampleUsage9 <{ Output: number }>()
 const exampleUsage11 = exampleUsage10<{ Output: number }>()
+
 //
 //

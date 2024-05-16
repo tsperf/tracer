@@ -39,5 +39,11 @@ export const gotoTracePosition = z.object({
 })
 export type GotoTracePosition = z.infer<typeof gotoTracePosition>
 
+export const positionTypeCounts = z.object({
+  message: z.literal('postionTypeCounts'),
+  counts: z.record(z.string(), z.record(z.string(), z.number())),
+})
+export type PositionTypeCounts = z.infer<typeof positionTypeCounts>
+
 export type Message = z.infer<typeof message>
-export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFile, gotoTracePosition])
+export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFile, gotoTracePosition, positionTypeCounts])

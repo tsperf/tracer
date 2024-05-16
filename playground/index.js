@@ -1,4 +1,3 @@
-"use strict";
 const example = {};
 const exampleUsage1 = example();
 const exampleUsage2 = exampleUsage1();

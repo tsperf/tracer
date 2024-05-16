@@ -26,7 +26,7 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
     panel = vscode.window.createWebviewPanel(
       'vueWebView',
       'Trace Viewer',
-      { viewColumn: vscode.ViewColumn.One, preserveFocus: !show },
+      { viewColumn: vscode.ViewColumn.Beside, preserveFocus: !show },
       { enableScripts: true, retainContextWhenHidden: true },
     )
 
@@ -41,7 +41,6 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
     )
 
     panel.webview.html = processedHTML
-
     panel.webview.onDidReceiveMessage((message) => {
       handleMessage(panel, message)
     })

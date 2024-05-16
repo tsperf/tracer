@@ -23,6 +23,7 @@ function goto(fileName: string | undefined, pos: number | undefined) {
           {{ Math.round(line.dur ?? 0 / 1000) / 1000 }}
           {{ line.args?.path }}
           : {{ line.args?.pos }}
+          - {{ line.args?.end }}
         </div>
         <UIcon primary name="i-heroicons-arrow-left-on-rectangle" @click="goto(line.args?.path, line.args?.pos)" />
       </div>

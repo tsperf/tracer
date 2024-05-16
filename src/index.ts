@@ -15,6 +15,8 @@ import { setPanelContext } from './webview'
 let ts: typeof import('typescript')
 let tsPath: string
 
+export const collection = vscode.languages.createDiagnosticCollection('tsperf')
+
 export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
 
@@ -22,8 +24,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // eslint-disable-next-line ts/no-require-imports
   ts = require(tsPath)
-
-  const collection = vscode.languages.createDiagnosticCollection('tsperf')
 
   const _run = debounce(runDiagnostics, 500)
   const run = (filenames: string[]) => Promise.all(getTestFileNames(filenames).map(file => _run(collection, file)))
