@@ -8,17 +8,26 @@ import * as vscode from 'vscode'
 
 import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
+import { afterConfigUpdate, updateConfig } from './configuration'
+import { getTsPath } from './tsUtil'
 
 let ts: typeof import('typescript')
 let tsPath: string
 
-export async function activate(context: vscode.ExtensionContext) {
-  log('============extension activated============')
-
-  tsPath = path.join(path.dirname(vscode.extensions.getExtension('vscode.typescript-language-features')!.extensionPath), 'node_modules/typescript')
+function getTs() {
+  tsPath = getTsPath()
 
   // eslint-disable-next-line ts/no-require-imports
   ts = require(tsPath)
+}
+export async function activate(context: vscode.ExtensionContext) {
+  log('============extension activated============')
+
+  updateConfig()
+
+  getTs()
+
+  afterConfigUpdate(['typescript-path', 'typescript-path-mode'], getTs)
 
   const collection = vscode.languages.createDiagnosticCollection('tsperf')
 
