@@ -8,6 +8,8 @@ import * as vscode from 'vscode'
 
 import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
+import { afterConfigUpdate, updateConfig } from './configuration'
+import { getTsPath } from './tsUtil'
 import { registerCommands } from './contributions'
 import { initDiagnostics } from './traceDiagnostics'
 import { setPanelContext } from './webview'
@@ -17,13 +19,22 @@ let tsPath: string
 
 export const collection = vscode.languages.createDiagnosticCollection('tsperf')
 
-export async function activate(context: vscode.ExtensionContext) {
-  log('============extension activated============')
-
-  tsPath = path.join(path.dirname(vscode.extensions.getExtension('vscode.typescript-language-features')!.extensionPath), 'node_modules/typescript')
+function getTs() {
+  tsPath = getTsPath()
 
   // eslint-disable-next-line ts/no-require-imports
   ts = require(tsPath)
+}
+export async function activate(context: vscode.ExtensionContext) {
+  log('============extension activated============')
+
+  updateConfig()
+
+  getTs()
+
+  afterConfigUpdate(['typescript-path', 'typescript-path-mode'], getTs)
+
+  const collection = vscode.languages.createDiagnosticCollection('tsperf')
 
   const _run = debounce(runDiagnostics, 500)
   const run = (filenames: string[]) => Promise.all(getTestFileNames(filenames).map(file => _run(collection, file)))
