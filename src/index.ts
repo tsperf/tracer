@@ -34,8 +34,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   afterConfigUpdate(['typescript-path', 'typescript-path-mode'], getTs)
 
-  const collection = vscode.languages.createDiagnosticCollection('tsperf')
-
   const _run = debounce(runDiagnostics, 500)
   const run = (filenames: string[]) => Promise.all(getTestFileNames(filenames).map(file => _run(collection, file)))
 
