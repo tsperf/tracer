@@ -34,15 +34,27 @@
     "configuration": {
       "title": "tsperf.tracer",
       "properties": {
-        "tsperf.tracer.checkTimeWarning": {
-          "type": "number",
-          "default": 1,
-          "description": "Warn when type check times exceed this number of seconds"
+        "tsperf.tracer.typescript-path-mode": {
+          "type": "string",
+          "default": "vscode-builtin",
+          "description": "Use TypeScript from",
+          "enum": [
+            "vscode-builtin",
+            "tsdk",
+            "workspace",
+            "explicit"
+          ],
+          "enumDescriptions": [
+            "VsCode's built in TypeScript",
+            "VsCode TSDK setting",
+            "node_modules in you project",
+            "Use tracer TypeScript path setting"
+          ]
         },
-        "tsperf.tracer.port": {
-          "type": "number",
-          "default": 3000,
-          "description": "port to run local web server on"
+        "tsperf.tracer.typescript-path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'"
         }
       }
     },
@@ -91,7 +103,7 @@
     "publish": "vsce publish --no-dependencies",
     "package": "vsce package --no-dependencies",
     "test": "vitest",
-    "typecheck": "tsc --noEmit && pnpm --filter ui typecheck",
+    "typecheck": "tsc --noEmit ",
     "release": "bumpp && nr publish"
   },
   "dependencies": {
