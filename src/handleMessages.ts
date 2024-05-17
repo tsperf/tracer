@@ -59,13 +59,13 @@ function updateDiagnosticCollection(counts: Record<string, Record<number, number
       const tgt: vscode.Diagnostic[] = []
       map.set(uri, tgt)
       arr.forEach((diagnostic) => {
-        const editor = vscode.window.visibleTextEditors.find(x => x.document.uri.fsPath === uri.fsPath)
-        if (!editor) {
+        const document = vscode.workspace.textDocuments.find(x => x.uri.fsPath === uri.fsPath)
+        if (!document) {
           tgt.push(diagnostic)
           return
         }
 
-        const offset = editor.document.offsetAt(diagnostic.range.start)
+        const offset = document.offsetAt(diagnostic.range.start)
         const count = fileCounts[offset]
         if (count)
           diagnostic.message += ` Types: ${count}`
