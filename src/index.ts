@@ -55,20 +55,19 @@ function getIdentifiers(sourceFile: SourceFile) {
   const { allIdentifiers } = getCurrentConfig()
   const identifiers: Node[] = []
   let inStatement = false
-  ts.forEachChild(sourceFile, function visit(node) {
-    if (allIdentifiers || inStatement) {
-      if (ts.isIdentifier(node)) {
+  ts.forEachChild(sourceFile, function visit(node): void {
+    if (ts.isStatement(node)) {
+      inStatement = true
+      ts.forEachChild(node, visit)
+      return
+    }
+
+    if (ts.isIdentifier(node)) {
+      if (allIdentifiers || inStatement)
         identifiers.push(node)
-        inStatement = false
-      }
-      else { ts.forEachChild(node, visit) }
+      inStatement = false
     }
-    else {
-      if (ts.isStatement(node)) {
-        inStatement = true
-        ts.forEachChild(node, visit)
-      }
-    }
+    else { ts.forEachChild(node, visit) }
   })
 
   return identifiers
