@@ -4,6 +4,9 @@ import { setTsPath } from './tsUtil'
 const configKeys = [
   'typescript-path',
   'typescript-path-mode',
+  'benchmarkIterations',
+  'restartTsserverOnIteration',
+  'allIdentifiers',
 ] as const
 
 type ConfigKey = typeof configKeys[number]
@@ -12,19 +15,44 @@ const configKey = 'tsperf.tracer'
 const currentConfig = {
   'typescript-path': '',
   'typescript-path-mode': 'vscode-builtin',
+  'benchmarkIterations': 3,
+  'restartTsserverOnIteration': false,
+  'allIdentifiers': false,
 } satisfies Record<ConfigKey, any>
+
+export function getCurrentConfig() {
+  return { ...currentConfig }
+}
 
 function isString(x: unknown): x is string {
   return typeof x === 'string'
 }
+
+function isNumber(x: unknown): x is number {
+  return typeof x === 'number'
+}
+
+function isBoolean(x: unknown): x is boolean {
+  return typeof x === 'boolean'
+}
+
 const configValidate = {
   'typescript-path': isString,
   'typescript-path-mode': isString,
+  'benchmarkIterations': isNumber,
+  'restartTsserverOnIteration': isBoolean,
+  'allIdentifiers': isBoolean,
 } satisfies Record<ConfigKey, any>
+
+function noop() {
+}
 
 const configHandlers = {
   'typescript-path': (_value: string) => { currentConfig['typescript-path-mode'] = '!ForceUpdate' },
   'typescript-path-mode': (value: string) => { setTsPath(value, currentConfig['typescript-path']) },
+  'benchmarkIterations': noop,
+  'restartTsserverOnIteration': noop,
+  'allIdentifiers': noop,
 } satisfies Record<ConfigKey, any>
 
 let configuration = vscode.workspace.getConfiguration(configKey)
@@ -41,8 +69,8 @@ export function updateConfig() {
         vscode.window.showErrorMessage(`wrong type received for configuration item ${key}: ${newValue}`)
         break
       }
-      currentConfig[key] = newValue
-      configHandlers[key](newValue)
+      currentConfig[key] = newValue as never
+      configHandlers[key](newValue as never)
     }
   }
   for (const after of afterConfigHandlers) {

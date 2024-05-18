@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 
 import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
-import { afterConfigUpdate, updateConfig } from './configuration'
+import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configuration'
 import { getTsPath } from './tsUtil'
 
 let ts: typeof import('typescript')
@@ -52,13 +52,25 @@ function getTestFileNames(fileNames: readonly string[]) {
 }
 
 function getIdentifiers(sourceFile: SourceFile) {
+  const { allIdentifiers } = getCurrentConfig()
   const identifiers: Node[] = []
+  let inStatement = false
   ts.forEachChild(sourceFile, function visit(node) {
-    if (ts.isIdentifier(node))
-      identifiers.push(node)
-    else
-      ts.forEachChild(node, visit)
+    if (allIdentifiers || inStatement) {
+      if (ts.isIdentifier(node)) {
+        identifiers.push(node)
+        inStatement = false
+      }
+      else { ts.forEachChild(node, visit) }
+    }
+    else {
+      if (ts.isStatement(node)) {
+        inStatement = true
+        ts.forEachChild(node, visit)
+      }
+    }
   })
+
   return identifiers
 }
 
@@ -93,13 +105,13 @@ interface MeasureLanguageServiceChildProcessArgs extends MeasureLanguageServiceA
   [key: string]: any
 }
 
-function createLanguageServiceTestMatrix(
+async function createLanguageServiceTestMatrix(
   fileNames: string[],
   packageDirectory: string,
   compilerOptions: CompilerOptions,
-  iterations: number,
   commandLine: ParsedCommandLine,
 ) {
+  const { restartTsserverOnIteration, benchmarkIterations } = getCurrentConfig()
   const fileMap = new Map<string, Map<number, LanguageServiceBenchmark>>()
   const inputs: MeasureLanguageServiceChildProcessArgs[] = []
   let uniquePositionCount = 0
@@ -113,7 +125,9 @@ function createLanguageServiceTestMatrix(
     )
     const identifiers = getIdentifiers(sourceFile).reverse()
     uniquePositionCount += identifiers.length
-    for (let i = 0; i < iterations; i++) {
+    for (let i = 0; i < benchmarkIterations; i++) {
+      if (restartTsserverOnIteration)
+        await vscode.commands.executeCommand('typescript.restartTsServer')
       for (const identifier of identifiers) {
         const start = identifier.getStart(sourceFile)
         if (i === 0) {
@@ -170,7 +184,7 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
   const parsedCommandLine = await getParsedCommandLine(filePath)!
   const testPaths = getTestFileNames(parsedCommandLine.fileNames).filter(path => openFiles.includes(path))
 
-  const matrix = createLanguageServiceTestMatrix(testPaths, rootDir, parsedCommandLine.options, 3, parsedCommandLine)
+  const matrix = await createLanguageServiceTestMatrix(testPaths, rootDir, parsedCommandLine.options, parsedCommandLine)
 
   log({ openFiles, testPaths })
 
