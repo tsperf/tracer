@@ -1,12 +1,12 @@
 type LMerge<T1, T2> = {
-   [k in keyof T1]: k extends keyof T2 ? T2[k] : T1[k]
+  [k in keyof T1]: k extends keyof T2 ? T2[k] : T1[k]
 }
 
 interface PossibleGenerics {
-   Output?: unknown
-   Error?: unknown
-   ResultResolverController?: unknown
-   ErrorResolverController?: unknown
+  Output?: unknown
+  Error?: unknown
+  ResultResolverController?: unknown
+  ErrorResolverController?: unknown
 }
 
 type Generics = Required<PossibleGenerics>
@@ -27,10 +27,10 @@ interface NodeItem<T extends Generics, Defaults extends Generics> {
 
 const example = {} as NodeItem<
    {
-      Output: string
-      Error: string
-      ResultResolverController: string
-      ErrorResolverController: string
+     Output: string
+     Error: string
+     ResultResolverController: string
+     ErrorResolverController: string
    },
    Generics
 >
@@ -46,8 +46,8 @@ const exampleUsage9 = exampleUsage8<{ Output: number }>()
 const exampleUsage10 = exampleUsage9<{ Output: number }>()
 const exampleUsage11 = exampleUsage10<{ Output: number }>()
 
-const lazy = () => {
-   const exampleUsage12 = exampleUsage11<{ Output: number }>()
+function lazy() {
+  const exampleUsage12 = exampleUsage11<{ Output: number }>()
 }
 //
 //
