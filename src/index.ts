@@ -120,6 +120,7 @@ async function createLanguageServiceTestMatrix(
   commandLine: ParsedCommandLine,
 ) {
   const { restartTsserverOnIteration, benchmarkIterations } = getCurrentConfig()
+
   const fileMap = new Map<string, Map<number, LanguageServiceBenchmark>>()
   const inputs: MeasureLanguageServiceChildProcessArgs[] = []
   let uniquePositionCount = 0
@@ -184,6 +185,9 @@ async function createLanguageServiceTestMatrix(
 }
 
 async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
+  if (getCurrentConfig().benchmarkIterations < 1)
+    return
+
   const tsConfigFile = await getTsconfigFile(filePath)
   const rootDir = path.dirname(tsConfigFile.fsPath)
 

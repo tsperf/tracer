@@ -68,7 +68,7 @@ export function updateConfig() {
   const changedKeys: ConfigKey[] = []
   for (const key of configKeys) {
     const newValue = configuration.get(key)
-    if (newValue && newValue !== currentConfig[key]) {
+    if (newValue !== undefined && newValue !== currentConfig[key]) {
       changedKeys.push(key)
       if (!configValidate[key](newValue)) {
         vscode.window.showErrorMessage(`wrong type received for configuration item ${key}: ${newValue}`)
