@@ -1,11 +1,6 @@
 {
   "npm.packageManager": "pnpm",
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  "cSpell.words": [
-    "antfu",
-    "Trpc",
-    "tsperf"
-  ],
   "eslint.experimental.useFlatConfig": true,
   "eslint.format.enable": true,
   "eslint.lintTask.enable": false,
