@@ -116,7 +116,7 @@
     "package": "vsce package --no-dependencies",
     "test": "vitest",
     "typecheck": "tsc --noEmit ",
-    "release": "bumpp && nr publish"
+    "release": "bumpp && git push"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.17.0",
