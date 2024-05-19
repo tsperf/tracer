@@ -10,7 +10,7 @@ import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
 import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configuration'
 import { getTsPath } from './tsUtil'
-import { registerCommands } from './contributions'
+import { registerCommands } from './commands'
 import { initDiagnostics } from './traceDiagnostics'
 import { setPanelContext } from './webview'
 

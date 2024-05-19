@@ -10,5 +10,8 @@ const exampleUsage8 = exampleUsage7();
 const exampleUsage9 = exampleUsage8();
 const exampleUsage10 = exampleUsage9();
 const exampleUsage11 = exampleUsage10();
+const lazy = () => {
+    const exampleUsage12 = exampleUsage11();
+};
 //
 //

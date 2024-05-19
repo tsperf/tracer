@@ -51,6 +51,11 @@
             "Use tracer TypeScript path setting"
           ]
         },
+        "tsperf.tracer.traceCmd": {
+          "type": "string",
+          "default": "npx tsc --generateTrace ${traceDir}",
+          "description": "command to generate tsc traces"
+        },
         "tsperf.tracer.typescript-path": {
           "type": "string",
           "default": "",
@@ -76,7 +81,8 @@
     "commandPalette": [
       {
         "command": "tsperf.tracer.sendTrace",
-        "when": "!notebookEditorFocused && editorLangId == 'json'"
+        "when": "!notebookEditorFocused && editorLangId == 'json'",
+        "group": "tracer"
       }
     ],
     "commands": [
