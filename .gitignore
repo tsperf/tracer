@@ -4,6 +4,7 @@
 .nitro
 .cache
 dist
+*.vsix
 
 # Node dependencies
 node_modules
