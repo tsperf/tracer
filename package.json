@@ -115,7 +115,7 @@
   },
   "scripts": {
     "pretest": "npm run ui:build && npm run build && npm run lint",
-    "build": "rollup -c",
+    "build": "nr ui:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
     "ui:dev": "nuxt dev ui",
     "ui:build": "nuxt build ui",

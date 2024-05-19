@@ -74,9 +74,6 @@ jobs:
       - name: Install
         run: pnpm i
 
-      - name: UiBuild
-        run: pnpm ui:build
-
       - name: Build
         run: pnpm build
 
