@@ -55,6 +55,21 @@
           "type": "string",
           "default": "",
           "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'"
+        },
+        "tsperf.tracer.benchmarkIterations": {
+          "type": "number",
+          "default": 3,
+          "description": "Higher values reduce variance but increase benchmarking time"
+        },
+        "tsperf.tracer.restartTsserverOnIteration": {
+          "type": "boolean",
+          "default": false,
+          "description": "Restart tsserver on each iteration to avoid caching influincing measurements"
+        },
+        "tsperf.tracer.allIdentifiers": {
+          "type": "boolean",
+          "default": false,
+          "description": "Benchmark all allIdentifiers or only the first of each statement"
         }
       }
     },
