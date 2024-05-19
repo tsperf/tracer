@@ -114,7 +114,7 @@
     ]
   },
   "scripts": {
-    "pretest": "npm run ui:build && npm run build && npm run lint",
+    "pretest": "nr build && nr lint",
     "build": "nr ui:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
     "ui:dev": "nuxt dev ui",
@@ -126,9 +126,6 @@
     "test": "vitest",
     "typecheck": "tsc --noEmit ",
     "release": "bumpp && git push"
-  },
-  "dependencies": {
-    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.18.1",
@@ -148,6 +145,7 @@
     "rollup-plugin-esbuild": "^6.1.1",
     "rollup-plugin-vue": "^6.0.0",
     "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "zod": "^3.23.8"
   }
 }
