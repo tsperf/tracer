@@ -28,11 +28,11 @@ function getTs() {
 export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
 
-  updateConfig()
+  updateConfig({ force: ['typescriptPathMode'] })
 
   getTs()
 
-  afterConfigUpdate(['typescript-path', 'typescript-path-mode'], getTs)
+  afterConfigUpdate(['typescriptPath', 'typescriptPathMode'], getTs)
 
   const collection = vscode.languages.createDiagnosticCollection('tsperf')
 

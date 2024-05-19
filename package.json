@@ -31,87 +31,93 @@
     "workspaceContains:tsconfig.json"
   ],
   "contributes": {
-    "configuration": {
-      "title": "tsperf.tracer",
-      "properties": {
-        "tsperf.tracer.typescript-path-mode": {
-          "type": "string",
-          "default": "vscode-builtin",
-          "description": "Use TypeScript from",
-          "enum": [
-            "vscode-builtin",
-            "tsdk",
-            "workspace",
-            "explicit"
-          ],
-          "enumDescriptions": [
-            "VsCode's built in TypeScript",
-            "VsCode TSDK setting",
-            "node_modules in you project",
-            "Use tracer TypeScript path setting"
-          ]
-        },
-        "tsperf.tracer.traceCmd": {
-          "type": "string",
-          "default": "npx tsc --generateTrace ${traceDir}",
-          "description": "command to generate tsc traces"
-        },
-        "tsperf.tracer.typescript-path": {
-          "type": "string",
-          "default": "",
-          "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'"
-        },
-        "tsperf.tracer.benchmarkIterations": {
-          "type": "number",
-          "default": 3,
-          "description": "Higher values reduce variance but increase benchmarking time"
-        },
-        "tsperf.tracer.restartTsserverOnIteration": {
-          "type": "boolean",
-          "default": false,
-          "description": "Restart tsserver on each iteration to avoid caching influincing measurements"
-        },
-        "tsperf.tracer.allIdentifiers": {
-          "type": "boolean",
-          "default": false,
-          "description": "Benchmark all allIdentifiers or only the first of each statement"
-        }
-      }
-    },
-    "commandPalette": [
-      {
-        "command": "tsperf.tracer.sendTrace",
-        "when": "!notebookEditorFocused && editorLangId == 'json'",
-        "group": "tracer"
-      }
-    ],
-    "commands": [
-      {
-        "command": "tsperf.tracer.gotoTracePosition",
-        "title": "Goto position in trace"
-      },
-      {
-        "command": "tsperf.tracer.openInBrowser",
-        "title": "Open trace view in browser",
-        "icon": {
-          "dark": "resources/todo.svg",
-          "light": "resources/todo.svg"
+    "contributes": {
+      "configuration": {
+        "title": "tsperf.tracer",
+        "properties": {
+          "tsperf.tracer.typescriptPathMode": {
+            "type": "string",
+            "default": "vscode-builtin",
+            "description": "Use TypeScript from",
+            "enum": [
+              "vscode-builtin",
+              "tsdk",
+              "workspace",
+              "explicit"
+            ],
+            "enumDescriptions": [
+              "VsCode's built in TypeScript",
+              "VsCode TSDK setting",
+              "node_modules in you project",
+              "Use tracer TypeScript path setting"
+            ]
+          },
+          "tsperf.tracer.traceCmd": {
+            "type": "string",
+            "default": "npx tsc --generateTrace ${traceDir}",
+            "description": "command to generate tsc traces"
+          },
+          "tsperf.tracer.typescriptPath": {
+            "type": "string",
+            "default": "",
+            "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'"
+          },
+          "tsperf.tracer.benchmarkIterations": {
+            "type": "number",
+            "default": 3,
+            "description": "Higher values reduce variance but increase benchmarking time"
+          },
+          "tsperf.tracer.restartTsserverOnIteration": {
+            "type": "boolean",
+            "default": false,
+            "description": "Restart tsserver on each iteration to avoid caching influincing measurements"
+          },
+          "tsperf.tracer.allIdentifiers": {
+            "type": "boolean",
+            "default": false,
+            "description": "Benchmark all allIdentifiers or only the first of each statement"
+          }
         }
       },
-      {
-        "command": "tsperf.tracer.runTrace",
-        "title": "tsc trace",
-        "icon": {
-          "dark": "resources/todo.svg",
-          "light": "resources/todo.svg"
+      "commandPalette": [
+        {
+          "command": "tsperf.tracer.sendTrace",
+          "when": "!notebookEditorFocused && editorLangId == 'json'",
+          "group": "tracer"
         }
-      },
-      {
-        "command": "tsperf.tracer.sendTrace",
-        "title": "Send Trace to Trace Viewer",
-        "when": "!notebookEditorFocused && editorLangId == 'json'"
-      }
-    ]
+      ],
+      "commands": [
+        {
+          "command": "tsperf.tracer.gotoTracePosition",
+          "title": "Goto position in trace",
+          "category": "Tracer"
+        },
+        {
+          "command": "tsperf.tracer.openInBrowser",
+          "title": "Open trace view in browser",
+          "category": "Tracer",
+          "icon": {
+            "dark": "resources/todo.svg",
+            "light": "resources/todo.svg"
+          }
+        },
+        {
+          "command": "tsperf.tracer.runTrace",
+          "title": "tsc trace",
+          "category": "Tracer",
+          "icon": {
+            "dark": "resources/todo.svg",
+            "light": "resources/todo.svg"
+          }
+        },
+        {
+          "command": "tsperf.tracer.sendTrace",
+          "title": "Send Trace to Trace Viewer",
+          "when": "!notebookEditorFocused && editorLangId == 'json'",
+          "category": "Tracer"
+        }
+      ]
+    }
   },
   "scripts": {
     "pretest": "nr build && nr lint",
@@ -127,13 +133,15 @@
     "typecheck": "tsc --noEmit ",
     "release": "bumpp && git push"
   },
+  "dependencies": {
+    "@types/vscode": "1.70.0"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^2.18.1",
     "@antfu/ni": "^0.21.12",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@types/d3": "^7.4.3",
     "@types/node": "^20.12.12",
-    "@types/vscode": "^1.89.0",
     "@vscode/vsce": "^2.26.1",
     "bumpp": "^9.4.1",
     "d3": "^7.9.0",
