@@ -51,6 +51,11 @@
             "Use tracer TypeScript path setting"
           ]
         },
+        "tsperf.tracer.traceCmd": {
+          "type": "string",
+          "default": "npx tsc --generateTrace ${traceDir}",
+          "description": "command to generate tsc traces"
+        },
         "tsperf.tracer.typescript-path": {
           "type": "string",
           "default": "",
@@ -76,7 +81,8 @@
     "commandPalette": [
       {
         "command": "tsperf.tracer.sendTrace",
-        "when": "!notebookEditorFocused && editorLangId == 'json'"
+        "when": "!notebookEditorFocused && editorLangId == 'json'",
+        "group": "tracer"
       }
     ],
     "commands": [
@@ -108,8 +114,11 @@
     ]
   },
   "scripts": {
-    "build": "rollup -c",
+    "pretest": "nr build && nr lint",
+    "build": "nr ui:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
+    "ui:dev": "nuxt dev ui",
+    "ui:build": "nuxt build ui",
     "lint": "eslint .",
     "vscode:prepublish": "nr build",
     "publish": "vsce publish --no-dependencies",
@@ -136,6 +145,7 @@
     "rollup-plugin-esbuild": "^6.1.1",
     "rollup-plugin-vue": "^6.0.0",
     "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "zod": "^3.23.8"
   }
 }

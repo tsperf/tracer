@@ -10,9 +10,14 @@ import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
 import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configuration'
 import { getTsPath } from './tsUtil'
+import { registerCommands } from './commands'
+import { initDiagnostics } from './traceDiagnostics'
+import { setPanelContext } from './webview'
 
 let ts: typeof import('typescript')
 let tsPath: string
+
+export const collection = vscode.languages.createDiagnosticCollection('tsperf')
 
 function getTs() {
   tsPath = getTsPath()
@@ -37,6 +42,10 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(event => run([event.fileName])))
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => run([event.document.fileName])))
   run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
+
+  setPanelContext(context)
+  registerCommands(context)
+  initDiagnostics(context)
 }
 
 export function deactivate() {}
@@ -111,6 +120,7 @@ async function createLanguageServiceTestMatrix(
   commandLine: ParsedCommandLine,
 ) {
   const { restartTsserverOnIteration, benchmarkIterations } = getCurrentConfig()
+
   const fileMap = new Map<string, Map<number, LanguageServiceBenchmark>>()
   const inputs: MeasureLanguageServiceChildProcessArgs[] = []
   let uniquePositionCount = 0
@@ -175,6 +185,9 @@ async function createLanguageServiceTestMatrix(
 }
 
 async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
+  if (getCurrentConfig().benchmarkIterations < 1)
+    return
+
   const tsConfigFile = await getTsconfigFile(filePath)
   const rootDir = path.dirname(tsConfigFile.fsPath)
 

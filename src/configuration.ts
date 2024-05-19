@@ -7,6 +7,7 @@ const configKeys = [
   'benchmarkIterations',
   'restartTsserverOnIteration',
   'allIdentifiers',
+  'traceCmd',
 ] as const
 
 type ConfigKey = typeof configKeys[number]
@@ -18,6 +19,8 @@ const currentConfig = {
   'benchmarkIterations': 3,
   'restartTsserverOnIteration': false,
   'allIdentifiers': false,
+  // eslint-disable-next-line no-template-curly-in-string
+  'traceCmd': 'npx tsc --generateTrace ${traceDir}',
 } satisfies Record<ConfigKey, any>
 
 export function getCurrentConfig() {
@@ -42,6 +45,7 @@ const configValidate = {
   'benchmarkIterations': isNumber,
   'restartTsserverOnIteration': isBoolean,
   'allIdentifiers': isBoolean,
+  'traceCmd': isString,
 } satisfies Record<ConfigKey, any>
 
 function noop() {
@@ -53,6 +57,7 @@ const configHandlers = {
   'benchmarkIterations': noop,
   'restartTsserverOnIteration': noop,
   'allIdentifiers': noop,
+  'traceCmd': noop,
 } satisfies Record<ConfigKey, any>
 
 let configuration = vscode.workspace.getConfiguration(configKey)
@@ -63,7 +68,7 @@ export function updateConfig() {
   const changedKeys: ConfigKey[] = []
   for (const key of configKeys) {
     const newValue = configuration.get(key)
-    if (newValue && newValue !== currentConfig[key]) {
+    if (newValue !== undefined && newValue !== currentConfig[key]) {
       changedKeys.push(key)
       if (!configValidate[key](newValue)) {
         vscode.window.showErrorMessage(`wrong type received for configuration item ${key}: ${newValue}`)
