@@ -45,5 +45,21 @@ export const positionTypeCounts = z.object({
 })
 export type PositionTypeCounts = z.infer<typeof positionTypeCounts>
 
+export const fileStat = z.object({
+  pos: z.number(),
+  end: z.number(),
+  dur: z.number(),
+  types: z.number(),
+  totalTypes: z.number(),
+})
+export type FileStat = z.infer<typeof fileStat>
+
+export const fileStats = z.object({
+  message: z.literal('fileStats'),
+  fileName: z.string(),
+  stats: z.array(fileStat),
+})
+export type FileStats = z.infer<typeof fileStats>
+
 export type Message = z.infer<typeof message>
-export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFile, gotoTracePosition, positionTypeCounts])
+export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFile, gotoTracePosition, positionTypeCounts, fileStats])

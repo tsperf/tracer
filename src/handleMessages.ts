@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as Messages from '../messages/src/messages'
+import { addTraceDiagnostics } from './traceDiagnostics'
 import { collection as diagnosticCollection } from '.'
 
 let positionTypeCounts: Messages.PositionTypeCounts['counts'] = {}
@@ -28,6 +29,9 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
     case 'postionTypeCounts':
       updateDiagnosticCollection(data.counts)
       positionTypeCounts = data.counts
+      break
+    case 'fileStats':
+      addTraceDiagnostics(data)
       break
   }
 }

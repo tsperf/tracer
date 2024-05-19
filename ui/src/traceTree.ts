@@ -67,8 +67,14 @@ export function toTree(traceData: TraceData): Tree {
     }
   }
 
+  /* if we make the real time diagnostics more stable we can add an option to update them with trace measurements like so:
   useNuxtApp().$sendMessage({ message: 'postionTypeCounts', counts: positionCounts })
+  */
 
   tree.line.dur = maxDur
   return tree
+}
+
+export function typesInNode(x: Tree): number {
+  return x.children.filter(x => 'id' in x.line).length + x.children.map(typesInNode).reduce((a, b) => a + b, 0)
 }

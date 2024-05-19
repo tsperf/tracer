@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Tree } from '~/src/traceTree'
+import { type Tree, typesInNode } from '~/src/traceTree'
 import type { TypeLine } from '~/src/traceData'
 
 const props = defineProps<{ tree: Tree, depth: number, isInCheck: boolean }>()
@@ -10,10 +10,6 @@ const children = computed(() => {
   const types = arr.filter(x => 'id' in x.line).map(x => x.line) as TypeLine[]
   return { tree, types }
 })
-
-function typesInNode(x: Tree): number {
-  return x.children.filter(x => 'id' in x.line).length + x.children.map(typesInNode).reduce((a, b) => a + b, 0)
-}
 
 const filters = useState<{ startsWith: string, sourceFileName: string, position: number }>('treeFilters')
 

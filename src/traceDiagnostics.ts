@@ -1,4 +1,6 @@
 import * as vscode from 'vscode'
+import type { FileStat, FileStats } from '../messages/src/messages'
+import { postMessage } from './webview'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -8,52 +10,73 @@ export function initDiagnostics(ctx: vscode.ExtensionContext): void {
   ctx.subscriptions.push(diagnosticCollection)
 }
 
+const fileStatus = new Map<string, 'dirty' | 'clean'>()
+
+vscode.workspace.onDidChangeTextDocument((event) => {
+  fileStatus.set(event.document.fileName, 'dirty')
+})
+
+vscode.window.onDidChangeActiveTextEditor((event) => {
+  const fileName = event?.document?.fileName
+  if (fileName)
+    postMessage({ message: 'fileStats', fileName: event?.document.fileName, stats: [] })
+})
+
 export function clearTaceDiagnostics() {
+  fileStatus.clear()
   if (diagnosticCollection)
     diagnosticCollection.clear()
 }
 
-export async function addTraceDiagnostic(
-  fileName: string,
-  pos: number,
-  end: number,
-  duration: number,
-) {
+export async function addTraceDiagnostics({ fileName, stats }: FileStats) {
   const uri = vscode.Uri.file(fileName)
+  if (fileStatus.get(fileName) === 'dirty') {
+    diagnosticCollection.set(uri, [])
+    return
+  }
+
+  fileStatus.set(fileName, 'clean')
+
   const document = await vscode.workspace.openTextDocument(uri)
-  const msg = `check time ${Math.round(duration / 1000) / 1000}`
-  const startPos = document.positionAt(pos)
-  const endPos = document.positionAt(end)
-  const range = new vscode.Range(startPos, endPos)
-  const diagnostics = [...(diagnosticCollection.get(uri) ?? [])]
-  diagnostics.push(
-    new vscode.Diagnostic(range, msg, vscode.DiagnosticSeverity.Warning),
-  )
+
+  const diagnostics = []
+  for (const stat of stats) {
+    const diagnostic = fileStatToDiagnostic(stat, document)
+    if (diagnostic)
+      diagnostics.push(diagnostic)
+  }
   diagnosticCollection.set(uri, diagnostics)
 }
 
-let durationWarning = 1 * 1000 * 1000
-export function getDurationWarning() {
-  return durationWarning
+function fileStatToDiagnostic({ pos, end, dur, types, totalTypes }: FileStat, document: vscode.TextDocument) {
+  if (!(types || totalTypes || dur))
+    return undefined
+
+  const severity = Math.min(Math.min(getSeverity({ types }), getSeverity({ totalTypes })), getSeverity({ dur }))
+  if (severity > vscode.DiagnosticSeverity.Information)
+    return
+
+  const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes}` : ''
+
+  const msg = `Check ms: ${Math.round(dur) / 1000} ${typeStr}`
+  const startPos = document.positionAt(pos)
+  const endPos = document.positionAt(end)
+  const range = new vscode.Range(startPos, endPos)
+
+  return new vscode.Diagnostic(range, msg, severity)
 }
-const limitKey = 'checkTimeWarning'
 
-function setLimit() {
-  clearTaceDiagnostics()
-  const configuration = vscode.workspace.getConfiguration('tsperf.tracer')
-  durationWarning
-      = (configuration.has(limitKey)
-      ? (configuration.get(limitKey) as number)
-      : 1)
-      * 1000
-      * 1000
+// yes, I should be using the vscode.DiagnosticSeverity but that's much more painful and they are unlikely to change
+const severityThresholds = {
+  types: [-1, -1, -1],
+  totalTypes: [-1, -1, -1],
+  dur: [20, 10, 5],
 }
-setLimit()
 
-vscode.workspace.onDidChangeConfiguration((e) => {
-  if (e.affectsConfiguration('tsperf.tracer'))
-    setLimit()
-})
+function getSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
+  const [thresholdType, value] = Object.entries(measure)[0]
+  const thresholds = severityThresholds[thresholdType as keyof typeof severityThresholds]
 
-const configuration = vscode.workspace.getConfiguration('tsperf.tracer')
-export const serverPort = configuration.get<number>('port') ?? 3000
+  const index = thresholds.findIndex(x => x >= 0 && x <= value / 1000)
+  return index === -1 ? 99 : index
+}
