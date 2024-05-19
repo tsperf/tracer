@@ -1,16 +1,10 @@
 {
   "npm.packageManager": "pnpm",
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  "cSpell.words": [
-    "antfu",
-    "Trpc",
-    "tsperf"
-  ],
   "eslint.experimental.useFlatConfig": true,
   "eslint.format.enable": true,
   "eslint.lintTask.enable": false,
   "[typescript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  },
-  "typescript.tsdk": "/home/hw/.vscode-server/data/User/globalStorage/typeholes.ts-versions-switcher/typescript/lib"
+  }
 }
