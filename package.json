@@ -133,7 +133,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@types/d3": "^7.4.3",
     "@types/node": "^20.12.12",
-    "@types/vscode": "^1.89.0",
+    "@types/vscode": "^1.70.0",
     "@vscode/vsce": "^2.26.1",
     "bumpp": "^9.4.1",
     "d3": "^7.9.0",
