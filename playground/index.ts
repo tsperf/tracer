@@ -51,3 +51,14 @@ function lazy() {
 }
 //
 //
+
+const multiLine = `a
+b
+c
+d`
+
+type MultiLine = typeof multiLine | `
+1
+2
+3
+4`

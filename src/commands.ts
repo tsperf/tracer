@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, readFileSync, readdirSync } from 'node:fs'
+import { createReadStream, mkdirSync, readdirSync, statSync } from 'node:fs'
 import * as vscode from 'vscode'
 import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
@@ -21,10 +21,31 @@ const commandHandlers = {
     if (!document)
       return
     const fileName = document.fileName
-    const traceString = document.getText()
-    postMessage({ message: 'traceFile', fileName, traceString })
+    sendTrace('', fileName)
   },
 } as const
+
+function sendTrace(dirName: string, fileName: string) {
+  const fullFileName = join(dirName, fileName)
+  const stat = statSync(fullFileName)
+  const size = stat.size
+
+  const stream = createReadStream(fullFileName, { autoClose: true, emitClose: true, encoding: 'utf-8' })
+
+  postMessage({ message: 'traceFileStart', fileName, size })
+
+  stream.on('end', () => postMessage({ message: 'traceFileEnd', fileName }))
+
+  function readChunks() {
+    const chunk = stream.read()
+    if (chunk === null)
+      return
+
+    postMessage({ message: 'traceFileChunk', fileName, chunk })
+    setImmediate(readChunks)
+  }
+  stream.on('readable', readChunks)
+}
 
 export function registerCommands(context: vscode.ExtensionContext) {
   for (const cmd in commandHandlers) {
@@ -67,7 +88,7 @@ function runTrace(context: vscode.ExtensionContext) {
 
   const projectPath = getProjectPath()
   if (!projectPath) {
-    vscode.window.showErrorMessage('could not get procject path from workspace folders')
+    vscode.window.showErrorMessage('could not get project path from workspace folders')
     return
   }
 
@@ -79,10 +100,8 @@ function runTrace(context: vscode.ExtensionContext) {
 
   try {
     const fileNames = readdirSync(traceDir)
-    for (const fileName of fileNames) {
-      const traceString = readFileSync(join(traceDir, fileName)).toString()
-      postMessage({ message: 'traceFile', fileName, traceString })
-    }
+    for (const fileName of fileNames)
+      sendTrace(traceDir, fileName)
   }
   catch (e) {
     vscode.window.showErrorMessage(e instanceof Error ? e.message : `${e}`)
