@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { createReadStream, mkdirSync, readdirSync, statSync } from 'node:fs'
 import * as vscode from 'vscode'
@@ -9,19 +9,19 @@ const commandHandlers = {
   'tsperf.tracer.runTrace': (context: vscode.ExtensionContext) => () => runTrace(context),
   'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
   'tsperf.tracer.gotoTracePosition': () => gotoTracePosition,
-  'tsperf.tracer.sendTrace': (context: vscode.ExtensionContext) => () => {
+  'tsperf.tracer.sendTrace': (context: vscode.ExtensionContext) => (event: unknown) => {
+    if (!(event instanceof vscode.Uri))
+      return
+
     let panel = getTracePanel()
     if (!panel) {
       prepareWebView(context, false)
       panel = getTracePanel()
     }
 
-    const document = vscode.window.activeTextEditor?.document
+    const fsPath = event.fsPath
 
-    if (!document)
-      return
-    const fileName = document.fileName
-    sendTrace('', fileName)
+    sendTrace(dirname(fsPath), basename(fsPath))
   },
 } as const
 

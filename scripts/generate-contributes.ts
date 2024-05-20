@@ -8,9 +8,56 @@ type PropertyConfigKey = WithPrefix<typeof configKeys>[number]
 interface Command {
   command: `${typeof extPrefix}.${string}`
   title: string
-  category: `Tracer${string}`
+  category?: `Tracer${string}`
   icon?: any
-  when?: string
+  when?: {
+    pallete?: string
+    explorerContext?: string
+  }
+}
+
+const commands: Command[] = [
+  {
+    command: 'tsperf.tracer.gotoTracePosition',
+    title: 'Goto position in trace',
+  },
+  {
+    command: 'tsperf.tracer.openInBrowser',
+    title: 'Open trace viewer',
+    icon: {
+      dark: 'resources/todo.svg',
+      light: 'resources/todo.svg',
+    },
+  },
+  {
+    command: 'tsperf.tracer.runTrace',
+    title: 'tsc trace',
+    icon: {
+      dark: 'resources/todo.svg',
+      light: 'resources/todo.svg',
+    },
+  },
+  {
+    command: 'tsperf.tracer.sendTrace',
+    title: 'Send Trace to Trace Viewer',
+    when: {
+      pallete: '!notebookEditorFocused && editorLangId == \'json\'',
+      explorerContext: 'resourceFilename =~ /.*((trace)|(types)).*\.json/',
+    },
+  },
+]
+
+function commandEntry(command: Command) {
+  const entry = { ...command, category: 'Tracer' }
+  delete entry.when
+  return entry
+}
+
+function menuEntries(menu: keyof Required<Command>['when']): (Exclude<Command, 'when'> & { when: string })[] {
+  return commands.filter(x => x.when && x.when[menu]).map((command) => {
+    const entry = { ...command, category: 'Tracer', when: command.when![menu]! } as const
+    return entry
+  })
 }
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
@@ -64,44 +111,11 @@ pkg.contributes = {
       },
     } satisfies Record<PropertyConfigKey, any>,
   },
-  commandPalette: [
-    {
-      command: 'tsperf.tracer.sendTrace',
-      when: '!notebookEditorFocused && editorLangId == \'json\'',
-      group: 'tracer',
-    },
-  ],
-  commands: [
-    {
-      command: 'tsperf.tracer.gotoTracePosition',
-      title: 'Goto position in trace',
-      category: 'Tracer',
-    },
-    {
-      command: 'tsperf.tracer.openInBrowser',
-      title: 'Open trace view in browser',
-      category: 'Tracer',
-      icon: {
-        dark: 'resources/todo.svg',
-        light: 'resources/todo.svg',
-      },
-    },
-    {
-      command: 'tsperf.tracer.runTrace',
-      title: 'tsc trace',
-      category: 'Tracer',
-      icon: {
-        dark: 'resources/todo.svg',
-        light: 'resources/todo.svg',
-      },
-    },
-    {
-      command: 'tsperf.tracer.sendTrace',
-      title: 'Send Trace to Trace Viewer',
-      when: '!notebookEditorFocused && editorLangId == \'json\'',
-      category: 'Tracer',
-    },
-  ] satisfies Command[],
+  commands: commands.map(commandEntry),
+  menus: {
+    'commandPalette': menuEntries('pallete'),
+    'explorer/context': menuEntries('explorerContext'),
+  },
 }
 
 const outStr = JSON.stringify(pkg, null, 2)
