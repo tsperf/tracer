@@ -13,7 +13,10 @@ export function setPanelContext(extensionContext: vscode.ExtensionContext) {
 }
 let panel: ReturnType<typeof vscode.window.createWebviewPanel>
 
-export function getTracePanel() {
+export function getTracePanel(context: vscode.ExtensionContext) {
+  if (!panel)
+    prepareWebView(context, false)
+
   return panel
 }
 

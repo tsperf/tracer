@@ -8,16 +8,12 @@ import { getCurrentConfig } from './configuration'
 const commandHandlers = {
   'tsperf.tracer.runTrace': (context: vscode.ExtensionContext) => () => runTrace(context),
   'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
-  'tsperf.tracer.gotoTracePosition': () => gotoTracePosition,
+  'tsperf.tracer.gotoTracePosition': (context: vscode.ExtensionContext) => () => gotoTracePosition(context),
   'tsperf.tracer.sendTrace': (context: vscode.ExtensionContext) => (event: unknown) => {
     if (!(event instanceof vscode.Uri))
       return
 
-    let panel = getTracePanel()
-    if (!panel) {
-      prepareWebView(context, false)
-      panel = getTracePanel()
-    }
+    getTracePanel(context)
 
     const fsPath = event.fsPath
 
@@ -59,7 +55,8 @@ export function registerCommands(context: vscode.ExtensionContext) {
   }
 }
 
-function gotoTracePosition() {
+function gotoTracePosition(context: vscode.ExtensionContext) {
+  getTracePanel(context)
   const editor = vscode.window.activeTextEditor
   if (!editor)
     return
@@ -67,11 +64,12 @@ function gotoTracePosition() {
   const start = editor.selection.start
   const startOffset = editor.document.offsetAt(start)
   postMessage({ message: 'gotoTracePosition', fileName: editor.document.fileName, position: startOffset - 1 })
-  getTracePanel()?.reveal()
+  getTracePanel(context)?.reveal()
 }
 
 let traceDir = ''
 function runTrace(context: vscode.ExtensionContext) {
+  getTracePanel(context)
   traceDir = ''
   const { traceCmd } = getCurrentConfig()
   const storagePath = context.storageUri?.fsPath
