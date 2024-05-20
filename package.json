@@ -107,7 +107,8 @@
             "error": -1
           },
           "description": "todo",
-          "order": 6
+          "order": 6,
+          "markdownDescription": "# Trace Time Thresholds\n\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTypeThresholds": {
           "type": "object",

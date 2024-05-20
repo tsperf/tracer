@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import type { ConfigKey } from '../src/constants'
+import { join } from 'node:path'
+import { type ConfigKey, configKeys } from '../src/constants'
 import { extPrefix } from '../src/constants'
 
 type WithPrefix<T extends ConfigKey> = `${typeof extPrefix}.${T}`
@@ -13,6 +14,17 @@ interface Command {
   when?: {
     pallete?: string
     explorerContext?: string
+  }
+}
+
+const configDescriptions: Record<string, string> = {}
+for (const configKey of configKeys) {
+  try {
+    const md = readFileSync(join(__dirname, 'configDescriptions', `${configKey}.md`)).toString()
+    configDescriptions[configKey] = md
+  }
+  catch (_e) {
+    /* ignore file errors */
   }
 }
 
@@ -153,7 +165,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
 const configurationProperties = orderedConfigurationProperties
   .map((x, idx) => {
     // (x as any).order = idx
-    for (const k in x) x[k as PropertyConfigKey]!.order = idx
+    for (const propertyKey in x) {
+      const property = x[propertyKey as PropertyConfigKey]!
+      property.order = idx
+      const configKey = propertyKey.replace(`${extPrefix}.`, '')
+      if (configKey in configDescriptions)
+        property.markdownDescription = configDescriptions[configKey]
+    }
     return x
   }).reduce((a, b) => ({ ...a, ...b }), {})
 
