@@ -49,32 +49,119 @@
             "VsCode TSDK setting",
             "node_modules in you project",
             "Use tracer TypeScript path setting"
-          ]
+          ],
+          "order": 0
         },
         "tsperf.tracer.traceCmd": {
           "type": "string",
           "default": "npx tsc --generateTrace ${traceDir}",
-          "description": "command to generate tsc traces"
+          "description": "command to generate tsc traces",
+          "order": 1
         },
         "tsperf.tracer.typescriptPath": {
           "type": "string",
           "default": "",
-          "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'"
+          "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'",
+          "order": 2
         },
         "tsperf.tracer.benchmarkIterations": {
           "type": "number",
           "default": 3,
-          "description": "Higher values reduce variance but increase benchmarking time"
+          "description": "Higher values reduce variance but increase benchmarking time",
+          "order": 3
         },
         "tsperf.tracer.restartTsserverOnIteration": {
           "type": "boolean",
           "default": false,
-          "description": "Restart tsserver on each iteration to avoid caching influincing measurements"
+          "description": "Restart tsserver on each iteration to avoid caching influincing measurements",
+          "order": 4
         },
         "tsperf.tracer.allIdentifiers": {
           "type": "boolean",
           "default": false,
-          "description": "Benchmark all allIdentifiers or only the first of each statement"
+          "description": "Benchmark all allIdentifiers or only the first of each statement",
+          "order": 5
+        },
+        "tsperf.tracer.traceTimeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 6
+        },
+        "tsperf.tracer.traceTypeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 7
+        },
+        "tsperf.tracer.traceTotalTypeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 8
         }
       }
     },

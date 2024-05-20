@@ -7,6 +7,9 @@ export const configKeys = [
   'restartTsserverOnIteration',
   'allIdentifiers',
   'traceCmd',
+  'traceTimeThresholds',
+  'traceTypeThresholds',
+  'traceTotalTypeThresholds',
 ] as const
 
 export type ConfigKey = typeof configKeys[number]
