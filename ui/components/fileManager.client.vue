@@ -57,10 +57,13 @@ function handleMessage(e: MessageEvent<unknown>) {
   }
 }
 
+const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 }))
+
 function processTraces() {
   const values = Object.values(files.value).flat(1) as unknown as TraceData
   const tree = toTree(values)
   traceTree.value = tree
+  filters.value = { startsWith: 'check', sourceFileName: '', position: 0 }
 }
 
 onMounted(() => {
