@@ -1,8 +1,7 @@
 import * as vscode from 'vscode'
 import { setTsPath } from './tsUtil'
-import { type ConfigKey, configKeys } from './genPackageContributions'
-
-const configKey = 'tsperf.tracer'
+import type { ConfigKey } from './constants'
+import { configKeys, extPrefix } from './constants'
 
 const currentConfig = {
   typescriptPath: '',
@@ -51,7 +50,7 @@ const configHandlers = {
   traceCmd: noop,
 } satisfies Record<ConfigKey, any>
 
-let configuration = vscode.workspace.getConfiguration(configKey)
+let configuration = vscode.workspace.getConfiguration(extPrefix)
 
 const afterConfigHandlers: [keys: ConfigKey[], handler: (config: typeof currentConfig) => void][] = []
 
@@ -78,8 +77,8 @@ export function updateConfig(opts?: { force?: ConfigKey[] }) {
 }
 
 vscode.workspace.onDidChangeConfiguration((change) => {
-  if (change.affectsConfiguration(configKey)) {
-    configuration = vscode.workspace.getConfiguration(configKey)
+  if (change.affectsConfiguration(extPrefix)) {
+    configuration = vscode.workspace.getConfiguration(extPrefix)
     updateConfig()
   }
 })
