@@ -14,6 +14,10 @@ const currentConfig = {
   traceTimeThresholds: { info: 1, warning: -1, error: -1 },
   traceTypeThresholds: { info: 1, warning: -1, error: -1 },
   traceTotalTypeThresholds: { info: 1, warning: -1, error: -1 },
+  traceDiagnosticsRelative: true,
+  traceTimeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTypeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTotalTypeRelativeThresholds: { info: 1, warning: -1, error: -1 },
 } satisfies Record<ConfigKey, any>
 
 export function getCurrentConfig() {
@@ -53,6 +57,11 @@ const configValidate = {
   traceTimeThresholds: isThresholds,
   traceTypeThresholds: isThresholds,
   traceTotalTypeThresholds: isThresholds,
+  traceDiagnosticsRelative: isBoolean,
+  traceTimeRelativeThresholds: isThresholds,
+  traceTypeRelativeThresholds: isThresholds,
+  traceTotalTypeRelativeThresholds: isThresholds,
+
 } satisfies Record<ConfigKey, any>
 
 function noop() {
@@ -68,6 +77,10 @@ const configHandlers = {
   traceTimeThresholds: noop,
   traceTypeThresholds: noop,
   traceTotalTypeThresholds: noop,
+  traceDiagnosticsRelative: noop,
+  traceTimeRelativeThresholds: noop,
+  traceTypeRelativeThresholds: noop,
+  traceTotalTypeRelativeThresholds: noop,
 } satisfies Record<ConfigKey, any>
 
 let configuration = vscode.workspace.getConfiguration(extPrefix)

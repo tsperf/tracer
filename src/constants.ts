@@ -10,6 +10,10 @@ export const configKeys = [
   'traceTimeThresholds',
   'traceTypeThresholds',
   'traceTotalTypeThresholds',
+  'traceDiagnosticsRelative',
+  'traceTimeRelativeThresholds',
+  'traceTypeRelativeThresholds',
+  'traceTotalTypeRelativeThresholds',
 ] as const
 
 export type ConfigKey = typeof configKeys[number]

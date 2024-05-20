@@ -160,6 +160,22 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
   {
     'tsperf.tracer.traceTotalTypeThresholds': threshold(),
   },
+  {
+    'tsperf.tracer.traceDiagnosticsRelative': {
+      type: 'boolean',
+      default: false,
+      description: 'Use measurements relative to the average for trace diagnostics',
+    },
+  },
+  {
+    'tsperf.tracer.traceTimeRelativeThresholds': threshold(),
+  },
+  {
+    'tsperf.tracer.traceTypeRelativeThresholds': threshold(),
+  },
+  {
+    'tsperf.tracer.traceTotalTypeRelativeThresholds': threshold(),
+  },
 ]
 
 const configurationProperties = orderedConfigurationProperties
@@ -177,7 +193,7 @@ const configurationProperties = orderedConfigurationProperties
 
 pkg.contributes = {
   configuration: {
-    title: extPrefix,
+    title: 'TsPerf Tracer',
     properties: configurationProperties,
   },
   commands: commands.map(commandEntry),
