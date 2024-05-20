@@ -121,7 +121,7 @@
     "generate:contributes": "jiti ./scripts/generate-contributes.ts",
     "pretest": "nr build && nr lint",
     "build": "nr generate:contributes && nr ui:build && rollup -c",
-    "dev": "nr build --watch --sourcemap",
+    "dev": "nr typecheck && nr ui:build --sourcemap && nr build --sourcemap && rollup -c --watch --sourcemap",
     "ui:dev": "nuxt dev ui",
     "ui:build": "nuxt build ui",
     "lint": "eslint .",
