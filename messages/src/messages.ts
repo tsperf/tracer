@@ -25,12 +25,25 @@ export const gotoLocation = z.object({
 })
 export type GotoLocation = z.infer<typeof gotoPosition>
 
-export const traceFile = z.object({
-  message: z.literal('traceFile'),
+export const traceFileStart = z.object({
+  message: z.literal('traceFileStart'),
   fileName: z.string(),
-  traceString: z.string(),
+  size: z.number(),
 })
-export type TraceFile = z.infer<typeof traceFile>
+export type TraceFileStart = z.infer<typeof traceFileStart>
+
+export const traceFileEnd = z.object({
+  message: z.literal('traceFileEnd'),
+  fileName: z.string(),
+})
+export type TraceFileEnd = z.infer<typeof traceFileEnd>
+
+export const traceFileChunk = z.object({
+  message: z.literal('traceFileChunk'),
+  fileName: z.string(),
+  chunk: z.string(),
+})
+export type TraceFileChunk = z.infer<typeof traceFileChunk>
 
 export const gotoTracePosition = z.object({
   message: z.literal('gotoTracePosition'),
@@ -62,4 +75,4 @@ export const fileStats = z.object({
 export type FileStats = z.infer<typeof fileStats>
 
 export type Message = z.infer<typeof message>
-export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFile, gotoTracePosition, positionTypeCounts, fileStats])
+export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFileChunk, traceFileEnd, traceFileStart, gotoTracePosition, positionTypeCounts, fileStats])

@@ -15,3 +15,7 @@ function lazy() {
 }
 //
 //
+const multiLine = `a
+b
+c
+d`
