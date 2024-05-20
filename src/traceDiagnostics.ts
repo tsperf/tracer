@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import type { FileStat, FileStats } from '../messages/src/messages'
 import { postMessage } from './webview'
+import { afterConfigUpdate } from './configuration'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -70,8 +71,14 @@ function fileStatToDiagnostic({ pos, end, dur, types, totalTypes }: FileStat, do
 const severityThresholds = {
   types: [-1, -1, -1],
   totalTypes: [-1, -1, -1],
-  dur: [20, 10, 5],
+  dur: [-1, -1, 1],
 }
+
+afterConfigUpdate(['traceTimeThresholds', 'traceTypeThresholds', 'traceTotalTypeThresholds'], (config) => {
+  severityThresholds.dur = [config.traceTimeThresholds.error, config.traceTimeThresholds.warning, config.traceTimeThresholds.info]
+  severityThresholds.types = [config.traceTypeThresholds.error, config.traceTypeThresholds.warning, config.traceTypeThresholds.info]
+  severityThresholds.totalTypes = [config.traceTotalTypeThresholds.error, config.traceTotalTypeThresholds.warning, config.traceTotalTypeThresholds.info]
+})
 
 function getSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
   const [thresholdType, value] = Object.entries(measure)[0]
