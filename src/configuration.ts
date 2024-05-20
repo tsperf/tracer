@@ -1,26 +1,16 @@
 import * as vscode from 'vscode'
 import { setTsPath } from './tsUtil'
-
-const configKeys = [
-  'typescript-path',
-  'typescript-path-mode',
-  'benchmarkIterations',
-  'restartTsserverOnIteration',
-  'allIdentifiers',
-  'traceCmd',
-] as const
-
-type ConfigKey = typeof configKeys[number]
-const configKey = 'tsperf.tracer'
+import type { ConfigKey } from './constants'
+import { configKeys, extPrefix } from './constants'
 
 const currentConfig = {
-  'typescript-path': '',
-  'typescript-path-mode': 'vscode-builtin',
-  'benchmarkIterations': 3,
-  'restartTsserverOnIteration': false,
-  'allIdentifiers': false,
+  typescriptPath: '',
+  typescriptPathMode: 'vscode-builtin',
+  benchmarkIterations: 3,
+  restartTsserverOnIteration: false,
+  allIdentifiers: false,
   // eslint-disable-next-line no-template-curly-in-string
-  'traceCmd': 'npx tsc --generateTrace ${traceDir}',
+  traceCmd: 'npx tsc --generateTrace ${traceDir}',
 } satisfies Record<ConfigKey, any>
 
 export function getCurrentConfig() {
@@ -40,35 +30,36 @@ function isBoolean(x: unknown): x is boolean {
 }
 
 const configValidate = {
-  'typescript-path': isString,
-  'typescript-path-mode': isString,
-  'benchmarkIterations': isNumber,
-  'restartTsserverOnIteration': isBoolean,
-  'allIdentifiers': isBoolean,
-  'traceCmd': isString,
+  typescriptPath: isString,
+  typescriptPathMode: isString,
+  benchmarkIterations: isNumber,
+  restartTsserverOnIteration: isBoolean,
+  allIdentifiers: isBoolean,
+  traceCmd: isString,
 } satisfies Record<ConfigKey, any>
 
 function noop() {
 }
 
 const configHandlers = {
-  'typescript-path': (_value: string) => { currentConfig['typescript-path-mode'] = '!ForceUpdate' },
-  'typescript-path-mode': (value: string) => { setTsPath(value, currentConfig['typescript-path']) },
-  'benchmarkIterations': noop,
-  'restartTsserverOnIteration': noop,
-  'allIdentifiers': noop,
-  'traceCmd': noop,
+  typescriptPath: (_value: string) => { currentConfig.typescriptPathMode = '!ForceUpdate' },
+  typescriptPathMode: (value: string) => { setTsPath(value, currentConfig.typescriptPath) },
+  benchmarkIterations: noop,
+  restartTsserverOnIteration: noop,
+  allIdentifiers: noop,
+  traceCmd: noop,
 } satisfies Record<ConfigKey, any>
 
-let configuration = vscode.workspace.getConfiguration(configKey)
+let configuration = vscode.workspace.getConfiguration(extPrefix)
 
 const afterConfigHandlers: [keys: ConfigKey[], handler: (config: typeof currentConfig) => void][] = []
 
-export function updateConfig() {
+export function updateConfig(opts?: { force?: ConfigKey[] }) {
   const changedKeys: ConfigKey[] = []
   for (const key of configKeys) {
-    const newValue = configuration.get(key)
-    if (newValue !== undefined && newValue !== currentConfig[key]) {
+    let newValue = configuration.get(key)
+    if (opts?.force?.includes(key) || (newValue !== undefined && newValue !== currentConfig[key])) {
+      newValue ??= currentConfig[key]
       changedKeys.push(key)
       if (!configValidate[key](newValue)) {
         vscode.window.showErrorMessage(`wrong type received for configuration item ${key}: ${newValue}`)
@@ -86,8 +77,8 @@ export function updateConfig() {
 }
 
 vscode.workspace.onDidChangeConfiguration((change) => {
-  if (change.affectsConfiguration(configKey)) {
-    configuration = vscode.workspace.getConfiguration(configKey)
+  if (change.affectsConfiguration(extPrefix)) {
+    configuration = vscode.workspace.getConfiguration(extPrefix)
     updateConfig()
   }
 })

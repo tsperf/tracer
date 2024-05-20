@@ -34,7 +34,7 @@
     "configuration": {
       "title": "tsperf.tracer",
       "properties": {
-        "tsperf.tracer.typescript-path-mode": {
+        "tsperf.tracer.typescriptPathMode": {
           "type": "string",
           "default": "vscode-builtin",
           "description": "Use TypeScript from",
@@ -56,7 +56,7 @@
           "default": "npx tsc --generateTrace ${traceDir}",
           "description": "command to generate tsc traces"
         },
-        "tsperf.tracer.typescript-path": {
+        "tsperf.tracer.typescriptPath": {
           "type": "string",
           "default": "",
           "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'"
@@ -88,11 +88,13 @@
     "commands": [
       {
         "command": "tsperf.tracer.gotoTracePosition",
-        "title": "Goto position in trace"
+        "title": "Goto position in trace",
+        "category": "Tracer"
       },
       {
         "command": "tsperf.tracer.openInBrowser",
         "title": "Open trace view in browser",
+        "category": "Tracer",
         "icon": {
           "dark": "resources/todo.svg",
           "light": "resources/todo.svg"
@@ -101,6 +103,7 @@
       {
         "command": "tsperf.tracer.runTrace",
         "title": "tsc trace",
+        "category": "Tracer",
         "icon": {
           "dark": "resources/todo.svg",
           "light": "resources/todo.svg"
@@ -109,13 +112,15 @@
       {
         "command": "tsperf.tracer.sendTrace",
         "title": "Send Trace to Trace Viewer",
-        "when": "!notebookEditorFocused && editorLangId == 'json'"
+        "when": "!notebookEditorFocused && editorLangId == 'json'",
+        "category": "Tracer"
       }
     ]
   },
   "scripts": {
+    "generate:contributes": "jiti ./scripts/generate-contributes.ts",
     "pretest": "nr build && nr lint",
-    "build": "nr ui:build && rollup -c",
+    "build": "nr generate:contributes && nr ui:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
     "ui:dev": "nuxt dev ui",
     "ui:build": "nuxt build ui",
@@ -133,7 +138,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@types/d3": "^7.4.3",
     "@types/node": "^20.12.12",
-    "@types/vscode": "^1.70.0",
+    "@types/vscode": "1.70.0",
     "@vscode/vsce": "^2.26.1",
     "bumpp": "^9.4.1",
     "d3": "^7.9.0",
