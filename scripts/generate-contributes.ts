@@ -1,17 +1,9 @@
-export const extPrefix = 'tsperf.tracer'
-
-export const configKeys = [
-  'typescriptPath',
-  'typescriptPathMode',
-  'benchmarkIterations',
-  'restartTsserverOnIteration',
-  'allIdentifiers',
-  'traceCmd',
-] as const
-export type ConfigKey = typeof configKeys[number]
+import { readFileSync, writeFileSync } from 'node:fs'
+import type { configKeys } from '../src/constants'
+import { extPrefix } from '../src/constants'
 
 type WithPrefix<T extends readonly [string, ...string[]]> = { [k in keyof T]: `${typeof extPrefix}.${T[k]}` }
-type ProperyConfigKey = WithPrefix<typeof configKeys>[number]
+type PropertyConfigKey = WithPrefix<typeof configKeys>[number]
 
 interface Command {
   command: `${typeof extPrefix}.${string}`
@@ -21,7 +13,9 @@ interface Command {
   when?: string
 }
 
-export const contributesForPackageJson = { contributes: {
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
+
+pkg.contributes = {
   configuration: {
     title: extPrefix,
     properties: {
@@ -68,7 +62,7 @@ export const contributesForPackageJson = { contributes: {
         default: false,
         description: 'Benchmark all allIdentifiers or only the first of each statement',
       },
-    } satisfies Record<ProperyConfigKey, any>,
+    } satisfies Record<PropertyConfigKey, any>,
   },
   commandPalette: [
     {
@@ -108,5 +102,8 @@ export const contributesForPackageJson = { contributes: {
       category: 'Tracer',
     },
   ] satisfies Command[],
-},
 }
+
+const outStr = JSON.stringify(pkg, null, 2)
+
+writeFileSync('./package.json', `${outStr}\n`)
