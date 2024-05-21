@@ -1,9 +1,15 @@
 import { basename, dirname, join } from 'node:path'
-import { spawnSync } from 'node:child_process'
-import { createReadStream, mkdirSync, readdirSync, statSync } from 'node:fs'
+import { promisify } from 'node:util'
+import { spawn } from 'node:child_process'
+import { createReadStream, mkdir as mkdirC, readdir as readdirC, stat as statC } from 'node:fs'
 import * as vscode from 'vscode'
 import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
+import { log } from './logger'
+
+const mkdir = promisify(mkdirC)
+const stat = promisify(statC)
+const readdir = promisify(readdirC)
 
 const commandHandlers = {
   'tsperf.tracer.runTrace': (context: vscode.ExtensionContext) => () => runTrace(context),
@@ -21,10 +27,10 @@ const commandHandlers = {
   },
 } as const
 
-function sendTrace(dirName: string, fileName: string) {
+async function sendTrace(dirName: string, fileName: string) {
   const fullFileName = join(dirName, fileName)
-  const stat = statSync(fullFileName)
-  const size = stat.size
+  const fileStat = await stat(fullFileName)
+  const size = fileStat.size
 
   const stream = createReadStream(fullFileName, { autoClose: true, emitClose: true, encoding: 'utf-8' })
 
@@ -68,7 +74,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
 }
 
 let traceDir = ''
-function runTrace(context: vscode.ExtensionContext) {
+async function runTrace(context: vscode.ExtensionContext) {
   getTracePanel(context)
   traceDir = ''
   const { traceCmd } = getCurrentConfig()
@@ -79,10 +85,12 @@ function runTrace(context: vscode.ExtensionContext) {
     return
   }
   traceDir = join(storagePath, 'traces')
-  mkdirSync(traceDir, { recursive: true })
+  await mkdir(traceDir, { recursive: true })
 
   // eslint-disable-next-line no-template-curly-in-string
   const fullCmd = traceCmd.replace('${traceDir}', traceDir)
+
+  log(fullCmd)
 
   const projectPath = getProjectPath()
   if (!projectPath) {
@@ -90,23 +98,32 @@ function runTrace(context: vscode.ExtensionContext) {
     return
   }
 
-  const cmdResult = spawnSync(fullCmd, [], { cwd: projectPath, shell: true })
-  if (cmdResult.error) {
-    vscode.window.showErrorMessage(cmdResult.error.message)
-    return
-  }
+  log('starting trace')
+  const trackSpawn = setInterval(() => log('trace still running'), 500)
 
-  try {
-    const fileNames = readdirSync(traceDir)
-    for (const fileName of fileNames)
-      sendTrace(traceDir, fileName)
-  }
-  catch (e) {
-    vscode.window.showErrorMessage(e instanceof Error ? e.message : `${e}`)
-    return
-  }
+  const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: true })
+  cmdProcess.on('error', (error) => {
+    vscode.window.showErrorMessage(error.message)
+  })
 
-  postMessage({ message: 'ping' }) // TODO - trigger processing trace files here
+  cmdProcess.on('exit', async () => {
+    log('finished trace')
+    clearInterval(trackSpawn)
+
+    try {
+      const fileNames = await readdir(traceDir)
+      for (const fileName of fileNames) {
+        log(`sending ${fileName}`)
+        sendTrace(traceDir, fileName)
+      }
+    }
+    catch (e) {
+      vscode.window.showErrorMessage(e instanceof Error ? e.message : `${e}`)
+      return
+    }
+
+    postMessage({ message: 'ping' }) // TODO - trigger processing trace files here
+  })
 }
 
 function getProjectPath(): string | undefined {

@@ -37,7 +37,7 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
 }
 async function gotoPosition(fileName: string, pos: number) {
   const uri = vscode.Uri.file(fileName)
-  const document = await vscode.workspace.openTextDocument(uri)
+  const document = vscode.workspace.textDocuments.find(x => x.fileName === fileName) ?? await vscode.workspace.openTextDocument(uri)
   const position = document.positionAt(pos + 1)
   const location = new vscode.Location(uri, position)
   vscode.commands.executeCommand(
