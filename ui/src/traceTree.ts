@@ -1,4 +1,4 @@
-import type { DataLine, TraceData, TraceLine, TypeLine } from './traceData'
+import type { DataLine, TraceData, TypeLine } from './traceData'
 
 export interface Tree { line: DataLine, children: Tree[], types: TypeLine[], childTypeCnt: number }
 const root: Tree = {

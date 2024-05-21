@@ -1,5 +1,4 @@
 import { join } from 'node:path'
-import { getPackedSettings } from 'node:http2'
 import * as vscode from 'vscode'
 
 // @ts-expect-error raw loader
