@@ -99,6 +99,7 @@ async function runTrace(context: vscode.ExtensionContext) {
   }
 
   log('starting trace')
+  postMessage({ message: 'traceStart' })
   const trackSpawn = setInterval(() => log('trace still running'), 500)
 
   const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: true })
@@ -107,6 +108,7 @@ async function runTrace(context: vscode.ExtensionContext) {
   })
 
   cmdProcess.on('exit', async () => {
+    postMessage({ message: 'traceStop' })
     log('finished trace')
     clearInterval(trackSpawn)
 

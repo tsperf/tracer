@@ -1,5 +1,4 @@
 import * as vscode from 'vscode'
-import { number } from 'zod'
 import type { FileStat, FileStats } from '../messages/src/messages'
 import { postMessage } from './webview'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'

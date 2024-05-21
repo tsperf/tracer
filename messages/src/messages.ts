@@ -74,5 +74,28 @@ export const fileStats = z.object({
 })
 export type FileStats = z.infer<typeof fileStats>
 
+export const traceStart = z.object({
+  message: z.literal('traceStart'),
+})
+export type TraceStart = z.infer<typeof traceStart>
+
+export const traceStop = z.object({
+  message: z.literal('traceStop'),
+})
+export type TraceStop = z.infer<typeof traceStop>
+
 export type Message = z.infer<typeof message>
-export const message = z.union([ping, pong, gotoLocation, gotoPosition, traceFileChunk, traceFileEnd, traceFileStart, gotoTracePosition, positionTypeCounts, fileStats])
+export const message = z.union([
+  ping,
+  pong,
+  gotoLocation,
+  gotoPosition,
+  traceFileChunk,
+  traceFileEnd,
+  traceFileStart,
+  gotoTracePosition,
+  positionTypeCounts,
+  fileStats,
+  traceStart,
+  traceStop,
+])

@@ -15,6 +15,8 @@ const fileSizes = reactive({} as Record<string, [number, number]>)
 
 const inProcess = ref(0)
 
+const traceRunning = ref(false)
+
 function handleMessage(e: MessageEvent<unknown>) {
   const parsed = Messages.message.safeParse(e.data)
   if (!parsed.success)
@@ -54,6 +56,16 @@ function handleMessage(e: MessageEvent<unknown>) {
 
       break
     }
+
+    case 'traceStart': {
+      traceRunning.value = true
+      break
+    }
+
+    case 'traceStop': {
+      traceRunning.value = false
+      break
+    }
   }
 }
 
@@ -73,6 +85,10 @@ onMounted(() => {
 
 <template>
   <div>
+    <div v-if="traceRunning">
+      traceRunning
+      <UProgress :indeterminate="true" />
+    </div>
     <div v-for="(_data, fileName) in files" :key="fileName">
       <div>{{ fileName }}  {{ fileProgress[fileName] }}</div>
     </div>
