@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as Messages from '../../messages/src/messages'
 import TreeNode from './TreeNode.vue'
-import { type Tree, typesInNode } from '~/src/traceTree'
+import type { Tree } from '~/src/traceTree'
 import type { TraceLine } from '~/src/traceData'
 
 const sendMessage = useNuxtApp().$sendMessage
@@ -37,12 +37,13 @@ function handleMessage(e: MessageEvent<unknown>) {
             && line.args?.pos
             && line.args?.end
           ) {
+            const types = node.types.length
             stats.push({
               dur: line.dur,
               pos: line.args.pos,
               end: line.args.end,
-              types: node.children.filter(x => 'id' in x.line).length,
-              totalTypes: typesInNode(node),
+              types,
+              totalTypes: types + node.childTypeCnt,
             })
           }
         }
