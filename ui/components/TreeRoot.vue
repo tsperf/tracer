@@ -24,33 +24,37 @@ function handleMessage(e: MessageEvent<unknown>) {
     filters.value.sourceFileName = parsed.data.fileName
     filters.value.position = 0
 
-    const stats: typeof parsed.data.stats = []
-    function visit(node: Tree) {
-      if ('name' in node.line) {
-        const line = node.line as TraceLine
-        if (
-          line.dur
-          && line.args?.path
-          && line.args?.pos
-          && line.args?.end
-        ) {
-          stats.push({
-            dur: line.dur,
-            pos: line.args.pos,
-            end: line.args.end,
-            types: node.children.filter(x => 'id' in x.line).length,
-            totalTypes: typesInNode(node),
-          })
+    const fileName = parsed.data.fileName
+    nextTick(() => {
+      const stats: typeof parsed.data.stats = []
+      function visit(node: Tree) {
+        if ('name' in node.line) {
+          const line = node.line as TraceLine
+          if (
+            line.dur
+            && line.args?.path
+            && line.args.path === fileName
+            && line.args?.pos
+            && line.args?.end
+          ) {
+            stats.push({
+              dur: line.dur,
+              pos: line.args.pos,
+              end: line.args.end,
+              types: node.children.filter(x => 'id' in x.line).length,
+              totalTypes: typesInNode(node),
+            })
+          }
         }
+        node.children.forEach(visit)
       }
-      node.children.forEach(visit)
-    }
 
-    visit(tree.value)
-    sendMessage({
-      message: 'fileStats',
-      fileName: parsed.data.fileName,
-      stats,
+      visit(tree.value)
+      sendMessage({
+        message: 'fileStats',
+        fileName,
+        stats,
+      })
     })
   }
 }

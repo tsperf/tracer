@@ -18,6 +18,9 @@ vscode.workspace.onDidChangeTextDocument((event) => {
 })
 
 vscode.window.onDidChangeActiveTextEditor((event) => {
+  if (getCurrentConfig().traceTimeThresholds.info === -99)
+    return
+
   const fileName = event?.document?.fileName
   if (fileName)
     postMessage({ message: 'fileStats', fileName: event?.document.fileName, stats: [] })
@@ -46,18 +49,29 @@ export async function addTraceDiagnostics({ fileName, stats }: FileStats) {
 
   let toDiagnistic: typeof fileStatToDiagnostic | typeof fileStatToRelativeDiagnostic = fileStatToDiagnostic
   if (relative) {
-    averages = stats.reduce((a, b) => ({ dur: a.dur + b.dur, types: a.types + b.types, totalTypes: a.totalTypes + b.totalTypes }), { dur: 0, types: 0, totalTypes: 0 })
-    averages.dur /= stats.length
-    averages.types /= stats.length
-    averages.totalTypes /= stats.length
+    const durations = stats.map(x => x.dur).filter(x => x >= 10_000)
+    const types = stats.map(x => x.types).filter(x => x >= 1)
+    const totalTypes = stats.map(x => x.totalTypes).filter(x => x >= 1)
+    averages = {
+      dur: durations.reduce((a, b) => a + b, 0) / durations.length,
+      types: types.reduce((a, b) => a + b, 0) / types.length,
+      totalTypes: totalTypes.reduce((a, b) => a + b, 0) / totalTypes.length,
+    }
     toDiagnistic = fileStatToRelativeDiagnostic
   }
 
   const diagnostics = []
+  stats.sort((a, b) => a.pos === b.pos ? (b.end - b.pos) - (a.end - a.pos) : b.pos - a.pos)
+  let lastPos = -9999
   for (const stat of stats) {
+    if (lastPos === stat.pos)
+      continue // do not create diagnostics for further checks at the same starting position
+
     const diagnostic = toDiagnistic(stat, document, averages!)
     if (diagnostic)
       diagnostics.push(diagnostic)
+
+    lastPos = stat.pos
   }
   diagnosticCollection.set(uri, diagnostics)
 }
@@ -65,11 +79,16 @@ export async function addTraceDiagnostics({ fileName, stats }: FileStats) {
 function relativeString(value: number) {
   return `(+${Math.round(10000 * value) / 100}%)`
 }
+
+function relativeValue(value: number, average: number) {
+  return (value - average) / average
+}
+
 function fileStatToRelativeDiagnostic({ pos, end, dur, types, totalTypes }: FileStat, document: vscode.TextDocument, averages: { dur: number, types: number, totalTypes: number }) {
   if (!(types || totalTypes || dur))
     return undefined
 
-  const relative = { dur: dur / averages.dur, types: types / averages.types, totalTypes: totalTypes / averages.totalTypes }
+  const relative = { dur: relativeValue(dur, averages.dur), types: relativeValue(types, averages.types), totalTypes: relativeValue(totalTypes, averages.totalTypes) }
 
   const severity = Math.min(Math.min(getRelativeSeverity({ types: relative.types }), getRelativeSeverity({ totalTypes: relative.totalTypes })), getRelativeSeverity({ dur: relative.dur }))
   if (severity > vscode.DiagnosticSeverity.Information)
