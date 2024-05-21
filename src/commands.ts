@@ -98,9 +98,7 @@ async function runTrace(context: vscode.ExtensionContext) {
     return
   }
 
-  log('starting trace')
   postMessage({ message: 'traceStart' })
-  const trackSpawn = setInterval(() => log('trace still running'), 500)
 
   const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: true })
   cmdProcess.on('error', (error) => {
@@ -109,15 +107,11 @@ async function runTrace(context: vscode.ExtensionContext) {
 
   cmdProcess.on('exit', async () => {
     postMessage({ message: 'traceStop' })
-    log('finished trace')
-    clearInterval(trackSpawn)
 
     try {
       const fileNames = await readdir(traceDir)
-      for (const fileName of fileNames) {
-        log(`sending ${fileName}`)
+      for (const fileName of fileNames)
         sendTrace(traceDir, fileName)
-      }
     }
     catch (e) {
       vscode.window.showErrorMessage(e instanceof Error ? e.message : `${e}`)
