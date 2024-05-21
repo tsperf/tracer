@@ -31,6 +31,11 @@ export function clearTaceDiagnostics() {
   if (diagnosticCollection)
     diagnosticCollection.clear()
 }
+const averageThresholds = {
+  dur: 10_000,
+  types: 0,
+  totalTypes: 0,
+}
 
 export async function addTraceDiagnostics({ fileName, stats }: FileStats) {
   const relative = getCurrentConfig().traceDiagnosticsRelative
@@ -49,13 +54,13 @@ export async function addTraceDiagnostics({ fileName, stats }: FileStats) {
 
   let toDiagnistic: typeof fileStatToDiagnostic | typeof fileStatToRelativeDiagnostic = fileStatToDiagnostic
   if (relative) {
-    const durations = stats.map(x => x.dur).filter(x => x >= 10_000)
-    const types = stats.map(x => x.types).filter(x => x >= 1)
-    const totalTypes = stats.map(x => x.totalTypes).filter(x => x >= 1)
+    const durations = stats.map(x => x.dur).filter(x => x >= averageThresholds.dur)
+    const types = stats.map(x => x.types).filter(x => x >= averageThresholds.types)
+    const totalTypes = stats.map(x => x.totalTypes).filter(x => x >= averageThresholds.totalTypes)
     averages = {
-      dur: durations.reduce((a, b) => a + b, 0) / durations.length,
-      types: types.reduce((a, b) => a + b, 0) / types.length,
-      totalTypes: totalTypes.reduce((a, b) => a + b, 0) / totalTypes.length,
+      dur: durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0,
+      types: types.length ? types.reduce((a, b) => a + b, 0) / types.length : 0,
+      totalTypes: totalTypes.length ? totalTypes.reduce((a, b) => a + b, 0) / totalTypes.length : 0,
     }
     toDiagnistic = fileStatToRelativeDiagnostic
   }
@@ -77,18 +82,18 @@ export async function addTraceDiagnostics({ fileName, stats }: FileStats) {
 }
 
 function relativeString(value: number) {
-  return `(+${Math.round(10000 * value) / 100}%)`
+  return `(${value > 0 ? '+' : ''}${Math.round(10000 * value) / 100}%)`
 }
 
-function relativeValue(value: number, average: number) {
-  return (value - average) / average
+function relativeValue(value: number, average: number, averageThreshold: number) {
+  return value / (average || averageThreshold || 1)
 }
 
 function fileStatToRelativeDiagnostic({ pos, end, dur, types, totalTypes }: FileStat, document: vscode.TextDocument, averages: { dur: number, types: number, totalTypes: number }) {
   if (!(types || totalTypes || dur))
     return undefined
 
-  const relative = { dur: relativeValue(dur, averages.dur), types: relativeValue(types, averages.types), totalTypes: relativeValue(totalTypes, averages.totalTypes) }
+  const relative = { dur: relativeValue(dur, averages.dur, averageThresholds.dur), types: relativeValue(types, averages.types, averageThresholds.types), totalTypes: relativeValue(totalTypes, averages.totalTypes, averageThresholds.totalTypes) }
 
   const severity = Math.min(Math.min(getRelativeSeverity({ types: relative.types }), getRelativeSeverity({ totalTypes: relative.totalTypes })), getRelativeSeverity({ dur: relative.dur }))
   if (severity > vscode.DiagnosticSeverity.Information)
@@ -96,7 +101,7 @@ function fileStatToRelativeDiagnostic({ pos, end, dur, types, totalTypes }: File
 
   const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes} ${relativeString(relative.types)} / ${relativeString(relative.totalTypes)}` : ''
 
-  const msg = `Check ms: ${Math.round(dur) / 1000} (+${relativeString(relative.dur)}) ${typeStr}`
+  const msg = `Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
   const startPos = document.positionAt(pos)
   const endPos = document.positionAt(end)
   const range = new vscode.Range(startPos, endPos)
