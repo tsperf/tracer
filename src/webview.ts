@@ -1,4 +1,5 @@
 import { join } from 'node:path'
+import { getPackedSettings } from 'node:http2'
 import * as vscode from 'vscode'
 
 // @ts-expect-error raw loader
@@ -11,13 +12,13 @@ let holdContext: vscode.ExtensionContext | undefined
 export function setPanelContext(extensionContext: vscode.ExtensionContext) {
   holdContext = extensionContext
 }
-let panel: ReturnType<typeof vscode.window.createWebviewPanel>
+let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
 
-export function getTracePanel(context: vscode.ExtensionContext) {
+export function getTracePanel(context: vscode.ExtensionContext = holdContext!) {
   if (!panel)
     prepareWebView(context, false)
 
-  return panel
+  return panel!
 }
 
 export function prepareWebView(context: vscode.ExtensionContext | undefined = holdContext, show = true) {
@@ -33,9 +34,13 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
       { enableScripts: true, retainContextWhenHidden: true },
     )
 
+    panel.onDidDispose(() => {
+      panel = undefined
+    })
+
     const processedHTML = (html as string).replace(
       /(src|href)="([^"]+)"/g,
-      (string, _attribute, source) => string.replace(source, panel.webview.asWebviewUri(
+      (string, _attribute, source) => string.replace(source, panel!.webview.asWebviewUri(
         vscode.Uri.file(
           join(context.extensionPath, 'ui/dist', source),
         ),
@@ -45,7 +50,7 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
 
     panel.webview.html = processedHTML
     panel.webview.onDidReceiveMessage((message) => {
-      handleMessage(panel, message)
+      handleMessage(getTracePanel(context), message)
     })
 
     ret = panel
@@ -61,5 +66,5 @@ export function postMessage(message: Message) {
   if (!panel)
     prepareWebView()
 
-  panel.webview.postMessage(message)
+  getTracePanel().webview.postMessage(message)
 }
