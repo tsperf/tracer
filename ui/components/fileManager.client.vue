@@ -3,9 +3,7 @@ import * as Messages from '../../messages/src/messages'
 import { type TraceData, traceData } from '~/src/traceData'
 import { type Tree, toTree } from '~/src/traceTree'
 
-const files = useState('files', () => ({}) as Record<string, TraceData>)
-
-const traceTree = useState('traceTree', () => shallowRef(undefined as Tree | undefined))
+import { files, traceTree } from '~/src/fileState'
 
 const tmpTraceStrings: Record<string, string> = {}
 
@@ -50,7 +48,8 @@ function handleMessage(e: MessageEvent<unknown>) {
         if (!arr.success)
           return
 
-        files.value[parsed.data.fileName] = shallowReactive(arr.data)
+        files.value[parsed.data.fileName] = arr.data
+        triggerRef(files)
       }
       catch (_e) {}
 
@@ -75,7 +74,7 @@ function processTraces() {
   traceTree.value = tree
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('message', handleMessage)
 })
 </script>

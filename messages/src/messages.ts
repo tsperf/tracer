@@ -84,6 +84,12 @@ export const traceStop = z.object({
 })
 export type TraceStop = z.infer<typeof traceStop>
 
+export const log = z.object({
+  message: z.literal('log'),
+  value: z.array(z.any()),
+})
+export type Log = z.infer<typeof log>
+
 export type Message = z.infer<typeof message>
 export const message = z.union([
   ping,
@@ -98,4 +104,5 @@ export const message = z.union([
   fileStats,
   traceStart,
   traceStop,
+  log,
 ])

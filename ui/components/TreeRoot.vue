@@ -3,10 +3,9 @@ import * as Messages from '../../messages/src/messages'
 import TreeNode from './TreeNode.vue'
 import type { Tree } from '~/src/traceTree'
 import type { TraceLine } from '~/src/traceData'
+import { traceTree as tree } from '~/src/fileState'
 
 const sendMessage = useNuxtApp().$sendMessage
-
-const tree = useState<Tree>('traceTree')
 
 const filters = useState<{
   startsWith: string
@@ -50,7 +49,9 @@ function handleMessage(e: MessageEvent<unknown>) {
         node.children.forEach(visit)
       }
 
-      visit(tree.value)
+      if (tree.value)
+        visit(tree.value)
+
       sendMessage({
         message: 'fileStats',
         fileName,

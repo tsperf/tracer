@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import * as Messages from '../messages/src/messages'
 import { addTraceDiagnostics } from './traceDiagnostics'
+import { log } from './logger'
 import { collection as diagnosticCollection } from '.'
 
 let positionTypeCounts: Messages.PositionTypeCounts['counts'] = {}
@@ -33,8 +34,12 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
     case 'fileStats':
       addTraceDiagnostics(data)
       break
+    case 'log':
+      log(...data.value)
+      break
   }
 }
+
 async function gotoPosition(fileName: string, pos: number) {
   const uri = vscode.Uri.file(fileName)
   const document = vscode.workspace.textDocuments.find(x => x.fileName === fileName) ?? await vscode.workspace.openTextDocument(uri)

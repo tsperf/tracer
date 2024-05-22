@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: true },
   experimental: { payloadExtraction: false, appManifest: false },
+  vite: {
+    optimizeDeps: {
+      include: ['localforage'],
+    },
+  },
   nitro: {
     static: true,
     output: { publicDir: '~/dist' },
@@ -19,7 +24,7 @@ export default defineNuxtConfig({
       isCustomElement: tag => tag.startsWith('vscode-'),
     },
   },
-  modules: ['@nuxt/ui'],
+  modules: ['@nuxt/ui', 'nuxt3-localforage'],
   app: {
 
     head: {

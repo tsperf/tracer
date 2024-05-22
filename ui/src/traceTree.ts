@@ -1,23 +1,25 @@
 import type { DataLine, TraceData, TypeLine } from './traceData'
 
 export interface Tree { line: DataLine, children: Tree[], types: TypeLine[], childTypeCnt: number }
-const root: Tree = {
-  line: {
-    cat: 'root',
-    name: 'root',
-    ph: 'root',
-    pid: 1,
-    tid: 1,
-    ts: 0,
-    dur: Number.MAX_SAFE_INTEGER,
-  },
-  children: [],
-  types: [],
-  childTypeCnt: 0,
+function getRoot(): Tree {
+  return {
+    line: {
+      cat: 'root',
+      name: 'root',
+      ph: 'root',
+      pid: 1,
+      tid: 1,
+      ts: 0,
+      dur: Number.MAX_SAFE_INTEGER,
+    },
+    children: [],
+    types: [],
+    childTypeCnt: 0,
+  } as const
 }
 
 export function toTree(traceData: TraceData): Tree {
-  const tree: Tree = { ...root }
+  const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
   let curr = tree
   let maxDur = 0
