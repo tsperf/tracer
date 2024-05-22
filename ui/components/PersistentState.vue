@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Tree } from '~/src/traceTree'
-
 import { files, traceTree } from '~/src/fileState'
 
 const sendMessage = useNuxtApp().$sendMessage
