@@ -20,12 +20,12 @@ const commandHandlers: Record<
     'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
     'tsperf.tracer.gotoTracePosition': (context: vscode.ExtensionContext) => () => gotoTracePosition(context),
     'tsperf.tracer.sendTrace': (context: vscode.ExtensionContext) => (event: unknown) => {
-      if (!(event instanceof vscode.Uri))
+      if (!(Array.isArray(event) && event[0] instanceof vscode.Uri))
         return
 
       getTracePanel(context)
 
-      const fsPath = event.fsPath
+      const fsPath = event[0].fsPath
 
       sendTrace(dirname(fsPath), basename(fsPath))
     },
