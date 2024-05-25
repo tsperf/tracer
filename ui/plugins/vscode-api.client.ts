@@ -1,5 +1,5 @@
 import type { WebviewApi } from 'vscode-webview'
-import * as Messages from '../../messages/src/messages'
+import * as Messages from '../../shared/src/messages'
 
 const dummyVscode: WebviewApi<unknown> = {
   postMessage: (_message: unknown) => undefined,

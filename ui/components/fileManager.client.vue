@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import * as Messages from '../../messages/src/messages'
-import { type TraceData, traceData } from '~/src/traceData'
-import { toTree } from '~/src/traceTree'
+import * as Messages from '../../shared/src/messages'
+import { type TraceData, traceData } from '../../shared/src/traceData'
+import { toTree } from '../../shared/src/traceTree'
 
 import { files, traceTree } from '~/src/fileState'
 

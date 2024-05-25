@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import * as Messages from '../../messages/src/messages'
+import * as Messages from '../../shared/src/messages'
+import type { TraceLine } from '../../shared/src/traceData'
+import type { Tree } from '../../shared/src/traceTree'
 import TreeNode from './TreeNode.vue'
-import type { Tree } from '~/src/traceTree'
-import type { TraceLine } from '~/src/traceData'
 import { traceTree as tree } from '~/src/fileState'
 
 const sendMessage = useNuxtApp().$sendMessage
@@ -69,7 +69,7 @@ onMounted(() => {
 <template>
   <UContainer v-if="tree">
     {{ tree.children.length }}
-    {{ tree.children.filter((x) => x.children.length > 0).length }}
+    {{ tree.children.filter((x: Tree) => x.children.length > 0).length }}
     <TreeNode :tree="tree" :depth="0" :is-in-check="false" />
   </UContainer>
 </template>

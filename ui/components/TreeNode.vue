@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Tree } from '~/src/traceTree'
+import type { Tree } from '../../shared/src/traceTree'
 
 const props = defineProps<{ tree: Tree, depth: number, isInCheck: boolean }>()
 

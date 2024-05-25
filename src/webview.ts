@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 // @ts-expect-error raw loader
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
-import type { Message } from '../messages/src/messages'
+import type { Message } from '../shared/src/messages'
 import { handleMessage } from './handleMessages'
 
 let holdContext: vscode.ExtensionContext | undefined

@@ -1,13 +1,13 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { type ConfigKey, configKeys } from '../src/constants'
+import { validateHeaderValue } from 'node:http'
+import { type CommandId, type ConfigKey, configKeys } from '../src/constants'
 import { extPrefix } from '../src/constants'
 
 type WithPrefix<T extends ConfigKey> = `${typeof extPrefix}.${T}`
 type PropertyConfigKey = WithPrefix<ConfigKey>
 
 interface Command {
-  command: `${typeof extPrefix}.${string}`
   title: string
   category?: `Tracer${string}`
   icon?: any
@@ -28,36 +28,37 @@ for (const configKey of configKeys) {
   }
 }
 
-const commands: Command[] = [
-  {
-    command: 'tsperf.tracer.gotoTracePosition',
+const commandRecord: Record<CommandId, Command> = {
+  'tsperf.tracer.gotoTracePosition': {
     title: 'Goto position in trace',
   },
-  {
-    command: 'tsperf.tracer.openInBrowser',
+  'tsperf.tracer.openInBrowser': {
     title: 'Open trace viewer',
     icon: {
       dark: 'resources/todo.svg',
       light: 'resources/todo.svg',
     },
   },
-  {
-    command: 'tsperf.tracer.runTrace',
+  'tsperf.tracer.runTrace': {
     title: 'tsc trace',
     icon: {
       dark: 'resources/todo.svg',
       light: 'resources/todo.svg',
     },
   },
-  {
-    command: 'tsperf.tracer.sendTrace',
+  'tsperf.tracer.sendTrace': {
     title: 'Send Trace to Trace Viewer',
     when: {
       pallete: '!notebookEditorFocused && editorLangId == \'json\'',
       explorerContext: 'resourceFilename =~ /.*((trace)|(types)).*\.json/',
     },
   },
-]
+  'tsperf.tracer.openTerminal': {
+    title: 'Open tracer directory in terminal',
+  },
+}
+
+const commands = Object.entries(commandRecord).map(([command, record]) => ({ ...record, command }))
 
 function commandEntry(command: Command) {
   const entry = { ...command, category: 'Tracer' }

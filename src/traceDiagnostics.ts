@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
-import type { FileStat, FileStats } from '../messages/src/messages'
-import { postMessage } from './webview'
+import type { FileStat, FileStats } from '../shared/src/messages'
+import { getStatsFromTree } from '../shared/src/traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
 
 let diagnosticCollection: vscode.DiagnosticCollection
@@ -23,7 +23,7 @@ vscode.window.onDidChangeActiveTextEditor((event) => {
 
   const fileName = event?.document?.fileName
   if (fileName)
-    postMessage({ message: 'fileStats', fileName: event?.document.fileName, stats: [] })
+    addTraceDiagnostics(fileName, getStatsFromTree(fileName))
 })
 
 export function clearTaceDiagnostics() {
@@ -37,7 +37,7 @@ const averageThresholds = {
   totalTypes: 0,
 }
 
-export async function addTraceDiagnostics({ fileName, stats }: FileStats) {
+export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
   const relative = getCurrentConfig().traceDiagnosticsRelative
 
   const uri = vscode.Uri.file(fileName)
