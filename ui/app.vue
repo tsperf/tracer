@@ -1,15 +1,12 @@
 <script setup lang="ts">
-const sendMessage = useNuxtApp().$sendMessage
 const Messages = useNuxtApp().$Messages
 const colorMode = useColorMode()
 
-function ping() {
-  sendMessage({ message: 'ping' })
-}
+const sendMesage = useNuxtApp().$sendMessage
 
 const secondButtonLabel = ref('Another button')
 
-const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 }))
+const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
 
 function handleMessage(e: MessageEvent<unknown>) {
   const message = Messages.message.safeParse(e.data)
@@ -21,6 +18,13 @@ function handleMessage(e: MessageEvent<unknown>) {
 
   else if (message.data.message === 'gotoTracePosition')
     filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName }
+
+  else if (message.data.message === 'filterTree')
+    filters.value = message.data
+}
+
+function doFilters() {
+  sendMesage('filterTree', filters.value)
 }
 
 onMounted(() => {
@@ -40,7 +44,7 @@ function toggleDarkMode() {
         <PersistentState />
       </div>
       <!-- Note the kebab case is mandatory for the vscode components.  <VscodeButton> will not work -->
-      <dev-only>
+      <!-- <dev-only>
         <div>
           <vscode-button appearance="primary" @click="ping">
             Ping
@@ -51,21 +55,23 @@ function toggleDarkMode() {
             {{ secondButtonLabel }}
           </vscode-button>
         </div>
-      </dev-only>
+      </dev-only> -->
 
       <file-manager />
-      <div class="flex flex-col gap-1">
-        <ULabled label="Trace Name">
-          <UInput v-model="filters.startsWith" />
-        </ULabled>
-        <ULabled label="Source File">
-          <UInput v-model="filters.sourceFileName" />
-        </ULabled>
-        <ULabled label="Position">
-          <UInput v-model="filters.position" label="Position" type="number" />
-          <ULabled />
-        </ulabled>
-      </div>
+      <ULabled icon="magnifying-glass-circle" label-div-class="h-full bg-primary text-black place-content-center" :icon-click="doFilters">
+        <div class="flex flex-col gap-1">
+          <ULabled label="Trace Name">
+            <UInput v-model="filters.startsWith" />
+          </ULabled>
+          <ULabled label="Source File">
+            <UInput v-model="filters.sourceFileName" />
+          </ULabled>
+          <ULabled label="Position">
+            <UInput v-model="filters.position" label="Position" type="number" />
+            <ULabled />
+          </ULabled>
+        </div>
+      </ULabled>
       <div>
         <p class="p-4 pb-2">
           <UIcon

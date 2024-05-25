@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import type { FileStat, FileStats } from '../shared/src/messages'
+import type { FileStat } from '../shared/src/messages'
 import { getStatsFromTree } from '../shared/src/traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
 

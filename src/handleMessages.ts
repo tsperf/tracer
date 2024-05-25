@@ -1,7 +1,9 @@
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
-import { addTraceDiagnostics } from './traceDiagnostics'
+import { filterTree } from '../shared/src/traceTree'
 import { log } from './logger'
+import { postMessage } from './webview'
+import { setLastMessageTrigger } from './storage'
 import { collection as diagnosticCollection } from '.'
 
 let positionTypeCounts: Messages.PositionTypeCounts['counts'] = {}
@@ -10,6 +12,7 @@ export function getPositionTypeCounts() {
 }
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
+  setLastMessageTrigger(message)
   const parsed = Messages.message.safeParse(message)
   if (!parsed.success) {
     vscode.window.showWarningMessage(`Unknown message ${JSON.stringify(message).slice(0, 20)}`)
@@ -20,7 +23,7 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
   switch (data.message) {
     case 'ping':
       vscode.window.showInformationMessage('Pinged from webview')
-      panel.webview.postMessage({ message: 'pong' })
+      postMessage({ message: 'pong' })
       break
     case 'pong': break
     case 'gotoLocation': break
@@ -34,6 +37,11 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
     case 'log':
       log(...data.value)
       break
+    case 'filterTree': {
+      const nodes = filterTree(data.startsWith, data.sourceFileName, data.position)
+      postMessage({ message: 'showTree', nodes })
+      break
+    }
   }
 }
 

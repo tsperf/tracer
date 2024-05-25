@@ -1,6 +1,7 @@
-import { mkdir as mkdirC } from 'node:fs'
+import { mkdir as mkdirC, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
+import { env } from 'node:process'
 import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
@@ -86,3 +87,27 @@ export function clearTraceFiles() {
 export function getTraceFiles() {
   return traceFiles
 }
+
+// allow setting this in the debugger
+// set it to the full path of devUiDriver/commands.ts to record for driver playback
+// eslint-disable-next-line prefer-const
+let logMessagesFileName = env.TracerLogMessages
+
+let lastMessageTrigger: any
+export function setLastMessageTrigger(trigger: any) {
+  lastMessageTrigger = trigger
+}
+
+let logMessagesStarted = false
+export const logMessage = logMessagesFileName
+  ? (message: any) => {
+      if (!logMessagesStarted) {
+        writeFileSync(logMessagesFileName, 'export const commands = [\n', { flag: 'w' })
+        logMessagesStarted = true
+      }
+      const s = `${JSON.stringify({ trigger: lastMessageTrigger, response: message }, null, 2)},\n`
+      writeFileSync(logMessagesFileName, s, { flag: 'a' })
+    }
+  : () => {
+    /* do nothing */
+    }

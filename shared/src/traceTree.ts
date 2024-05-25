@@ -2,9 +2,10 @@ import { getTraceFiles } from '../../src/storage'
 import type { FileStat } from './messages'
 import type { DataLine, TraceData, TypeLine } from './traceData'
 
-export interface Tree { line: DataLine, children: Tree[], types: TypeLine[], childTypeCnt: number }
+export interface Tree { id: number, line: DataLine, children: Tree[], types: TypeLine[], childTypeCnt: number }
 function getRoot(): Tree {
   return {
+    id: 0,
     line: {
       cat: 'root',
       name: 'root',
@@ -20,12 +21,17 @@ function getRoot(): Tree {
   } as const
 }
 
+let treeIndexes: Tree[] = []
 export function toTree(traceData: TraceData): Tree {
   const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
   let curr = tree
   let maxDur = 0
+  let id = 0
+
   const stack: Tree[] = []
+
+  treeIndexes = [tree]
 
   const data = traceData.filter(x => 'id' in x || ('cat' in x)).sort((a, b) => a.ts - b.ts)
   // const data = traceData.filter(x => 'id' in x || ('cat' in x && x.cat?.startsWith('check'))).sort((a, b) => a.ts - b.ts)
@@ -49,7 +55,8 @@ export function toTree(traceData: TraceData): Tree {
     }
     else {
       endTs = line.ts + (line.dur ?? 0)
-      const child = { line, children: [], types: [], childTypeCnt: 0 }
+      const child = { id: ++id, line, children: [], types: [], childTypeCnt: 0 }
+      treeIndexes[id] = child
       curr.children.push(child)
       stack.push(curr)
       curr = child
@@ -65,7 +72,10 @@ export function processTraceFiles() {
   traceTree = toTree(Object.values(getTraceFiles()).flat(1))
 }
 
-export function filterTree(startsWith: string, sourceFileName: string, position: number, tree = traceTree): Tree[] {
+export function filterTree(startsWith: string, sourceFileName: string, position: number | '', tree = traceTree): Tree[] {
+  if (position === '')
+    position = 0
+
   if (!tree)
     return []
 
@@ -108,4 +118,8 @@ export function getStatsFromTree(fileName: string) {
   fileNodes.forEach(visit)
 
   return stats
+}
+
+export function getTreeAtIndex(idx: number) {
+  return treeIndexes[idx]
 }

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { files, traceTree } from '~/src/fileState'
-
 const sendMessage = useNuxtApp().$sendMessage
 
 function log(...values: any[]) {
-  sendMessage({ message: 'log', value: values })
+  sendMessage('log', { value: values })
 }
 
 const forage = useLocalForage()
@@ -25,9 +23,9 @@ function key(name: string) {
   return `${projectName.value}::${name}`
 }
 
-function saveKey(name: string) {
-  return `${projectName.value}::${saveName.value}::${name}`
-}
+// function saveKey(name: string) {
+//   return `${projectName.value}::${saveName.value}::${name}`
+// }
 
 async function loadProject(selectedProjectName: string) {
   selectedProjectName ??= projectName.value
@@ -57,20 +55,20 @@ async function loadSave() {
     await forage.setItem(key('saveNames'), [...saveNames.value])
   }
 
-  files.value = (await forage.getItem(saveKey('files'))) ?? {}
-  traceTree.value = (await forage.getItem(saveKey('tree'))) ?? undefined
+  // files.value = (await forage.getItem(saveKey('files'))) ?? {}
+  // traceTree.value = (await forage.getItem(saveKey('tree'))) ?? undefined
 }
 
 function watchState() {
-  watch(files, async (value) => {
-    if (projectName.value && saveName)
-      await forage.setItem(saveKey('files'), value)
-  })
+  // watch(files, async (value) => {
+  //   if (projectName.value && saveName)
+  //     await forage.setItem(saveKey('files'), value)
+  // })
 
-  watch(traceTree, async (value) => {
-    if (projectName.value && saveName)
-      await forage.setItem(saveKey('tree'), value)
-  })
+  // watch(traceTree, async (value) => {
+  //   if (projectName.value && saveName)
+  //     await forage.setItem(saveKey('tree'), value)
+  // })
 }
 
 // function manualSave() {

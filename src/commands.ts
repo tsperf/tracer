@@ -1,16 +1,15 @@
 import { basename, dirname, join } from 'node:path'
 import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
-import { createReadStream, readdir as readdirC, stat as statC } from 'node:fs'
+import { createReadStream, readdir as readdirC } from 'node:fs'
 import * as vscode from 'vscode'
-import { processTraceFiles } from '../shared/src/traceTree'
+import { filterTree, processTraceFiles } from '../shared/src/traceTree'
 import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import type { CommandId } from './constants'
-import { addTraceFile, clearTraceFiles, getProjectPath, getTraceDir, getWorkspacePath, openTerminal } from './storage'
+import { addTraceFile, clearTraceFiles, getProjectPath, getTraceDir, getWorkspacePath, openTerminal, setLastMessageTrigger } from './storage'
 
-const stat = promisify(statC)
 const readdir = promisify(readdirC)
 
 const commandHandlers: Record<
@@ -35,19 +34,17 @@ const commandHandlers: Record<
 
 async function sendTrace(dirName: string, fileName: string) {
   const fullFileName = join(dirName, fileName)
-  const fileStat = await stat(fullFileName)
-  const size = fileStat.size
 
   const stream = createReadStream(fullFileName, { autoClose: true, emitClose: true, encoding: 'utf-8' })
-
-  postMessage({ message: 'traceFileStart', fileName, size })
 
   let fileContents = ''
 
   stream.on('end', () => {
-    postMessage({ message: 'traceFileEnd', fileName })
+    postMessage({ message: 'traceFileLoaded', fileName, dirName })
     addTraceFile(fileName, fileContents)
     processTraceFiles() // todo wait for all files to avoid repeated work
+    const nodes = filterTree('check', '', 0)
+    postMessage({ message: 'showTree', nodes })
   })
 
   function readChunks() {
@@ -55,7 +52,6 @@ async function sendTrace(dirName: string, fileName: string) {
     if (chunk === null)
       return
 
-    postMessage({ message: 'traceFileChunk', fileName, chunk })
     fileContents += chunk
     setImmediate(readChunks)
   }
@@ -66,7 +62,10 @@ export function registerCommands(context: vscode.ExtensionContext) {
   for (const cmd in commandHandlers) {
     const disposable = vscode.commands.registerCommand(
       cmd,
-      commandHandlers[cmd as keyof typeof commandHandlers](context),
+      (...args: any[]) => {
+        setLastMessageTrigger({ command: cmd, args })
+        commandHandlers[cmd as keyof typeof commandHandlers](context)(args)
+      },
     )
 
     if (disposable)
@@ -82,8 +81,10 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
 
   const start = editor.selection.start
   const startOffset = editor.document.offsetAt(start)
-  postMessage({ message: 'gotoTracePosition', fileName: editor.document.fileName, position: startOffset - 1 })
   getTracePanel(context)?.reveal()
+  postMessage({ message: 'gotoTracePosition', fileName: editor.document.fileName, position: startOffset - 1 })
+  const nodes = filterTree('', editor.document.fileName, startOffset - 1)
+  postMessage({ message: 'showTree', nodes })
 }
 
 async function runTrace(context: vscode.ExtensionContext) {

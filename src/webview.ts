@@ -6,6 +6,7 @@ import * as vscode from 'vscode'
 import html from '../ui/dist/200.html?raw'
 import type { Message } from '../shared/src/messages'
 import { handleMessage } from './handleMessages'
+import { logMessage } from './storage'
 
 let holdContext: vscode.ExtensionContext | undefined
 export function setPanelContext(extensionContext: vscode.ExtensionContext) {
@@ -65,5 +66,6 @@ export function postMessage(message: Message) {
   if (!panel)
     prepareWebView()
 
+  logMessage(message)
   getTracePanel().webview.postMessage(message)
 }

@@ -1,7 +1,10 @@
 import z from 'zod'
+import type { Tree } from './traceTree'
+import { traceLine, typeLine } from './traceData'
 
 export const ping = z.object({
   message: z.literal('ping'),
+  text: z.string().optional(),
 })
 export type Ping = z.infer<typeof ping>
 
@@ -25,25 +28,12 @@ export const gotoLocation = z.object({
 })
 export type GotoLocation = z.infer<typeof gotoPosition>
 
-export const traceFileStart = z.object({
-  message: z.literal('traceFileStart'),
+export const traceFileLoaded = z.object({
+  message: z.literal('traceFileLoaded'),
   fileName: z.string(),
-  size: z.number(),
+  dirName: z.string(),
 })
-export type TraceFileStart = z.infer<typeof traceFileStart>
-
-export const traceFileEnd = z.object({
-  message: z.literal('traceFileEnd'),
-  fileName: z.string(),
-})
-export type TraceFileEnd = z.infer<typeof traceFileEnd>
-
-export const traceFileChunk = z.object({
-  message: z.literal('traceFileChunk'),
-  fileName: z.string(),
-  chunk: z.string(),
-})
-export type TraceFileChunk = z.infer<typeof traceFileChunk>
+export type TraceFileLoaded = z.infer<typeof traceFileLoaded>
 
 export const gotoTracePosition = z.object({
   message: z.literal('gotoTracePosition'),
@@ -90,19 +80,51 @@ export const log = z.object({
 })
 export type Log = z.infer<typeof log>
 
+export const filterTree = z.object({
+  message: z.literal('filterTree'),
+  startsWith: z.string(),
+  sourceFileName: z.string(),
+  position: z.literal('').or(z.number()),
+})
+export type FilterTree = z.infer<typeof filterTree>
+
+const zodTree: z.ZodType<Tree> = z.lazy(() =>
+  z.object({
+    id: z.number(),
+    line: traceLine,
+    children: z.array(zodTree),
+    types: z.array(typeLine),
+    childTypeCnt: z.number(),
+  }),
+)
+
+const showTree = z.object({
+  message: z.literal('showTree'),
+  nodes: z.array(zodTree),
+})
+export type ShowTree = z.infer<typeof showTree>
+
+// TODO: result message for filter tree
+// message for getting tree by id and result message
+
 export type Message = z.infer<typeof message>
 export const message = z.union([
   ping,
   pong,
+  filterTree,
   gotoLocation,
   gotoPosition,
-  traceFileChunk,
-  traceFileEnd,
-  traceFileStart,
   gotoTracePosition,
   positionTypeCounts,
   fileStats,
+  showTree,
   traceStart,
   traceStop,
+  traceFileLoaded,
   log,
 ])
+
+export type MessageType = Message['message']
+
+export type SpecificMessage<T extends MessageType> = Message & { message: T }
+export type MessageValues<T extends MessageType> = Omit<SpecificMessage<T>, 'message'>

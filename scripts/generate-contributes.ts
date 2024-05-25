@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { validateHeaderValue } from 'node:http'
 import { type CommandId, type ConfigKey, configKeys } from '../src/constants'
 import { extPrefix } from '../src/constants'
 
