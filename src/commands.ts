@@ -81,7 +81,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   const start = editor.selection.start
   const startOffset = editor.document.offsetAt(start)
   getTracePanel(context)?.reveal()
-  postMessage({ message: 'gotoTracePosition', fileName: editor.document.fileName, position: startOffset - 1 })
+  postMessage({ message: 'gotoTracePosition', fileName: editor.document.fileName, position: startOffset })
   showTree('', editor.document.fileName, startOffset - 1)
 }
 

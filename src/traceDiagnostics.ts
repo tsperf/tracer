@@ -102,7 +102,7 @@ function fileStatToRelativeDiagnostic({ pos, end, dur, types, totalTypes }: File
   const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes} ${relativeString(relative.types)} / ${relativeString(relative.totalTypes)}` : ''
 
   const msg = `Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
-  const startPos = document.positionAt(pos)
+  const startPos = document.positionAt(pos + 1)
   const endPos = document.positionAt(end)
   const range = new vscode.Range(startPos, endPos)
 
