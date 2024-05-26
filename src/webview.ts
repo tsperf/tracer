@@ -1,7 +1,9 @@
 import { join } from 'node:path'
 import * as vscode from 'vscode'
 
-// @ts-expect-error raw loader
+// error is not generated when running traces on just UI
+// eslint-disable-next-line ts/prefer-ts-expect-error
+// @ts-ignore raw loader
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
 import type { Message } from '../shared/src/messages'

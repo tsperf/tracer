@@ -17,6 +17,7 @@
   "exclude": [
     "examples/*",
     "node_modules",
-    "ui"
+    "ui",
+    "devUiDriver"
   ]
 }
