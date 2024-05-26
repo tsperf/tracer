@@ -5,6 +5,7 @@ import * as vscode from 'vscode'
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
 import type { Message } from '../shared/src/messages'
+import { showTree } from '../shared/src/traceTree'
 import { handleMessage } from './handleMessages'
 import { logMessage, sendStorageMeta } from './storage'
 
@@ -14,6 +15,12 @@ export function setPanelContext(extensionContext: vscode.ExtensionContext) {
 }
 let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
 
+let disposed = true
+
+export function isTraceViewAlive() {
+  return panel && !disposed
+}
+
 export function getTracePanel(context: vscode.ExtensionContext = holdContext!) {
   if (!panel)
     prepareWebView(context, false)
@@ -21,7 +28,7 @@ export function getTracePanel(context: vscode.ExtensionContext = holdContext!) {
   return panel!
 }
 
-export function prepareWebView(context: vscode.ExtensionContext | undefined = holdContext, show = true) {
+export function prepareWebView(context: vscode.ExtensionContext | undefined = holdContext, show = false) {
   if (!context)
     throw new Error('context was not passed or set')
 
@@ -30,12 +37,15 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
     panel = vscode.window.createWebviewPanel(
       'vueWebView',
       'Trace Viewer',
-      { viewColumn: vscode.ViewColumn.Beside, preserveFocus: !show },
+      { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
       { enableScripts: true, retainContextWhenHidden: true },
     )
+    context.subscriptions.push(panel)
 
+    disposed = false
     panel.onDidDispose(() => {
       panel = undefined
+      disposed = true
     })
 
     const processedHTML = (html as string).replace(
@@ -60,14 +70,13 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
     panel.reveal()
 
   sendStorageMeta()
+  showTree('check', '', 0)
 
   return ret
 }
 
 export function postMessage(message: Message) {
-  if (!panel)
-    prepareWebView()
-
   logMessage(message)
-  getTracePanel().webview.postMessage(message)
+  if (isTraceViewAlive())
+    getTracePanel().webview.postMessage(message)
 }

@@ -3,12 +3,13 @@ import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import { createReadStream, readdir as readdirC } from 'node:fs'
 import * as vscode from 'vscode'
-import { processTraceFiles, showTree } from '../shared/src/traceTree'
+import { getStatsFromTree, processTraceFiles, showTree } from '../shared/src/traceTree'
 import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import type { CommandId } from './constants'
 import { addTraceFile, clearTraceFiles, getProjectPath, getTraceDir, getWorkspacePath, openTerminal, setLastMessageTrigger } from './storage'
+import { addTraceDiagnostics } from './traceDiagnostics'
 
 const readdir = promisify(readdirC)
 
@@ -16,14 +17,12 @@ const commandHandlers: Record<
   CommandId,
   (context: vscode.ExtensionContext) => (...args: any[]) => void
   > = {
-    'tsperf.tracer.runTrace': (context: vscode.ExtensionContext) => () => runTrace(context),
+    'tsperf.tracer.runTrace': () => () => runTrace(),
     'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
     'tsperf.tracer.gotoTracePosition': (context: vscode.ExtensionContext) => () => gotoTracePosition(context),
-    'tsperf.tracer.sendTrace': (context: vscode.ExtensionContext) => (event: unknown) => {
+    'tsperf.tracer.sendTrace': () => (event: unknown) => {
       if (!(Array.isArray(event) && event[0] instanceof vscode.Uri))
         return
-
-      getTracePanel(context)
 
       const fsPath = event[0].fsPath
 
@@ -44,6 +43,11 @@ async function sendTrace(dirName: string, fileName: string) {
     addTraceFile(fileName, fileContents)
     processTraceFiles() // todo wait for all files to avoid repeated work
     showTree('check', '', 0)
+
+    for (const editor of vscode.window.visibleTextEditors) {
+      const visibleFileName = editor.document.fileName
+      addTraceDiagnostics(visibleFileName, getStatsFromTree(visibleFileName))
+    }
   })
 
   function readChunks() {
@@ -85,8 +89,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   showTree('', editor.document.fileName, startOffset - 1)
 }
 
-async function runTrace(context: vscode.ExtensionContext) {
-  getTracePanel(context)
+async function runTrace() {
   const { traceCmd } = getCurrentConfig()
   const traceDir = `${await getTraceDir()}`
 
