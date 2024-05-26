@@ -1,8 +1,9 @@
 import { getTraceFiles } from '../../src/storage'
+import { postMessage } from '../../src/webview'
 import type { FileStat } from './messages'
 import type { DataLine, TraceData, TypeLine } from './traceData'
 
-export interface Tree { id: number, line: DataLine, children: Tree[], types: TypeLine[], childTypeCnt: number }
+export interface Tree { id: number, line: DataLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
   return {
     id: 0,
@@ -17,7 +18,9 @@ function getRoot(): Tree {
     },
     children: [],
     types: [],
+    childCnt: 0,
     childTypeCnt: 0,
+    typeCnt: 0,
   } as const
 }
 
@@ -51,13 +54,13 @@ export function toTree(traceData: TraceData): Tree {
 
     if (!line.dur) {
       if ('id' in line)
-        curr.types.push(line)
+        curr.typeCnt = curr.types.push(line)
     }
     else {
       endTs = line.ts + (line.dur ?? 0)
-      const child = { id: ++id, line, children: [], types: [], childTypeCnt: 0 }
+      const child = { id: ++id, line, children: [], types: [], childTypeCnt: 0, childCnt: 0, typeCnt: 0 }
       treeIndexes[id] = child
-      curr.children.push(child)
+      curr.childCnt = curr.children.push(child)
       stack.push(curr)
       curr = child
     }
@@ -87,6 +90,32 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
     return [tree]
 
   return tree.children.map(child => filterTree(startsWith, sourceFileName, position, child)).flat()
+}
+
+const treeIdNodes = new Map<number, Tree>()
+export function showTree(startsWith: string, sourceFileName: string, position: number | '', updateUi = true, tree = traceTree) {
+  const nodes = filterTree(startsWith, sourceFileName, position, tree)
+  const skinnyNodes = nodes.map(x => ({ ...x, children: [], types: [] }))
+  if (updateUi)
+    postMessage({ message: 'filterTree', startsWith, sourceFileName, position })
+  postMessage({ message: 'showTree', nodes: skinnyNodes })
+
+  nodes.forEach(node => treeIdNodes.set(node.id, node))
+  return nodes
+}
+
+export function getChildrenById(id: number) {
+  const nodes = treeIdNodes.get(id)?.children ?? []
+  const ret: typeof nodes = []
+  nodes.forEach((node) => {
+    treeIdNodes.set(node.id, node)
+    ret.push({ ...node, children: [], types: [] })
+  })
+  return ret
+}
+
+export function getTypesById(id: number) {
+  return treeIdNodes.get(id)?.types ?? []
 }
 
 export function getStatsFromTree(fileName: string) {

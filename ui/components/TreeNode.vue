@@ -3,19 +3,56 @@
 import type { Tree } from '../../shared/src/traceTree'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
+
+const sendMesage = useNuxtApp().$sendMessage
+const Messages = useNuxtApp().$Messages
+
+const children = shallowRef([] as Tree['children'])
+const types = shallowRef([] as Tree['types'])
+
+function fetchChildren() {
+  sendMesage('childrenById', { id: props.tree.id })
+}
+
+function fetchTypes() {
+  sendMesage('typesById', { id: props.tree.id })
+}
+
+function handleMessage(e: MessageEvent<unknown>) {
+  const parsed = Messages.message.safeParse(e.data)
+  if (!parsed.success)
+    return
+
+  switch (parsed.data.message) {
+    case 'childrenById':
+      if (parsed.data.id === props.tree.id)
+        children.value = parsed.data.children ?? []
+      break
+    case 'typesById':
+      if (parsed.data.id === props.tree.id)
+        types.value = parsed.data.types ?? []
+      break
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('message', handleMessage)
+})
 </script>
 
 <template>
   <div class="pl-3 ">
-    <!-- children: {{ tree.children.length }} -->
     <TraceLine v-if="'name' in tree.line" :line="tree.line" />
-    <UExpand v-if="props.tree.children.length > 0" :label=" `Children: ${props.tree.children.length} ${props.tree.childTypeCnt || props.tree.types.length ? `Types: ${props.tree.childTypeCnt + props.tree.types.length}` : ''}`" class="border">
-      <template v-for="(node, idx) of props.tree.children" :key="idx">
+    <UExpand v-if="props.tree.childCnt > 0" :label=" `Children: ${props.tree.childCnt} ${props.tree.childTypeCnt || props.tree.typeCnt ? `Types: ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}`" class="border" @expand="fetchChildren">
+      <template v-for="(node, idx) of children" :key="idx">
         <TreeNode v-if="'name' in tree.line" :depth="depth + 1" :tree="node" />
       </template>
+      <div v-if="children.length === 0">
+        Fetching...
+      </div>
     </Uexpand>
-    <UExpand v-if="props.tree.types.length > 0" :label="`Types: ${props.tree.types.length}`">
-      <TypeTable :types="props.tree.types" />
+    <UExpand v-if="props.tree.typeCnt > 0" :label="`Types: ${props.tree.typeCnt}`" @expand="fetchTypes">
+      <TypeTable :types="types" />
     </UExpand>
   </div>
 </template>

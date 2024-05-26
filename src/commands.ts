@@ -3,7 +3,7 @@ import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import { createReadStream, readdir as readdirC } from 'node:fs'
 import * as vscode from 'vscode'
-import { filterTree, processTraceFiles } from '../shared/src/traceTree'
+import { processTraceFiles, showTree } from '../shared/src/traceTree'
 import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
@@ -43,8 +43,7 @@ async function sendTrace(dirName: string, fileName: string) {
     postMessage({ message: 'traceFileLoaded', fileName, dirName })
     addTraceFile(fileName, fileContents)
     processTraceFiles() // todo wait for all files to avoid repeated work
-    const nodes = filterTree('check', '', 0)
-    postMessage({ message: 'showTree', nodes })
+    showTree('check', '', 0)
   })
 
   function readChunks() {
@@ -83,8 +82,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   const startOffset = editor.document.offsetAt(start)
   getTracePanel(context)?.reveal()
   postMessage({ message: 'gotoTracePosition', fileName: editor.document.fileName, position: startOffset - 1 })
-  const nodes = filterTree('', editor.document.fileName, startOffset - 1)
-  postMessage({ message: 'showTree', nodes })
+  showTree('', editor.document.fileName, startOffset - 1)
 }
 
 async function runTrace(context: vscode.ExtensionContext) {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
-import { filterTree } from '../shared/src/traceTree'
+import { getChildrenById, getTypesById, showTree } from '../shared/src/traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
 import { openSave, setLastMessageTrigger } from './storage'
@@ -38,12 +38,20 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       log(...data.value)
       break
     case 'filterTree': {
-      const nodes = filterTree(data.startsWith, data.sourceFileName, data.position)
-      postMessage({ message: 'showTree', nodes })
+      showTree(data.startsWith, data.sourceFileName, data.position, false)
       break
     }
     case 'saveOpen': {
       openSave(data.name)
+      break
+    }
+    case 'childrenById': {
+      postMessage({ ...data, children: getChildrenById(data.id) })
+      break
+    }
+    case 'typesById': {
+      postMessage({ ...data, types: getTypesById(data.id) })
+      break
     }
   }
 }

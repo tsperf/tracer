@@ -95,6 +95,8 @@ const zodTree: z.ZodType<Tree> = z.lazy(() =>
     children: z.array(zodTree),
     types: z.array(typeLine),
     childTypeCnt: z.number(),
+    childCnt: z.number(),
+    typeCnt: z.number(),
   }),
 )
 
@@ -131,10 +133,25 @@ export const saveNames = z.object({
 })
 export type SaveNames = z.infer<typeof saveNames>
 
+export const childrenById = z.object({
+  message: z.literal('childrenById'),
+  id: z.number(),
+  children: z.array(zodTree).optional(),
+})
+export type ChildrenById = z.infer<typeof childrenById>
+
+export const typesById = z.object({
+  message: z.literal('typesById'),
+  id: z.number(),
+  types: z.array(typeLine).optional(),
+})
+export type TypesById = z.infer<typeof typesById>
+
 export type Message = z.infer<typeof message>
 export const message = z.union([
   ping,
   pong,
+  childrenById,
   fileStats,
   filterTree,
   gotoLocation,
@@ -149,6 +166,7 @@ export const message = z.union([
   traceStart,
   traceStop,
   traceFileLoaded,
+  typesById,
   log,
 ])
 
