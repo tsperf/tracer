@@ -1,89 +1,58 @@
 <script setup lang="ts">
 const sendMessage = useNuxtApp().$sendMessage
 
-function log(...values: any[]) {
-  sendMessage('log', { value: values })
-}
-
-const forage = useLocalForage()
+const Messages = useNuxtApp().$Messages
 
 const projectName = ref('')
 const saveName = ref('default')
 
-const projectNames = shallowRef([] as string[])
-const saveNames = shallowRef([] as string[])
+const projectNames = ref([] as string[])
+const saveNames = ref([] as string[])
 
-async function loadMeta() {
-  projectNames.value = (await forage.getItem('projectNames')) ?? []
-  if (!projectName.value)
-    projectName.value = (await forage.getItem('projectName')) ?? ''
-}
-
-function key(name: string) {
-  return `${projectName.value}::${name}`
-}
-
-// function saveKey(name: string) {
-//   return `${projectName.value}::${saveName.value}::${name}`
-// }
-
-async function loadProject(selectedProjectName: string) {
-  selectedProjectName ??= projectName.value
-  if (!selectedProjectName)
+function handleMessage(e: MessageEvent<unknown>) {
+  const parsed = Messages.message.safeParse(e.data)
+  if (!parsed.success)
     return
 
-  log('loadProject', selectedProjectName)
+  switch (parsed.data.message) {
+    case 'projectNames':
+      projectNames.value = parsed.data.names
+      break
 
-  if (!(projectNames.value.includes(selectedProjectName))) {
-    projectNames.value.push(selectedProjectName)
-    await forage.setItem('projectNames', [...projectNames.value])
-    log('Added Project', selectedProjectName)
+    case 'saveNames':
+      saveNames.value = parsed.data.names
+      break
+
+    case 'saveOpen': {
+      saveName.value = parsed.data.name
+      break
+    }
+
+    case 'projectOpen': {
+      projectName.value = parsed.data.name
+      break
+    }
   }
-
-  saveNames.value = (await forage.getItem(key('saveNames'))) ?? []
-  saveName.value = (await forage.getItem(key('saveName'))) ?? 'default'
-
-  loadSave()
 }
 
-async function loadSave() {
-  if (!projectName.value || !saveName.value)
-    return
-
-  if (!(saveNames.value.includes(saveName.value))) {
-    saveNames.value.push(saveName.value)
-    await forage.setItem(key('saveNames'), [...saveNames.value])
-  }
-
-  // files.value = (await forage.getItem(saveKey('files'))) ?? {}
-  // traceTree.value = (await forage.getItem(saveKey('tree'))) ?? undefined
-}
-
-function watchState() {
-  // watch(files, async (value) => {
-  //   if (projectName.value && saveName)
-  //     await forage.setItem(saveKey('files'), value)
-  // })
-
-  // watch(traceTree, async (value) => {
-  //   if (projectName.value && saveName)
-  //     await forage.setItem(saveKey('tree'), value)
-  // })
-}
-
-// function manualSave() {
+// function loadProject() {
+//   sendMessage('projectOpen', { name: projectName.value })
 // }
+
+function loadSave() {
+  sendMessage('saveOpen', { name: saveName.value })
+}
 
 onMounted(() => {
-  loadMeta()
-  watchState()
+  window.addEventListener('message', handleMessage)
 })
 </script>
 
 <template>
   <div class="flex flex-col gap-1">
     <ULabled label="Project Name">
-      <USelectMenu v-model="projectName" :options="projectNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadProject" />
+      {{ projectName }}
+      <!-- <USelectMenu v-model="projectName" :options="projectNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadProject" /> -->
     </ULabled>
     <ULabled label="Save Name">
       <USelectMenu v-model="saveName" :options="saveNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadSave" />

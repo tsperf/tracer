@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Messages from '../../shared/src/messages'
+const Messages = useNuxtApp().$Messages
 
 const files = reactive([] as { fileName: string, dirName: string }[])
 

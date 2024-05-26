@@ -107,16 +107,44 @@ export type ShowTree = z.infer<typeof showTree>
 // TODO: result message for filter tree
 // message for getting tree by id and result message
 
+export const projectOpen = z.object({
+  message: z.literal('projectOpen'),
+  name: z.string(),
+})
+export type ProjectOpen = z.infer<typeof projectOpen>
+
+export const saveOpen = z.object({
+  message: z.literal('saveOpen'),
+  name: z.string(),
+})
+export type SaveOpen = z.infer<typeof saveOpen>
+
+export const projectNames = z.object({
+  message: z.literal('projectNames'),
+  names: z.array(z.string()),
+})
+export type ProjectNames = z.infer<typeof projectNames>
+
+export const saveNames = z.object({
+  message: z.literal('saveNames'),
+  names: z.array(z.string()),
+})
+export type SaveNames = z.infer<typeof saveNames>
+
 export type Message = z.infer<typeof message>
 export const message = z.union([
   ping,
   pong,
+  fileStats,
   filterTree,
   gotoLocation,
   gotoPosition,
   gotoTracePosition,
   positionTypeCounts,
-  fileStats,
+  projectNames,
+  projectOpen,
+  saveNames,
+  saveOpen,
   showTree,
   traceStart,
   traceStop,

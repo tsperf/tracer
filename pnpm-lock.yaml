@@ -41,9 +41,6 @@ importers:
       eslint:
         specifier: ^9.3.0
         version: 9.3.0
-      nuxt3-localforage:
-        specifier: ^0.1.2
-        version: 0.1.2(localforage@1.10.0)(rollup@4.17.2)
       open:
         specifier: ^10.1.0
         version: 10.1.0

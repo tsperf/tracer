@@ -6,7 +6,7 @@ import * as vscode from 'vscode'
 import html from '../ui/dist/200.html?raw'
 import type { Message } from '../shared/src/messages'
 import { handleMessage } from './handleMessages'
-import { logMessage } from './storage'
+import { logMessage, sendStorageMeta } from './storage'
 
 let holdContext: vscode.ExtensionContext | undefined
 export function setPanelContext(extensionContext: vscode.ExtensionContext) {
@@ -58,6 +58,8 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
 
   if (show)
     panel.reveal()
+
+  sendStorageMeta()
 
   return ret
 }

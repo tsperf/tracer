@@ -3,7 +3,7 @@ import * as Messages from '../shared/src/messages'
 import { filterTree } from '../shared/src/traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
-import { setLastMessageTrigger } from './storage'
+import { openSave, setLastMessageTrigger } from './storage'
 import { collection as diagnosticCollection } from '.'
 
 let positionTypeCounts: Messages.PositionTypeCounts['counts'] = {}
@@ -41,6 +41,9 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       const nodes = filterTree(data.startsWith, data.sourceFileName, data.position)
       postMessage({ message: 'showTree', nodes })
       break
+    }
+    case 'saveOpen': {
+      openSave(data.name)
     }
   }
 }

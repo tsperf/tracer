@@ -130,13 +130,17 @@ async function runTrace(context: vscode.ExtensionContext) {
 
     clearTraceFiles()
 
-    try {
-      const fileNames = await readdir(traceDir)
-      for (const fileName of fileNames)
-        sendTrace(traceDir, fileName)
-    }
-    catch (e) {
-      vscode.window.showErrorMessage(e instanceof Error ? e.message : `${e}`)
-    }
+    await sendTraceDir(traceDir)
   })
+}
+
+export async function sendTraceDir(traceDir: string) {
+  try {
+    const fileNames = await readdir(traceDir)
+    for (const fileName of fileNames)
+      sendTrace(traceDir, fileName)
+  }
+  catch (e) {
+    vscode.window.showErrorMessage(e instanceof Error ? e.message : `${e}`)
+  }
 }

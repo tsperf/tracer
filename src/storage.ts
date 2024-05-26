@@ -1,25 +1,94 @@
-import { mkdir as mkdirC, writeFileSync } from 'node:fs'
+import { mkdir as mkdirC, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
 import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
+import { postMessage } from './webview'
+import { sendTraceDir } from './commands'
 
 // TODO: track creation of directories to avoid excess mkdir calls
 
 const mkdir = promisify(mkdirC)
 
-const saveName = 'default'
+const saveNames: string[] = []
+const projectNames: string[] = []
+let saveName = 'default'
+let projectName = 'Not Named'
+let attemptedGetProjectName = false
+
+async function getProjectName() {
+  if (attemptedGetProjectName)
+    return projectName
+  attemptedGetProjectName = true
+
+  try {
+    const packageStr = readFileSync(join(getWorkspacePath(), 'package.json'), { encoding: 'utf8' })
+    const json = JSON.parse(packageStr)
+    if ('name' in json && typeof json.name === 'string')
+      projectName = json.name
+  }
+  catch (_e) {
+  /* */
+  }
+
+  return projectName
+}
+
+export function sendStorageMeta() {
+  postMessage({ message: 'projectNames', names: projectNames })
+  postMessage({ message: 'saveNames', names: saveNames })
+  postMessage({ message: 'projectOpen', name: projectName })
+  postMessage({ message: 'saveOpen', name: saveName })
+}
+
+export async function openSave(name: string) {
+  if (!saveNames.includes(name))
+    saveNames.push(name)
+  saveName = name
+
+  const traceDir = await getTraceDir()
+  mkdir(traceDir, { recursive: true })
+
+  sendStorageMeta()
+  void sendTraceDir(traceDir)
+}
+
+export async function openProject(name: string) {
+  if (!projectNames.includes(name))
+    projectNames.push(name)
+  projectName = name
+  const projectPath = await getProjectPath()
+  mkdir(projectPath, { recursive: true })
+
+  const files = readdirSync(projectPath)
+  for (const file of files) {
+    const savePath = join(projectPath, file)
+    const stat = statSync(savePath)
+    if (stat.isDirectory()) {
+      if (!saveNames.includes(file)) {
+        saveNames.push(file)
+        mkdir(savePath, { recursive: true })
+      }
+      // TODO: check for project config file, particularly to get the last used save name
+    }
+  }
+
+  openSave('default')
+}
 
 let context: vscode.ExtensionContext
-export function initStorage(extensionContext: vscode.ExtensionContext) {
+export async function initStorage(extensionContext: vscode.ExtensionContext) {
   context = extensionContext
+
+  const projectName = await getProjectName()
+  openProject(projectName)
 }
 
 export async function getProjectPath() {
   const storagePath = context.globalStorageUri.fsPath
-  const projectPath = join(storagePath, getProjectName())
+  const projectPath = join(storagePath, await getProjectName())
   await mkdir(projectPath, { recursive: true })
   return projectPath
 }
@@ -34,10 +103,6 @@ export async function getTraceDir() {
   const traceDir = join(await getSavePath(), 'traces')
   await mkdir(traceDir, { recursive: true })
   return traceDir
-}
-
-export function getProjectName() {
-  return 'TODO'
 }
 
 export function getWorkspacePath(): string {
