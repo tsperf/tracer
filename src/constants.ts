@@ -14,6 +14,7 @@ export const configKeys = [
   'traceTimeRelativeThresholds',
   'traceTypeRelativeThresholds',
   'traceTotalTypeRelativeThresholds',
+  'enableTraceMetrics',
 ] as const
 
 export type ConfigKey = typeof configKeys[number]

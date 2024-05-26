@@ -152,6 +152,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.enableTraceMetrics': {
+      type: 'boolean',
+      default: true,
+      description: 'Create diagnostics from trace data',
+    },
+  },
+  {
     'tsperf.tracer.traceTimeThresholds': threshold(),
   },
   {

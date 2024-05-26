@@ -82,6 +82,12 @@
           "description": "Benchmark all allIdentifiers or only the first of each statement",
           "order": 5
         },
+        "tsperf.tracer.enableTraceMetrics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Create diagnostics from trace data",
+          "order": 6
+        },
         "tsperf.tracer.traceTimeThresholds": {
           "type": "object",
           "properties": {
@@ -107,7 +113,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 6,
+          "order": 7,
           "markdownDescription": "# Trace Time Thresholds\n\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTypeThresholds": {
@@ -135,7 +141,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 7,
+          "order": 8,
           "markdownDescription": "# Trace Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created locally in this check call exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTotalTypeThresholds": {
@@ -163,14 +169,14 @@
             "error": -1
           },
           "description": "todo",
-          "order": 8,
+          "order": 9,
           "markdownDescription": "# Trace Total Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created in this check call stack exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceDiagnosticsRelative": {
           "type": "boolean",
           "default": false,
           "description": "Use measurements relative to the average for trace diagnostics",
-          "order": 9
+          "order": 10
         },
         "tsperf.tracer.traceTimeRelativeThresholds": {
           "type": "object",
@@ -197,7 +203,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 10
+          "order": 11
         },
         "tsperf.tracer.traceTypeRelativeThresholds": {
           "type": "object",
@@ -224,7 +230,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 11
+          "order": 12
         },
         "tsperf.tracer.traceTotalTypeRelativeThresholds": {
           "type": "object",
@@ -251,7 +257,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 12
+          "order": 13
         }
       }
     },

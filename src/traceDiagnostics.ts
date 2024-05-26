@@ -38,6 +38,9 @@ const averageThresholds = {
 }
 
 export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
+  if (!getCurrentConfig().enableTraceMetrics)
+    return
+
   const relative = getCurrentConfig().traceDiagnosticsRelative
 
   const uri = vscode.Uri.file(fileName)
@@ -168,3 +171,8 @@ function getRelativeSeverity(measure: Partial<{ [k in keyof typeof severityThres
   const index = thresholds.findIndex(x => x >= 0 && x <= value * 100)
   return index === -1 ? 99 : index
 }
+
+afterConfigUpdate(['enableTraceMetrics'], (config) => {
+  if (!config.enableTraceMetrics)
+    diagnosticCollection.clear()
+})
