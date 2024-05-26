@@ -6,5 +6,6 @@
   "eslint.lintTask.enable": false,
   "[typescript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  }
+  },
+  "tsperf.tracer.traceCmd": "/home/hw/projects/TypeScript/bin/tsc --noEmit --generateTrace ${traceDir}"
 }
