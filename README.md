@@ -24,4 +24,4 @@ If the trace is run with a version of `tsc` that includes timestamps in `types.j
 
 ## License
 
-[MIT](./LICENSE) License © 2024 [Aleksandra Sikora](https://github.com/beerose), [Daniel Roe](https://github.com/danielroe), and [Larry Layland](https://github.com/typeholes)
+Published under the [MIT License](./LICENCE).
