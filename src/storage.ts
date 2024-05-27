@@ -7,6 +7,7 @@ import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
 import { postMessage } from './webview'
 import { sendTraceDir } from './commands'
+import { setStatusBarState } from './statusBar'
 
 // TODO: track creation of directories to avoid excess mkdir calls
 
@@ -47,6 +48,7 @@ export async function openSave(name: string) {
   if (!saveNames.includes(name))
     saveNames.push(name)
   saveName = name
+  setStatusBarState('saveName', saveName)
 
   const traceDir = await getTraceDir()
   mkdir(traceDir, { recursive: true })
@@ -59,6 +61,7 @@ export async function openProject(name: string) {
   if (!projectNames.includes(name))
     projectNames.push(name)
   projectName = name
+  setStatusBarState('projectName', projectName)
   const projectPath = await getProjectPath()
   mkdir(projectPath, { recursive: true })
 

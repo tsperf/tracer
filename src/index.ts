@@ -14,6 +14,7 @@ import { registerCommands } from './commands'
 import { initDiagnostics } from './traceDiagnostics'
 import { setPanelContext } from './webview'
 import { initStorage } from './storage'
+import { initStatusBar } from './statusBar'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -47,6 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
   initStorage(context)
   setPanelContext(context)
   registerCommands(context)
+  initStatusBar(context)
   initDiagnostics(context)
 }
 

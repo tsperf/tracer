@@ -10,6 +10,7 @@ import { log } from './logger'
 import type { CommandId } from './constants'
 import { addTraceFile, clearTraceFiles, getProjectPath, getTraceDir, getWorkspacePath, openTerminal, setLastMessageTrigger } from './storage'
 import { addTraceDiagnostics } from './traceDiagnostics'
+import { setStatusBarState } from './statusBar'
 
 const readdir = promisify(readdirC)
 
@@ -115,18 +116,23 @@ async function runTrace() {
 
   postMessage({ message: 'traceStart' })
 
+  setStatusBarState('tracing', true)
   const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: true })
   cmdProcess.on('error', (error) => {
     vscode.window.showErrorMessage(error.message)
   })
 
   cmdProcess.on('exit', async (code) => {
+    setStatusBarState('tracing', false)
     if (code) {
+      setStatusBarState('traceError', true)
       vscode.window.showErrorMessage('error running trace')
       const terminal = await openTerminal()
       terminal.sendText(fullCmd)
       return
     }
+
+    setStatusBarState('traceError', false)
     postMessage({ message: 'traceStop' })
 
     clearTraceFiles()
