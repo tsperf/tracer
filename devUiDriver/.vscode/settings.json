@@ -1,9 +1,0 @@
-{
-  "cSpell.words": [
-    "tsperf"
-  ],
-  "editor.formatOnSave": true,
-  "editor.formatOnPaste": true,
-  "typescript.format.enable": false,
-  "javascript.format.enable": false
-}

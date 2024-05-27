@@ -1,3 +1,0 @@
-{
-  "tsperf.tracer.traceCmd": "pnpm /home/hw/projects/TypeScript/bin/tsc --noEmit --generateTrace ${traceDir}"
-}
