@@ -1,6 +1,6 @@
 <!-- eslint-disable @typescript-eslint/no-non-null-assertion -->
 <script setup lang="ts">
-import type { TraceLine } from '~/src/traceData'
+import type { TraceLine } from '../../shared/src/traceData'
 
 const props = defineProps<{ line: TraceLine }>()
 
@@ -10,7 +10,7 @@ function goto(fileName: string | undefined, pos: number | undefined) {
   if (!fileName || !pos)
     return
 
-  sendMessage({ message: 'gotoPosition', fileName, pos })
+  sendMessage('gotoPosition', { fileName, pos })
 }
 </script>
 

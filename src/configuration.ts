@@ -10,7 +10,15 @@ const currentConfig = {
   restartTsserverOnIteration: false,
   allIdentifiers: false,
   // eslint-disable-next-line no-template-curly-in-string
-  traceCmd: 'npx tsc --generateTrace ${traceDir}',
+  traceCmd: 'npx tsc --noEmit --generateTrace ${traceDir}',
+  traceTimeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTypeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTotalTypeThresholds: { info: 1, warning: -1, error: -1 },
+  traceDiagnosticsRelative: true,
+  traceTimeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTypeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTotalTypeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+  enableTraceMetrics: true,
 } satisfies Record<ConfigKey, any>
 
 export function getCurrentConfig() {
@@ -29,6 +37,17 @@ function isBoolean(x: unknown): x is boolean {
   return typeof x === 'boolean'
 }
 
+interface Thresholds {
+  info: number
+  warning: number
+  error: number
+}
+function isThresholds(x: unknown): x is Thresholds {
+  return x !== null && x !== undefined && typeof x === 'object'
+    && 'info' in x && 'warning' in x && 'error' in x
+    && typeof x.info === 'number' && typeof x.warning === 'number' && typeof x.error === 'number'
+}
+
 const configValidate = {
   typescriptPath: isString,
   typescriptPathMode: isString,
@@ -36,6 +55,14 @@ const configValidate = {
   restartTsserverOnIteration: isBoolean,
   allIdentifiers: isBoolean,
   traceCmd: isString,
+  traceTimeThresholds: isThresholds,
+  traceTypeThresholds: isThresholds,
+  traceTotalTypeThresholds: isThresholds,
+  traceDiagnosticsRelative: isBoolean,
+  traceTimeRelativeThresholds: isThresholds,
+  traceTypeRelativeThresholds: isThresholds,
+  traceTotalTypeRelativeThresholds: isThresholds,
+  enableTraceMetrics: isBoolean,
 } satisfies Record<ConfigKey, any>
 
 function noop() {
@@ -48,6 +75,14 @@ const configHandlers = {
   restartTsserverOnIteration: noop,
   allIdentifiers: noop,
   traceCmd: noop,
+  traceTimeThresholds: noop,
+  traceTypeThresholds: noop,
+  traceTotalTypeThresholds: noop,
+  traceDiagnosticsRelative: noop,
+  traceTimeRelativeThresholds: noop,
+  traceTypeRelativeThresholds: noop,
+  traceTotalTypeRelativeThresholds: noop,
+  enableTraceMetrics: noop,
 } satisfies Record<ConfigKey, any>
 
 let configuration = vscode.workspace.getConfiguration(extPrefix)

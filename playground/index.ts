@@ -34,7 +34,7 @@ const example = {} as NodeItem<
    },
    Generics
 >
-const exampleUsage1 = example<{ Output: number }, { Error: Error }>()
+const exampleUsage1 = example<{ Output: number }, { Error: Error }>() ?? undefined
 const exampleUsage2 = exampleUsage1<{ Output: number }>()
 const exampleUsage3 = exampleUsage2<{ Output: number }>()
 const exampleUsage4 = exampleUsage3<{ Output: number }>()

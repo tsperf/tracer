@@ -1,1 +1,0 @@
-{ "message": "fileStats", "fileName": "index.ts", "stats": [] }

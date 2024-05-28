@@ -1,57 +1,21 @@
+// TODO:  handle receiving an array of trees to display here
 <script setup lang="ts">
-import * as Messages from '../../messages/src/messages'
+import type { Tree } from '../../shared/src/traceTree'
 import TreeNode from './TreeNode.vue'
-import { type Tree, typesInNode } from '~/src/traceTree'
-import type { TraceLine } from '~/src/traceData'
 
-const sendMessage = useNuxtApp().$sendMessage
+const Messages = useNuxtApp().$Messages
 
-const tree = useState<Tree>('traceTree')
-
-const filters = useState<{
-  startsWith: string
-  sourceFileName: string
-  position: number
-}>('treeFilters')
+const nodes = ref([] as Tree[])
 
 function handleMessage(e: MessageEvent<unknown>) {
-  const parsed = Messages.message.safeParse(e.data)
-  if (!parsed.success)
+  const message = Messages.message.safeParse(e.data)
+  if (!message.success)
     return
 
-  if (parsed.data.message === 'fileStats') {
-    filters.value.startsWith = 'check'
-    filters.value.sourceFileName = parsed.data.fileName
-    filters.value.position = 0
-
-    const stats: typeof parsed.data.stats = []
-    function visit(node: Tree) {
-      if ('name' in node.line) {
-        const line = node.line as TraceLine
-        if (
-          line.dur
-          && line.args?.path
-          && line.args?.pos
-          && line.args?.end
-        ) {
-          stats.push({
-            dur: line.dur,
-            pos: line.args.pos,
-            end: line.args.end,
-            types: node.children.filter(x => 'id' in x.line).length,
-            totalTypes: typesInNode(node),
-          })
-        }
-      }
-      node.children.forEach(visit)
-    }
-
-    visit(tree.value)
-    sendMessage({
-      message: 'fileStats',
-      fileName: parsed.data.fileName,
-      stats,
-    })
+  if (message.data.message === 'showTree') {
+    if (message.data.replace)
+      nodes.value = []
+    nodes.value.push(...message.data.nodes)
   }
 }
 
@@ -61,9 +25,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <UContainer v-if="tree">
-    {{ tree.children.length }}
-    {{ tree.children.filter((x) => x.children.length > 0).length }}
-    <TreeNode :tree="tree" :depth="0" :is-in-check="false" />
+  <UContainer>
+    <template v-for="tree of nodes" :key="tree.id">
+      <TreeNode :tree="tree" :depth="0" :is-in-check="false" />
+    </template>
   </UContainer>
 </template>

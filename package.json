@@ -32,7 +32,7 @@
   ],
   "contributes": {
     "configuration": {
-      "title": "tsperf.tracer",
+      "title": "TsPerf Tracer",
       "properties": {
         "tsperf.tracer.typescriptPathMode": {
           "type": "string",
@@ -49,73 +49,271 @@
             "VsCode TSDK setting",
             "node_modules in you project",
             "Use tracer TypeScript path setting"
-          ]
+          ],
+          "order": 0
         },
         "tsperf.tracer.traceCmd": {
           "type": "string",
-          "default": "npx tsc --generateTrace ${traceDir}",
-          "description": "command to generate tsc traces"
+          "default": "npx tsc --noEmit --generateTrace ${traceDir}",
+          "description": "command to generate tsc traces",
+          "order": 1
         },
         "tsperf.tracer.typescriptPath": {
           "type": "string",
           "default": "",
-          "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'"
+          "description": "Path to TypeScript. Must be specified if 'Use TypeScript from' is 'Use tracer TypeScript path setting'",
+          "order": 2
         },
         "tsperf.tracer.benchmarkIterations": {
           "type": "number",
           "default": 3,
-          "description": "Higher values reduce variance but increase benchmarking time"
+          "description": "Higher values reduce variance but increase benchmarking time",
+          "order": 3
         },
         "tsperf.tracer.restartTsserverOnIteration": {
           "type": "boolean",
           "default": false,
-          "description": "Restart tsserver on each iteration to avoid caching influincing measurements"
+          "description": "Restart tsserver on each iteration to avoid caching influincing measurements",
+          "order": 4
         },
         "tsperf.tracer.allIdentifiers": {
           "type": "boolean",
           "default": false,
-          "description": "Benchmark all allIdentifiers or only the first of each statement"
+          "description": "Benchmark all allIdentifiers or only the first of each statement",
+          "order": 5
+        },
+        "tsperf.tracer.enableTraceMetrics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Create diagnostics from trace data",
+          "order": 6
+        },
+        "tsperf.tracer.traceTimeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 7,
+          "markdownDescription": "# Trace Time Thresholds\n\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
+        },
+        "tsperf.tracer.traceTypeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 8,
+          "markdownDescription": "# Trace Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created locally in this check call exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
+        },
+        "tsperf.tracer.traceTotalTypeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 9,
+          "markdownDescription": "# Trace Total Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created in this check call stack exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
+        },
+        "tsperf.tracer.traceDiagnosticsRelative": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use measurements relative to the average for trace diagnostics",
+          "order": 10
+        },
+        "tsperf.tracer.traceTimeRelativeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 11
+        },
+        "tsperf.tracer.traceTypeRelativeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 12
+        },
+        "tsperf.tracer.traceTotalTypeRelativeThresholds": {
+          "type": "object",
+          "properties": {
+            "info": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "error": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "info": 1,
+            "warning": -1,
+            "error": -1
+          },
+          "description": "todo",
+          "order": 13
         }
       }
     },
-    "commandPalette": [
-      {
-        "command": "tsperf.tracer.sendTrace",
-        "when": "!notebookEditorFocused && editorLangId == 'json'",
-        "group": "tracer"
-      }
-    ],
     "commands": [
       {
-        "command": "tsperf.tracer.gotoTracePosition",
         "title": "Goto position in trace",
+        "command": "tsperf.tracer.gotoTracePosition",
         "category": "Tracer"
       },
       {
+        "title": "Open trace viewer",
+        "icon": {
+          "dark": "resources/todo.svg",
+          "light": "resources/todo.svg"
+        },
         "command": "tsperf.tracer.openInBrowser",
-        "title": "Open trace view in browser",
-        "category": "Tracer",
-        "icon": {
-          "dark": "resources/todo.svg",
-          "light": "resources/todo.svg"
-        }
+        "category": "Tracer"
       },
       {
-        "command": "tsperf.tracer.runTrace",
         "title": "tsc trace",
-        "category": "Tracer",
         "icon": {
           "dark": "resources/todo.svg",
           "light": "resources/todo.svg"
-        }
+        },
+        "command": "tsperf.tracer.runTrace",
+        "category": "Tracer"
       },
       {
-        "command": "tsperf.tracer.sendTrace",
         "title": "Send Trace to Trace Viewer",
-        "when": "!notebookEditorFocused && editorLangId == 'json'",
+        "command": "tsperf.tracer.sendTrace",
+        "category": "Tracer"
+      },
+      {
+        "title": "Open tracer directory in terminal",
+        "command": "tsperf.tracer.openTerminal",
         "category": "Tracer"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "title": "Send Trace to Trace Viewer",
+          "when": "!notebookEditorFocused && editorLangId == 'json'",
+          "command": "tsperf.tracer.sendTrace",
+          "category": "Tracer"
+        }
+      ],
+      "explorer/context": [
+        {
+          "title": "Send Trace to Trace Viewer",
+          "when": "resourceFilename =~ /.*((trace)|(types)).*.json/",
+          "command": "tsperf.tracer.sendTrace",
+          "category": "Tracer"
+        }
+      ]
+    }
   },
   "scripts": {
     "generate:contributes": "jiti ./scripts/generate-contributes.ts",

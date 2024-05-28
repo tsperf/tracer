@@ -1,15 +1,12 @@
 <script setup lang="ts">
-const sendMessage = useNuxtApp().$sendMessage
 const Messages = useNuxtApp().$Messages
 const colorMode = useColorMode()
 
-function ping() {
-  sendMessage({ message: 'ping' })
-}
+const sendMesage = useNuxtApp().$sendMessage
 
 const secondButtonLabel = ref('Another button')
 
-const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 }))
+const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
 
 function handleMessage(e: MessageEvent<unknown>) {
   const message = Messages.message.safeParse(e.data)
@@ -21,36 +18,33 @@ function handleMessage(e: MessageEvent<unknown>) {
 
   else if (message.data.message === 'gotoTracePosition')
     filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName }
+
+  else if (message.data.message === 'filterTree')
+    filters.value = message.data
+}
+
+function doFilters() {
+  sendMesage('filterTree', filters.value)
 }
 
 onMounted(() => {
   window.addEventListener('message', handleMessage)
 })
+
+const iconName = computed(() => colorMode.value === 'light' ? 'heroicons:sun' : 'heroicons:moon')
+function toggleDarkMode() {
+  colorMode.preference = colorMode.value === 'light' ? 'dark' : 'light'
+}
 </script>
 
 <template>
   <div class="flex flex-col">
     <div class="flex flex-row justify-evenly">
       <div>
-        <p class="p-4 pb-2">
-          <select
-            v-model="colorMode.preference"
-            class="border w-24 h-8 dark:bg-gray-900 dark:text-white dark:border-gray-700"
-          >
-            <option value="system">
-              System
-            </option>
-            <option value="light">
-              Light
-            </option>
-            <option value="dark">
-              Dark
-            </option>
-          </select>
-        </p>
+        <PersistentState />
       </div>
       <!-- Note the kebab case is mandatory for the vscode components.  <VscodeButton> will not work -->
-      <dev-only>
+      <!-- <dev-only>
         <div>
           <vscode-button appearance="primary" @click="ping">
             Ping
@@ -61,19 +55,30 @@ onMounted(() => {
             {{ secondButtonLabel }}
           </vscode-button>
         </div>
-      </dev-only>
+      </dev-only> -->
 
       <file-manager />
-      <div class="flex flex-col">
-        <div class="flex flex-row justify-between gap-2 content-center">
-          Trace Name: <UInput v-model="filters.startsWith" label="Trace Name Starts With" />
+      <ULabled icon="magnifying-glass-circle" label-div-class="h-full bg-primary text-black place-content-center" :icon-click="doFilters">
+        <div class="flex flex-col gap-1">
+          <ULabled label="Trace Name">
+            <UInput v-model="filters.startsWith" />
+          </ULabled>
+          <ULabled label="Source File">
+            <UInput v-model="filters.sourceFileName" />
+          </ULabled>
+          <ULabled label="Position">
+            <UInput v-model="filters.position" label="Position" type="number" />
+            <ULabled />
+          </ULabled>
         </div>
-        <div class="flex flex-row justify-between content-center">
-          Source File: <UInput v-model="filters.sourceFileName" label="Source File" />
-        </div>
-        <div class="flex flex-row justify-between content-center">
-          Position: <UInput v-model="filters.position" label="Position" type="number" />
-        </div>
+      </ULabled>
+      <div>
+        <p class="p-4 pb-2">
+          <UIcon
+            v-model="colorMode.preference" :name="iconName"
+            :dynamic="true" @click="toggleDarkMode"
+          />
+        </p>
       </div>
     </div>
     <div>
