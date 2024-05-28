@@ -103,6 +103,7 @@ const zodTree: z.ZodType<Tree> = z.lazy(() =>
 const showTree = z.object({
   message: z.literal('showTree'),
   nodes: z.array(zodTree),
+  replace: z.boolean().optional(),
 })
 export type ShowTree = z.infer<typeof showTree>
 

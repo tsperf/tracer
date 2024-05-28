@@ -12,8 +12,11 @@ function handleMessage(e: MessageEvent<unknown>) {
   if (!message.success)
     return
 
-  if (message.data.message === 'showTree')
-    nodes.value = message.data.nodes
+  if (message.data.message === 'showTree') {
+    if (message.data.replace)
+      nodes.value = []
+    nodes.value.push(...message.data.nodes)
+  }
 }
 
 onMounted(() => {
