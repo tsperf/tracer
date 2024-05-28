@@ -54,7 +54,7 @@
         },
         "tsperf.tracer.traceCmd": {
           "type": "string",
-          "default": "npx tsc --generateTrace ${traceDir}",
+          "default": "npx tsc --noEmit --generateTrace ${traceDir}",
           "description": "command to generate tsc traces",
           "order": 1
         },

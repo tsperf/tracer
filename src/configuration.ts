@@ -10,7 +10,7 @@ const currentConfig = {
   restartTsserverOnIteration: false,
   allIdentifiers: false,
   // eslint-disable-next-line no-template-curly-in-string
-  traceCmd: 'npx tsc --generateTrace ${traceDir}',
+  traceCmd: 'npx tsc --noEmit --generateTrace ${traceDir}',
   traceTimeThresholds: { info: 1, warning: -1, error: -1 },
   traceTypeThresholds: { info: 1, warning: -1, error: -1 },
   traceTotalTypeThresholds: { info: 1, warning: -1, error: -1 },

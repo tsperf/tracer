@@ -119,7 +119,7 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     'tsperf.tracer.traceCmd': {
       type: 'string',
       // eslint-disable-next-line no-template-curly-in-string
-      default: 'npx tsc --generateTrace ${traceDir}',
+      default: 'npx tsc --noEmit --generateTrace ${traceDir}',
       description: 'command to generate tsc traces',
     },
   },
