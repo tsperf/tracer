@@ -92,7 +92,7 @@ function relativeValue(value: number, average: number, averageThreshold: number)
   return value / (average || averageThreshold || 1)
 }
 
-function fileStatToRelativeDiagnostic({ pos, end, dur, types, totalTypes }: FileStat, document: vscode.TextDocument, averages: { dur: number, types: number, totalTypes: number }) {
+function fileStatToRelativeDiagnostic({ pos, dur, types, totalTypes }: FileStat, document: vscode.TextDocument, averages: { dur: number, types: number, totalTypes: number }) {
   if (!(types || totalTypes || dur))
     return undefined
 
@@ -106,13 +106,12 @@ function fileStatToRelativeDiagnostic({ pos, end, dur, types, totalTypes }: File
 
   const msg = `Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
   const startPos = document.positionAt(pos + 1)
-  const endPos = document.positionAt(end)
-  const range = new vscode.Range(startPos, endPos)
+  const range = new vscode.Range(startPos, startPos)
 
   return new vscode.Diagnostic(range, msg, severity)
 }
 
-function fileStatToDiagnostic({ pos, end, dur, types, totalTypes }: FileStat, document: vscode.TextDocument) {
+function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, document: vscode.TextDocument) {
   if (!(types || totalTypes || dur))
     return undefined
 
@@ -124,8 +123,7 @@ function fileStatToDiagnostic({ pos, end, dur, types, totalTypes }: FileStat, do
 
   const msg = `Check ms: ${Math.round(dur) / 1000} ${typeStr}`
   const startPos = document.positionAt(pos)
-  const endPos = document.positionAt(end)
-  const range = new vscode.Range(startPos, endPos)
+  const range = new vscode.Range(startPos, startPos)
 
   return new vscode.Diagnostic(range, msg, severity)
 }
