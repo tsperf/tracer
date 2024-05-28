@@ -138,8 +138,6 @@ async function runTrace() {
     if (code) {
       setStatusBarState('traceError', true)
       vscode.window.showErrorMessage('error running trace')
-      const terminal = await openTerminal()
-      terminal.sendText(fullCmd)
       return
     }
 
