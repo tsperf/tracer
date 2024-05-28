@@ -16,7 +16,9 @@ const sortValue: Record<typeof props.sortBy, (t: Tree) => number> = {
 
 const nodes = ref([] as Tree[])
 
+let lastSortBy = props.sortBy
 function doSort() {
+  lastSortBy = props.sortBy
   const val = props.sortBy ?? 'Timestamp'
   const ord = sortValue[val]
   nodes.value = nodes.value.toSorted((a, b) => ord(a) - ord(b))
@@ -42,7 +44,6 @@ function handleMessage(e: MessageEvent<unknown>) {
   }
 }
 
-const lastSortBy = props.sortBy
 onUpdated(() => {
   if (lastSortBy !== props.sortBy)
     doSort()
