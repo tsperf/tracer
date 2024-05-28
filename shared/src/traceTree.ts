@@ -99,16 +99,18 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
   if (updateUi)
     postMessage({ message: 'filterTree', startsWith, sourceFileName, position })
 
-  postMessage({ message: 'showTree', nodes: [], replace: true })
+  postMessage({ message: 'showTree', nodes: [], step: 'start' })
 
   let i = 0
 
   // this can be large enough to freeze the UI if sent at once
   const interval = setInterval(() => {
-    postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + 10) })
+    postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + 10), step: 'add' })
     i += 10
-    if (i >= skinnyNodes.length)
+    if (i >= skinnyNodes.length) {
       clearInterval(interval)
+      postMessage({ message: 'showTree', nodes: [], step: 'done' })
+    }
   }, 0)
 
   nodes.forEach(node => treeIdNodes.set(node.id, node))

@@ -4,6 +4,9 @@ const colorMode = useColorMode()
 
 const sendMesage = useNuxtApp().$sendMessage
 
+const sortOptions = ['Timestamp', 'Duration', 'Types', 'Total Types'] as const
+const sortBy = ref('Timestamp' as (typeof sortOptions)[number])
+
 const secondButtonLabel = ref('Another button')
 
 const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
@@ -72,17 +75,22 @@ function toggleDarkMode() {
           </ULabled>
         </div>
       </ULabled>
-      <div>
-        <p class="p-4 pb-2">
-          <UIcon
-            v-model="colorMode.preference" :name="iconName"
-            :dynamic="true" @click="toggleDarkMode"
-          />
-        </p>
+      <div class="flex flex-col gap-1">
+        <ULabled label="Dark Mode">
+          <p class="p-4 ">
+            <UIcon
+              v-model="colorMode.preference" :name="iconName"
+              :dynamic="true" @click="toggleDarkMode"
+            />
+          </p>
+        </ULabled>
+        <ULabled label="Sort By">
+          <USelect v-model="sortBy" :options="sortOptions" />
+        </ULabled>
       </div>
     </div>
     <div>
-      <tree-root />
+      <tree-root :sort-by="sortBy" />
     </div>
 
     <dev-controls />
