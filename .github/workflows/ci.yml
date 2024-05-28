@@ -13,69 +13,56 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: pnpm
 
-      - name: Install
-        run: pnpm i
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Lint
+      - name: 🔠 Lint project
         run: pnpm lint
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: pnpm
 
-      - name: Install
-        run: pnpm i
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        run: pnpm typecheck
+      - name: 💪 Test types
+        run: pnpm test:types
 
   test:
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        node: [18]
         os: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node version to ${{ matrix.node }}
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 18
           cache: pnpm
 
-      - name: Install
-        run: pnpm i
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: 🛠 Build project
         run: pnpm build
 
-      - name: Test
+      - name: 🧪 Test project
         run: pnpm test
