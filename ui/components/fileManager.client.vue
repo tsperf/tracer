@@ -12,7 +12,10 @@ function handleMessage(e: MessageEvent<unknown>) {
 
   switch (parsed.data.message) {
     case 'traceFileLoaded':
-      files.push(parsed.data)
+      if (parsed.data.resetFileList)
+        files.length = 0
+      if (parsed.data.fileName)
+        files.push(parsed.data)
       break
 
     case 'traceStart': {

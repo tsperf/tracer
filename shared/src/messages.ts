@@ -32,6 +32,7 @@ export const traceFileLoaded = z.object({
   message: z.literal('traceFileLoaded'),
   fileName: z.string(),
   dirName: z.string(),
+  resetFileList: z.boolean().default(false),
 })
 export type TraceFileLoaded = z.infer<typeof traceFileLoaded>
 

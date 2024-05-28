@@ -40,7 +40,8 @@ async function sendTrace(dirName: string, fileName: string) {
   let fileContents = ''
 
   stream.on('end', () => {
-    postMessage({ message: 'traceFileLoaded', fileName, dirName })
+    postMessage({ message: 'traceFileLoaded', fileName, dirName, resetFileList: false })
+
     addTraceFile(fileName, fileContents)
     processTraceFiles() // todo wait for all files to avoid repeated work
     showTree('check', '', 0)
@@ -144,6 +145,7 @@ async function runTrace() {
 export async function sendTraceDir(traceDir: string) {
   try {
     const fileNames = await readdir(traceDir)
+    postMessage({ message: 'traceFileLoaded', fileName: '', dirName: '', resetFileList: true })
     for (const fileName of fileNames)
       sendTrace(traceDir, fileName)
   }
