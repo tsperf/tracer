@@ -31,7 +31,7 @@ function handleMessage(e: any) {
     return
 
   for (const message of commands) {
-    if (deepEq(message.trigger, e.data))
+    if (message.trigger && deepEq(message.trigger, e.data))
       iframe.contentWindow?.postMessage(message.response, '*')
   }
 }
@@ -50,6 +50,7 @@ const commandResponses: Record<string, any[]> = {}
 for (const command of commands) {
   if (
     'trigger' in command
+    && command.trigger
     && 'command' in command.trigger
     && command.trigger.command
   ) {
