@@ -122,7 +122,7 @@ function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, documen
   const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes}` : ''
 
   const msg = `Check ms: ${Math.round(dur) / 1000} ${typeStr}`
-  const startPos = document.positionAt(pos)
+  const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
   return new vscode.Diagnostic(range, msg, severity)
