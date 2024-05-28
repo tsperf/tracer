@@ -86,8 +86,9 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
     ('name' in tree.line && tree.line.name.startsWith(startsWith))
     && (!sourceFileName || ((tree.line.args?.path ?? '').endsWith(sourceFileName)))
     && (!(position > 0) || ((tree.line.args?.pos ?? 0) === position))
-  )
+  ) {
     return [tree]
+  }
 
   return tree.children.map(child => filterTree(startsWith, sourceFileName, position, child)).flat()
 }
