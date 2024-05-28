@@ -24,14 +24,17 @@ async function getProjectName() {
     return projectName
   attemptedGetProjectName = true
 
+  const workspacePath = getWorkspacePath()
   try {
-    const packageStr = readFileSync(join(getWorkspacePath(), 'package.json'), { encoding: 'utf8' })
+    const packageStr = readFileSync(join(workspacePath, 'package.json'), { encoding: 'utf8' })
     const json = JSON.parse(packageStr)
     if ('name' in json && typeof json.name === 'string')
       projectName = json.name
+    else
+      projectName = `unnamed-${simpleHash(workspacePath)}`
   }
   catch (_e) {
-  /* */
+    projectName = `unnamed-${simpleHash(workspacePath)}`
   }
 
   return projectName
@@ -179,3 +182,14 @@ export const logMessage = logMessagesFileName
   : () => {
     /* do nothing */
     }
+
+// credit: https://gist.github.com/jlevy/c246006675becc446360a798e2b2d781
+function simpleHash(str: string) {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+  }
+  // Convert to 32bit unsigned integer in base 36 and pad with "0" to ensure length is 7.
+  return (hash >>> 0).toString(36).padStart(7, '0')
+}
