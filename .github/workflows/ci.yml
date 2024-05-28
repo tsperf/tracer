@@ -40,7 +40,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 💪 Test types
-        run: pnpm test:types
+        run: pnpm typecheck
 
   test:
     runs-on: ${{ matrix.os }}
