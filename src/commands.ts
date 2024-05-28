@@ -119,11 +119,19 @@ async function runTrace() {
 
   setStatusBarState('tracing', true)
   const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: true })
+
+  let err = ''
+  cmdProcess.stderr.on('data', data => err += data.toString())
+
+  cmdProcess.stdout.on('data', data => log(data.toString()))
+
   cmdProcess.on('error', (error) => {
     vscode.window.showErrorMessage(error.message)
   })
 
   cmdProcess.on('exit', async (code) => {
+    log('---- trace stderr -----')
+    log(err)
     setStatusBarState('tracing', false)
     if (code) {
       setStatusBarState('traceError', true)
