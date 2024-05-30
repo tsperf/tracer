@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { env } from 'node:process'
 import { type CommandId, type ConfigKey, configKeys } from '../src/constants'
 import { extPrefix } from '../src/constants'
 
@@ -56,6 +57,9 @@ const commandRecord: Record<CommandId, Command> = {
     title: 'Open tracer directory in terminal',
   },
 }
+
+const includeExperimental = env.TraceExperimental === 'true'
+const experimentalCommands: CommandId[] = ['tsperf.tracer.gotoTracePosition', 'tsperf.tracer.openInBrowser']
 
 const commands = Object.entries(commandRecord).map(([command, record]) => ({ ...record, command }))
 
@@ -203,7 +207,7 @@ pkg.contributes = {
     title: 'TsPerf Tracer',
     properties: configurationProperties,
   },
-  commands: commands.map(commandEntry),
+  commands: commands.filter(x => includeExperimental || !experimentalCommands.includes(x.command as never)).map(commandEntry),
   menus: {
     'commandPalette': menuEntries('pallete'),
     'explorer/context': menuEntries('explorerContext'),
