@@ -1,4 +1,5 @@
 import { basename, dirname, join } from 'node:path'
+import * as process from 'node:process'
 import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import { createReadStream, readdir as readdirC } from 'node:fs'
@@ -118,18 +119,25 @@ async function runTrace() {
   postMessage({ message: 'traceStart' })
 
   setStatusBarState('tracing', true)
-  const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: true })
+  log(`shell: ${process.env.SHELL}`)
+  const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: process.env.SHELL })
+
+  let err = ''
+  cmdProcess.stderr.on('data', data => err += data.toString())
+
+  cmdProcess.stdout.on('data', data => log(data.toString()))
+
   cmdProcess.on('error', (error) => {
     vscode.window.showErrorMessage(error.message)
   })
 
   cmdProcess.on('exit', async (code) => {
+    log('---- trace stderr -----')
+    log(err)
     setStatusBarState('tracing', false)
     if (code) {
       setStatusBarState('traceError', true)
       vscode.window.showErrorMessage('error running trace')
-      const terminal = await openTerminal()
-      terminal.sendText(fullCmd)
       return
     }
 

@@ -317,6 +317,7 @@
   },
   "scripts": {
     "generate:contributes": "jiti ./scripts/generate-contributes.ts",
+    "generate:experimental": "TraceExperimental=true jiti ./scripts/generate-contributes.ts",
     "pretest": "nr build && nr lint",
     "build": "nr generate:contributes && nr ui:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
