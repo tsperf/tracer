@@ -61,14 +61,22 @@ async function gotoPosition(fileName: string, pos: number) {
   const document = vscode.workspace.textDocuments.find(x => x.fileName === fileName) ?? await vscode.workspace.openTextDocument(uri)
   const position = document.positionAt(pos + 1)
   const location = new vscode.Location(uri, position)
-  vscode.commands.executeCommand(
-    'editor.action.goToLocations',
-    uri,
-    position,
-    [location],
-    'goto',
-    'location not found',
-  )
+
+  const editor = vscode.window.visibleTextEditors.find(editor => editor.document.fileName === fileName)
+  if (editor) {
+    vscode.window.showTextDocument(editor.document, editor?.viewColumn)
+    editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.Default)
+  }
+  else {
+    vscode.commands.executeCommand(
+      'editor.action.goToLocations',
+      uri,
+      position,
+      [location],
+      'goto',
+      'location not found',
+    )
+  }
 }
 
 function updateDiagnosticCollection(counts: Record<string, Record<number, number>>) {
