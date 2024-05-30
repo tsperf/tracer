@@ -16,6 +16,10 @@ The `Tracer: tsc trace` command can be run to gather accurate timings.  As with 
 
 If the trace is run with a version of `tsc` that includes timestamps in `types.json`, type count metrics are also displayed. A PR to include these timestamps or tooling to automatically patch them in are works in progress.  See https://github.com/typeholes/TypeScript/tree/trace-data-5-4 for a version you can build yourself.
 
+## Credits
+
+We are grateful to [Algora](https://console.algora.io/) for creating the [TSPerf Type Challenge](https://console.algora.io/challenges/tsperf) and to its sponsors.
+
 ## Help wanted
 
 - Improve UX/API of the plugin - for example, more settings to customise how data is displayed to the user and better display of the traces
