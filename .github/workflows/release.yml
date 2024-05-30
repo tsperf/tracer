@@ -17,17 +17,16 @@ jobs:
           fetch-depth: 0
 
       - run: corepack enable
-      - name: Set node
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
-      - name: Install
-        run: pnpm i
-      - uses: actions/checkout@v4
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - run: pnpm run publish
+      - name: 🚀 Publish package
+        run: pnpm run publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
@@ -40,10 +39,10 @@ jobs:
           fetch-depth: 0
 
       - run: corepack enable
-      - name: Set node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: pnpm
 
       - run: npx changelogithub
         env:
