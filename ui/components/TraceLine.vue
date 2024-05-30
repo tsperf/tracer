@@ -22,10 +22,9 @@ function goto(fileName: string | undefined, pos: number | undefined) {
           {{ props.line.name }} :
           {{ Math.round(line.dur ?? 0 / 1000) / 1000 }}
           {{ line.args?.path }}
-          : {{ line.args?.pos }}
-          - {{ line.args?.end }}
+          {{ line.args?.pos === undefined ? '' : `: ${line.args.pos} - ${line.args?.end}` }}
         </div>
-        <UIcon primary name="i-heroicons-arrow-left-on-rectangle" @click="goto(line.args?.path, line.args?.pos)" />
+        <UIcon v-if="line.args?.pos !== undefined" primary name="i-heroicons-arrow-left-on-rectangle" @click="goto(line.args?.path, line.args?.pos)" />
       </div>
     </div>
   </div>
