@@ -65,7 +65,7 @@ onMounted(() => {
       </div>
       <div class="flex flex-col gap-1">
         <ULabled label="Sort By" container-class="dropdown-container" label-class="dropdown-container label">
-          <USelect v-model="sortBy" :options="sortOptions" />
+          <USelect v-model="sortBy" :options="sortOptions" select-class="dark:focus:ring-[var(--vscode-focusBorder)]" />
         </ULabled>
       </div>
     </div>
