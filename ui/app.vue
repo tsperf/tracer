@@ -42,7 +42,7 @@ function toggleDarkMode() {
 
 <template>
   <div class="flex flex-col w-max overflow-x-auto">
-    <div class="flex flex-row justify-evenly">
+    <div class="flex flex-row justify-evenly w-screen">
       <div>
         <PersistentState />
       </div>
@@ -61,20 +61,21 @@ function toggleDarkMode() {
       </dev-only> -->
 
       <file-manager />
-      <ULabled icon="magnifying-glass-circle" label-div-class="h-full bg-primary text-black place-content-center" :icon-click="doFilters">
-        <div class="flex flex-col gap-1">
-          <ULabled label="Trace Name">
-            <UInput v-model="filters.startsWith" />
-          </ULabled>
-          <ULabled label="Source File">
-            <UInput v-model="filters.sourceFileName" />
-          </ULabled>
-          <ULabled label="Position">
-            <UInput v-model="filters.position" label="Position" type="number" />
-            <ULabled />
-          </ULabled>
-        </div>
-      </ULabled>
+      <div class="flex flex-col gap-1">
+        <ULabled label="Trace Name">
+          <UInput v-model="filters.startsWith" />
+        </ULabled>
+        <ULabled label="Source File">
+          <UInput v-model="filters.sourceFileName" />
+        </ULabled>
+        <ULabled label="Position">
+          <UInput v-model="filters.position" label="Position" type="number" />
+          <ULabled />
+        </ULabled>
+        <vscode-button class="w-full" @click="doFilters">
+          Filter Trace <UIcon name="heroicons:magnifying-glass-circle" :dynamic="true" size="20" />
+        </vscode-button>
+      </div>
       <div class="flex flex-col gap-1">
         <ULabled label="Dark Mode">
           <p class="p-4 ">
