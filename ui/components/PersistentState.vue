@@ -51,7 +51,7 @@ onMounted(() => {
 <template>
   <div class="flex flex-col gap-1">
     <VTextField v-model="projectName" label="Project Name" readonly />
-    <ULabled label="Save Name">
+    <ULabled label="Save Name" container-class="dropdown-container" label-class="dropdown-container label">
       <USelectMenu v-model="saveName" :options="saveNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadSave">
         <template #option-create="{ option }">
           <span class="flex-shrink-0">New save:</span>

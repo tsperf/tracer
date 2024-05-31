@@ -64,7 +64,7 @@ onMounted(() => {
         </vscode-button>
       </div>
       <div class="flex flex-col gap-1">
-        <ULabled label="Sort By">
+        <ULabled label="Sort By" container-class="dropdown-container" label-class="dropdown-container label">
           <USelect v-model="sortBy" :options="sortOptions" />
         </ULabled>
       </div>
@@ -85,5 +85,25 @@ body {
   font-family: var(--vscode-editor-font-family);
   font-weight: var(--vscode-editor-font-weight);
   font-size: var(--vscode-editor-font-size);
+}
+
+.dropdown-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  background-color: var(--vscode-editor-background);
+}
+
+.dropdown-container .label {
+  display: block;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family);
+  font-weight: var(--vscode-font-weight);
+  line-height: normal;
+  margin-bottom: 2px;
 }
 </style>
