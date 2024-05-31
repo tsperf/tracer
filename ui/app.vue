@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const Messages = useNuxtApp().$Messages
-const colorMode = useColorMode()
 
 const sendMesage = useNuxtApp().$sendMessage
 
@@ -33,11 +32,6 @@ function doFilters() {
 onMounted(() => {
   window.addEventListener('message', handleMessage)
 })
-
-const iconName = computed(() => colorMode.value === 'light' ? 'heroicons:sun' : 'heroicons:moon')
-function toggleDarkMode() {
-  colorMode.preference = colorMode.value === 'light' ? 'dark' : 'light'
-}
 </script>
 
 <template>
@@ -77,14 +71,6 @@ function toggleDarkMode() {
         </vscode-button>
       </div>
       <div class="flex flex-col gap-1">
-        <ULabled label="Dark Mode">
-          <p class="p-4 ">
-            <UIcon
-              v-model="colorMode.preference" :name="iconName"
-              :dynamic="true" @click="toggleDarkMode"
-            />
-          </p>
-        </ULabled>
         <ULabled label="Sort By">
           <USelect v-model="sortBy" :options="sortOptions" />
         </ULabled>
@@ -100,6 +86,8 @@ function toggleDarkMode() {
 
 <style lang="postcss">
 body {
-  @apply min-h-screen bg-white dark:bg-gray-800 dark:text-gray-200;
+  @apply min-h-screen;
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
 }
 </style>
