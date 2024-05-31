@@ -15,7 +15,7 @@ function toggleExpand() {
 <template>
   <div class="m-0 p-0 f//lex flex-col">
     <div class="m-0 p-0 flex flex-row justify-start align-center text-center">
-      <UIcon :name="`i-heroicons-chevron-${showBody ? 'up' : 'right'}`" dynamic @click="toggleExpand" class="mt-1 pt-1" />
+      <UIcon :name="`i-heroicons-chevron-${showBody ? 'up' : 'right'}`" dynamic class="mt-1 pt-1" @click="toggleExpand" />
       <slot name="label" />
     </div>
     <div v-if="showBody">

@@ -1,4 +1,4 @@
-import type { Button, Dropdown, ProgressRing, Tag, TextField } from '@vscode/webview-ui-toolkit'
+import type { Button, ProgressRing, Tag, TextField } from '@vscode/webview-ui-toolkit'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeProgressRing, vsCodeTag, vsCodeTextField } from '@vscode/webview-ui-toolkit'
 import type { DefineComponent } from 'vue'
 
