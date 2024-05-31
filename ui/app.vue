@@ -41,7 +41,7 @@ function toggleDarkMode() {
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div class="flex flex-col w-max overflow-x-auto">
     <div class="flex flex-row justify-evenly">
       <div>
         <PersistentState />

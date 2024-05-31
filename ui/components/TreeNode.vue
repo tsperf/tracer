@@ -44,7 +44,7 @@ onMounted(() => {
   <div class="m-0 pl-3 flex flex-col justify-start">
     <UExpand v-if="props.tree.childCnt > 0" @expand="fetchChildren">
       <template #label>
-        <div class="flex flex-row gap-5">
+        <div class="flex flex-row gap-5 flex-nowrap">
           <TraceLine v-if="'name' in tree.line" :line="tree.line" class="pr-16" />
           <span>{{ `Children: ${props.tree.childCnt} ${props.tree.childTypeCnt || props.tree.typeCnt ? `Types: ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
         </div>
