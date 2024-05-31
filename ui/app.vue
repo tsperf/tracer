@@ -25,7 +25,8 @@ function handleMessage(e: MessageEvent<unknown>) {
     filters.value = message.data
 }
 
-function doFilters() {
+function doFilters(event: any) {
+  sortBy.value = event.target.value
   sendMesage('filterTree', filters.value)
 }
 
@@ -40,20 +41,6 @@ onMounted(() => {
       <div>
         <PersistentState />
       </div>
-      <!-- Note the kebab case is mandatory for the vscode components.  <VscodeButton> will not work -->
-      <!-- <dev-only>
-        <div>
-          <vscode-button appearance="primary" @click="ping">
-            Ping
-          </vscode-button>
-        </div>
-        <div>
-          <vscode-button appearance="secondary" @click="secondButtonLabel = 'Another button'">
-            {{ secondButtonLabel }}
-          </vscode-button>
-        </div>
-      </dev-only> -->
-
       <file-manager />
       <div class="flex flex-col gap-1">
         <VTextField v-model="filters.startsWith" label="Trace Name" />
@@ -63,10 +50,15 @@ onMounted(() => {
           Filter Trace <UIcon name="heroicons:magnifying-glass-circle" :dynamic="true" size="20" />
         </vscode-button>
       </div>
-      <div class="flex flex-col gap-1">
-        <ULabled label="Sort By" container-class="dropdown-container" label-class="dropdown-container label">
-          <USelect v-model="sortBy" :options="sortOptions" select-class="dark:focus:ring-[var(--vscode-focusBorder)]" />
-        </ULabled>
+      <div class="dropdown-container">
+        <label for="my-dropdown">Sort By</label>
+        <vscode-dropdown id="my-dropdown" :value="sortBy" @change="doFilters">
+          <template v-for="value of sortOptions" :key="value">
+            <vscode-option :selected="value === sortBy">
+              {{ value }}
+            </vscode-option>
+          </template>
+        </vscode-dropdown>
       </div>
     </div>
     <div>

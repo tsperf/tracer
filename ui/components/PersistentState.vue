@@ -9,6 +9,9 @@ const saveName = ref('default')
 const projectNames = ref([] as string[])
 const saveNames = ref([] as string[])
 
+if (!saveNames.value.includes('default'))
+  saveNames.value.unshift('default')
+
 function handleMessage(e: MessageEvent<unknown>) {
   const parsed = Messages.message.safeParse(e.data)
   if (!parsed.success)
@@ -39,7 +42,8 @@ function handleMessage(e: MessageEvent<unknown>) {
 //   sendMessage('projectOpen', { name: projectName.value })
 // }
 
-function loadSave() {
+function loadSave(event: any) {
+  saveName.value = event.target.value
   sendMessage('saveOpen', { name: saveName.value })
 }
 
@@ -51,25 +55,23 @@ onMounted(() => {
 <template>
   <div class="flex flex-col gap-1">
     <VTextField v-model="projectName" label="Project Name" readonly />
-    <ULabled label="Save Name" container-class="dropdown-container" label-class="dropdown-container label">
-      <USelectMenu
-        v-model="saveName" :options="saveNames" searchable clear-search-on-close creatable class="min-w-48 ring-blue-500"
-        select-class="dark:focus:ring-[var(--vscode-focusBorder)]"
-        @change="loadSave"
-      >
-        <template #option-create="{ option }">
-          <span class="flex-shrink-0">New save:</span>
-          <span class="block truncate">{{ option }} </span>
+    <div class="dropdown-container">
+      <label for="my-dropdown">Save Name  </label>
+      <vscode-dropdown id="my-dropdown" :value="saveName" class="w-full" @change="(loadSave)">
+        <template v-for="value of saveNames" :key="value">
+          <vscode-option :selected="value === saveName">
+            {{ value }}
+          </vscode-option>
         </template>
-      </USelectMenu>
-    </ULabled>
-    <!-- <div class="flex flex-row items-center text-center justify-between">
-      <vscode-button @click="manualSave">
-        Save
-      </vscode-button>
-      <vscode-button>
-        Load
-      </vscode-button>
-    </div> -->
+      </vscode-dropdown>
+    </div>
   </div>
 </template>
+
+<style>
+.vs-input {
+  color: var(--vscode-input-foreground);
+  background-color: var(--vscode-input-background);
+
+}
+</style>
