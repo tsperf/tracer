@@ -42,7 +42,7 @@ onMounted(() => {
 
 <template>
   <div class="m-0 pl-3 flex flex-col justify-start">
-    <UExpand v-if="props.tree.childCnt > 0" @expand="fetchChildren">
+    <UExpand @expand="fetchChildren">
       <template #label>
         <div class="flex flex-row gap-5 flex-nowrap">
           <TraceLine v-if="'name' in tree.line" :line="tree.line" class="pr-16" />
@@ -52,11 +52,8 @@ onMounted(() => {
       <template v-for="(node, idx) of children" :key="idx">
         <TreeNode v-if="'name' in tree.line" :depth="depth + 1" :tree="node" />
       </template>
-      <div v-if="children.length === 0">
-        Fetching...
-      </div>
     </Uexpand>
-    <UExpand v-if="props.tree.typeCnt > 0" @expand="fetchTypes">
+    <UExpand v-if="props.tree.typeCnt > 0" class="pl-1" @expand="fetchTypes">
       <template #label>
         {{ `Types: ${props.tree.typeCnt}` }}
       </template>
