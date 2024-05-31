@@ -56,16 +56,9 @@ onMounted(() => {
 
       <file-manager />
       <div class="flex flex-col gap-1">
-        <ULabled label="Trace Name">
-          <UInput v-model="filters.startsWith" />
-        </ULabled>
-        <ULabled label="Source File">
-          <UInput v-model="filters.sourceFileName" />
-        </ULabled>
-        <ULabled label="Position">
-          <UInput v-model="filters.position" label="Position" type="number" />
-          <ULabled />
-        </ULabled>
+        <VTextField v-model="filters.startsWith" label="Trace Name" />
+        <VTextField v-model="filters.sourceFileName" label="Source File" />
+        <VTextField v-model="filters.position" label="Position" type="number" />
         <vscode-button class="w-full" @click="doFilters">
           Filter Trace <UIcon name="heroicons:magnifying-glass-circle" :dynamic="true" size="20" />
         </vscode-button>
@@ -89,5 +82,8 @@ body {
   @apply min-h-screen;
   color: var(--vscode-editor-foreground);
   background-color: var(--vscode-editor-background);
+  font-family: var(--vscode-editor-font-family);
+  font-weight: var(--vscode-editor-font-weight);
+  font-size: var(--vscode-editor-font-size);
 }
 </style>

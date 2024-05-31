@@ -3,7 +3,7 @@ const props = defineProps<{ label?: string, icon?: string, labelDivClass?: strin
 </script>
 
 <template>
-  <div class="flex flex-row items-center text-center justify-between">
+  <div class="flex flex-col items-start text-start justify-between">
     <div :class="props.labelDivClass ?? ''">
       {{ label }}
     </div>
@@ -15,3 +15,10 @@ const props = defineProps<{ label?: string, icon?: string, labelDivClass?: strin
     </div>
   </div>
 </template>
+
+<style scoped>
+div {
+  color: var(--vscode-descriptionForeground);
+  background-color: var(--vscode-editor-background);
+}
+</style>

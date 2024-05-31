@@ -50,12 +50,14 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-1">
-    <ULabled label="Project Name">
-      {{ projectName }}
-      <!-- <USelectMenu v-model="projectName" :options="projectNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadProject" /> -->
-    </ULabled>
+    <VTextField v-model="projectName" label="Project Name" readonly />
     <ULabled label="Save Name">
-      <USelectMenu v-model="saveName" :options="saveNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadSave" />
+      <USelectMenu v-model="saveName" :options="saveNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadSave">
+        <template #option-create="{ option }">
+          <span class="flex-shrink-0">New save:</span>
+          <span class="block truncate">{{ option }} </span>
+        </template>
+      </USelectMenu>
     </ULabled>
     <!-- <div class="flex flex-row items-center text-center justify-between">
       <vscode-button @click="manualSave">
