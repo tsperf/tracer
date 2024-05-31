@@ -41,9 +41,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="pl-3 ">
-    <TraceLine v-if="'name' in tree.line" :line="tree.line" />
-    <UExpand v-if="props.tree.childCnt > 0" :label=" `Children: ${props.tree.childCnt} ${props.tree.childTypeCnt || props.tree.typeCnt ? `Types: ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}`" class="border" @expand="fetchChildren">
+  <div class="m-0 pl-3 flex flex-col justify-start">
+    <UExpand v-if="props.tree.childCnt > 0" @expand="fetchChildren">
+      <template #label>
+        <div class="flex flex-row gap-5">
+          <TraceLine v-if="'name' in tree.line" :line="tree.line" class="pr-16" />
+          <span>{{ `Children: ${props.tree.childCnt} ${props.tree.childTypeCnt || props.tree.typeCnt ? `Types: ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
+        </div>
+      </template>
       <template v-for="(node, idx) of children" :key="idx">
         <TreeNode v-if="'name' in tree.line" :depth="depth + 1" :tree="node" />
       </template>
@@ -51,7 +56,10 @@ onMounted(() => {
         Fetching...
       </div>
     </Uexpand>
-    <UExpand v-if="props.tree.typeCnt > 0" :label="`Types: ${props.tree.typeCnt}`" @expand="fetchTypes">
+    <UExpand v-if="props.tree.typeCnt > 0" @expand="fetchTypes">
+      <template #label>
+        {{ `Types: ${props.tree.typeCnt}` }}
+      </template>
       <TypeTable :types="types" />
     </UExpand>
   </div>

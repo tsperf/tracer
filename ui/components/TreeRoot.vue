@@ -55,9 +55,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <UContainer>
-    <template v-for="tree of nodes" :key="tree.id">
-      <TreeNode :tree="tree" :depth="0" :is-in-check="false" />
-    </template>
-  </UContainer>
+  <template v-for="tree of nodes" :key="tree.id">
+    <TreeNode :tree="tree" :depth="0" :is-in-check="false" />
+  </template>
 </template>
