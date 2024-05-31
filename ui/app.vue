@@ -10,6 +10,18 @@ const secondButtonLabel = ref('Another button')
 
 const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
 
+function setStartsWith(event: any) {
+  filters.value.startsWith = event.target.value
+}
+
+function setSourceFileName(event: any) {
+  filters.value.sourceFileName = event.target.value
+}
+
+function setPosition(event: any) {
+  filters.value.position = +event.target.value
+}
+
 function handleMessage(e: MessageEvent<unknown>) {
   const message = Messages.message.safeParse(e.data)
   if (!message.success)
@@ -43,9 +55,9 @@ onMounted(() => {
       </div>
       <file-manager />
       <div class="flex flex-col gap-1">
-        <VTextField v-model="filters.startsWith" label="Trace Name" />
-        <VTextField v-model="filters.sourceFileName" label="Source File" />
-        <VTextField v-model="filters.position" label="Position" type="number" />
+        <VTextField v-model="filters.startsWith" label="Trace Name" @change="setStartsWith" />
+        <VTextField v-model="filters.sourceFileName" label="Source File" @change="setSourceFileName" />
+        <VTextField v-model="filters.position" label="Position" type="number" @change="setPosition" />
         <vscode-button class="w-full" @click="doFilters">
           Filter Trace <UIcon name="heroicons:magnifying-glass-circle" :dynamic="true" size="20" />
         </vscode-button>
