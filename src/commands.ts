@@ -112,7 +112,7 @@ async function runTrace(args?: unknown[]) {
 
   if (dirName) {
     const relativeDirName = relative(workspacePath, dirName)
-    openSave(relativeDirName)
+    await openSave(relativeDirName)
   }
 
   // TODO: use logic from real time metrics that get the tsconfig path

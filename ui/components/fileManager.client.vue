@@ -13,12 +13,14 @@ function handleMessage(e: MessageEvent<unknown>) {
     return
 
   switch (parsed.data.message) {
-    case 'traceFileLoaded':
-      if (parsed.data.resetFileList)
+    case 'traceFileLoaded': {
+      const data = parsed.data
+      if (data.resetFileList)
         files.value = []
-      if (parsed.data.fileName)
+      if (parsed.data.fileName && !files.value.some(x => x.fileName === data.fileName && x.dirName === data.dirName))
         files.value.push(parsed.data)
       break
+    }
 
     case 'traceStart': {
       traceRunning.value = true
