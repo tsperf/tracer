@@ -1,6 +1,6 @@
 // TODO:  handle receiving an array of trees to display here
 <script setup lang="ts">
-import type { Tree } from '../../shared/src/traceTree'
+import type { Tree } from '../../src/traceTree'
 import TreeNode from './TreeNode.vue'
 
 const props = defineProps<{ sortBy: 'Timestamp' | 'Duration' | 'Types' | 'Total Types' }>()

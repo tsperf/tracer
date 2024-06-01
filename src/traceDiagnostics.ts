@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
-import { getStatsFromTree } from '../shared/src/traceTree'
+import { getStatsFromTree } from './traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
 
 let diagnosticCollection: vscode.DiagnosticCollection

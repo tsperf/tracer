@@ -1,9 +1,10 @@
+import { join } from 'node:path'
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
-import { getChildrenById, getTypesById, showTree } from '../shared/src/traceTree'
+import { getChildrenById, getTypesById, showTree } from './traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
-import { openSave, setLastMessageTrigger } from './storage'
+import { getWorkspacePath, openSave, setLastMessageTrigger } from './storage'
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
   setLastMessageTrigger(message)
@@ -47,7 +48,8 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
 }
 
 async function gotoPosition(fileName: string, pos: number) {
-  const uri = vscode.Uri.file(fileName)
+  const workspacePath = getWorkspacePath()
+  const uri = vscode.Uri.file(join(workspacePath, fileName))
   const document = vscode.workspace.textDocuments.find(x => x.fileName === fileName) ?? await vscode.workspace.openTextDocument(uri)
   const position = document.positionAt(pos + 1)
   const location = new vscode.Location(uri, position)
@@ -57,14 +59,13 @@ async function gotoPosition(fileName: string, pos: number) {
     vscode.window.showTextDocument(editor.document, editor?.viewColumn)
     editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.Default)
   }
-  else {
-    vscode.commands.executeCommand(
-      'editor.action.goToLocations',
-      uri,
-      position,
-      [location],
-      'goto',
-      'location not found',
-    )
-  }
+
+  vscode.commands.executeCommand(
+    'editor.action.goToLocations',
+    uri,
+    position,
+    [location],
+    'goto',
+    'location not found',
+  )
 }

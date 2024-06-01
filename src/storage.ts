@@ -2,7 +2,6 @@ import { mkdir as mkdirC, readFileSync, readdirSync, statSync, writeFileSync } f
 import { basename, dirname, join, relative } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
-import { log } from 'node:console'
 import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'

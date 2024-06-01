@@ -6,8 +6,8 @@ import * as vscode from 'vscode'
 // @ts-ignore raw loader
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
-import { type Message, projectNames } from '../shared/src/messages'
-import { showTree } from '../shared/src/traceTree'
+import type { Message } from '../shared/src/messages'
+import { showTree } from './traceTree'
 import { handleMessage } from './handleMessages'
 import { getProjectName, logMessage, sendStorageMeta } from './storage'
 

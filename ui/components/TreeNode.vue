@@ -1,6 +1,6 @@
 // TODO: on expand post message getTreeByID and handle receiving a result of the tree to expand
 <script setup lang="ts">
-import type { Tree } from '../../shared/src/traceTree'
+import type { Tree } from '../../src/traceTree'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 

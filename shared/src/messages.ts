@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { Tree } from './traceTree'
+import type { Tree } from '../../src/traceTree'
 import { traceLine, typeLine } from './traceData'
 
 export const ping = z.object({
