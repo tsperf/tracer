@@ -56,6 +56,10 @@ const commandRecord: Record<CommandId, Command> = {
   'tsperf.tracer.openTerminal': {
     title: 'Open tracer directory in terminal',
   },
+  'tsperf.tracer.openTraceDirExternal': {
+    title: 'Open trace directory in file browser',
+  },
+
 }
 
 const includeExperimental = env.TraceExperimental === 'true'
@@ -156,10 +160,25 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.enableRealtimeMetrics': {
+      type: 'boolean',
+      default: true,
+      description: 'Create diagnostics from tsserver',
+    },
+  },
+  {
     'tsperf.tracer.enableTraceMetrics': {
       type: 'boolean',
       default: true,
       description: 'Create diagnostics from trace data',
+    },
+  },
+  {
+    'tsperf.tracer.fileBrowserExecutable': {
+      type: 'string',
+      default: '',
+      // eslint-disable-next-line no-template-curly-in-string
+      description: 'command to open your preferred file browser. Use the ${traceDir} substitution variable',
     },
   },
   {

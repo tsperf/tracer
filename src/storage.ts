@@ -2,12 +2,14 @@ import { mkdir as mkdirC, readFileSync, readdirSync, statSync, writeFileSync } f
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
+import { log } from 'node:console'
 import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
 import { postMessage } from './webview'
 import { sendTraceDir } from './commands'
 import { setStatusBarState } from './statusBar'
+import { getCurrentConfig } from './configuration'
 
 // TODO: track creation of directories to avoid excess mkdir calls
 
@@ -121,18 +123,45 @@ export function getWorkspacePath(): string {
 }
 
 const terminalName = 'Tracer Storage'
-export async function openTerminal(): Promise<vscode.Terminal> {
+export async function openTerminal(show = true): Promise<vscode.Terminal> {
   let terminal = vscode.window.terminals.find(x => x.name === terminalName)
   if (terminal) {
-    terminal.show()
+    if (show)
+      terminal.show()
     return terminal
   }
   const projectPath = await getProjectPath()
   await mkdir(projectPath, { recursive: true })
   terminal = vscode.window.createTerminal({ cwd: projectPath, name: terminalName })
-  terminal.show()
+
+  if (show)
+    terminal.show()
 
   return terminal
+}
+
+export async function openTraceDirectoryExternal() {
+  const traceDir = await getTraceDir()
+  const terminal = await openTerminal(false)
+
+  const executable = getCurrentConfig().fileBrowserExecutable
+  if (executable) {
+    // eslint-disable-next-line no-template-curly-in-string
+    terminal.sendText(`${executable.replace('${traceDir}', traceDir)}`)
+  }
+  else if (vscode.env.remoteName === 'wsl') {
+    terminal.sendText(`explorer.exe $(wslpath -w '${traceDir}')\n`)
+  }
+  // hopefully this is a good check for windows
+  else if (!vscode.env.appRoot.startsWith('/')) {
+    terminal.sendText(`explorer.exe '${traceDir}'\n`)
+  }
+  else {
+    terminal.show()
+    terminal.sendText(`cd '${traceDir}'`)
+    // eslint-disable-next-line no-template-curly-in-string
+    terminal.sendText('echo \'Please set the extension setting "File Browser Executable" to open trace directories in your preferred application\nFor example: vscode "${traceDir}"\'\n\n')
+  }
 }
 
 let traceFiles: Record<string, TraceData> = {}

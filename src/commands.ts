@@ -9,7 +9,7 @@ import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import type { CommandId } from './constants'
-import { addTraceFile, clearTraceFiles, getProjectPath, getTraceDir, getWorkspacePath, openTerminal, setLastMessageTrigger } from './storage'
+import { addTraceFile, clearTraceFiles, getProjectPath, getTraceDir, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
 import { addTraceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 
@@ -31,6 +31,7 @@ const commandHandlers: Record<
       sendTrace(dirname(fsPath), basename(fsPath))
     },
     'tsperf.tracer.openTerminal': () => () => openTerminal(),
+    'tsperf.tracer.openTraceDirExternal': () => () => openTraceDirectoryExternal(),
   } as const
 
 async function sendTrace(dirName: string, fileName: string) {

@@ -18,9 +18,6 @@ vscode.workspace.onDidChangeTextDocument((event) => {
 })
 
 vscode.window.onDidChangeActiveTextEditor((event) => {
-  if (getCurrentConfig().traceTimeThresholds.info === -99)
-    return
-
   const fileName = event?.document?.fileName
   if (fileName)
     addTraceDiagnostics(fileName, getStatsFromTree(fileName))
@@ -171,6 +168,13 @@ function getRelativeSeverity(measure: Partial<{ [k in keyof typeof severityThres
 }
 
 afterConfigUpdate(['enableTraceMetrics'], (config) => {
-  if (!config.enableTraceMetrics)
+  if (diagnosticCollection && !config.enableTraceMetrics) {
     diagnosticCollection.clear()
+  }
+  else {
+    vscode.window.visibleTextEditors.forEach((editor) => {
+      const fileName = editor.document.uri.fsPath
+      addTraceDiagnostics(fileName, getStatsFromTree(fileName))
+    })
+  }
 })

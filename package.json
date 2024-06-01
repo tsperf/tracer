@@ -82,11 +82,23 @@
           "description": "Benchmark all allIdentifiers or only the first of each statement",
           "order": 5
         },
+        "tsperf.tracer.enableRealtimeMetrics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Create diagnostics from tsserver",
+          "order": 6
+        },
         "tsperf.tracer.enableTraceMetrics": {
           "type": "boolean",
           "default": true,
           "description": "Create diagnostics from trace data",
-          "order": 6
+          "order": 7
+        },
+        "tsperf.tracer.fileBrowserExecutable": {
+          "type": "string",
+          "default": "",
+          "description": "command to open your preferred file browser. Use the ${traceDir} substitution variable",
+          "order": 8
         },
         "tsperf.tracer.traceTimeThresholds": {
           "type": "object",
@@ -113,7 +125,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 7,
+          "order": 9,
           "markdownDescription": "# Trace Time Thresholds\n\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTypeThresholds": {
@@ -141,7 +153,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 8,
+          "order": 10,
           "markdownDescription": "# Trace Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created locally in this check call exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTotalTypeThresholds": {
@@ -169,14 +181,14 @@
             "error": -1
           },
           "description": "todo",
-          "order": 9,
+          "order": 11,
           "markdownDescription": "# Trace Total Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created in this check call stack exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceDiagnosticsRelative": {
           "type": "boolean",
           "default": false,
           "description": "Use measurements relative to the average for trace diagnostics",
-          "order": 10
+          "order": 12
         },
         "tsperf.tracer.traceTimeRelativeThresholds": {
           "type": "object",
@@ -203,7 +215,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 11
+          "order": 13
         },
         "tsperf.tracer.traceTypeRelativeThresholds": {
           "type": "object",
@@ -230,7 +242,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 12
+          "order": 14
         },
         "tsperf.tracer.traceTotalTypeRelativeThresholds": {
           "type": "object",
@@ -257,7 +269,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 13
+          "order": 15
         }
       }
     },
@@ -293,6 +305,11 @@
       {
         "title": "Open tracer directory in terminal",
         "command": "tsperf.tracer.openTerminal",
+        "category": "Tracer"
+      },
+      {
+        "title": "Open trace directory in file browser",
+        "command": "tsperf.tracer.openTraceDirExternal",
         "category": "Tracer"
       }
     ],

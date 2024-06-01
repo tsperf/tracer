@@ -19,8 +19,6 @@ import { initStatusBar } from './statusBar'
 let ts: typeof import('typescript')
 let tsPath: string
 
-export const collection = vscode.languages.createDiagnosticCollection('tsperf')
-
 function getTs() {
   tsPath = getTsPath()
 
@@ -40,6 +38,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const _run = debounce(runDiagnostics, 500)
   const run = (filenames: string[]) => Promise.all(getTestFileNames(filenames).map(file => _run(collection, file)))
+
+  afterConfigUpdate(['enableRealtimeMetrics'], (config) => {
+    if (!config.enableRealtimeMetrics) {
+      collection.clear()
+      log('clearing realtime metrics')
+    }
+    else {
+      log('enabling realtime metrics')
+      run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
+    }
+  })
 
   context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(event => run([event.fileName])))
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => run([event.document.fileName])))
@@ -189,7 +198,8 @@ async function createLanguageServiceTestMatrix(
 }
 
 async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
-  if (getCurrentConfig().benchmarkIterations < 1)
+  const config = getCurrentConfig()
+  if (config.benchmarkIterations < 1 || !config.enableRealtimeMetrics)
     return
 
   const tsConfigFile = await getTsconfigFile(filePath)
