@@ -45,6 +45,7 @@ async function sendTrace(dirName: string, fileName: string) {
     postMessage({ message: 'traceFileLoaded', fileName, dirName, resetFileList: false })
 
     addTraceFile(fileName, fileContents)
+    processTraceFiles()
     showTree('check', '', 0)
 
     for (const editor of vscode.window.visibleTextEditors) {

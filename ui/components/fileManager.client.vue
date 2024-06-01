@@ -51,8 +51,8 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div> Files Loaded </div>
-    <div v-for="({ fileName, dirName }) in files" :key="`${dirName}/${fileName}`">
+    <label class="border-solid border-b border-current" for="trace-file-list"> {{ files.length === 0 ? 'No ' : '' }} Files Loaded </label>
+    <div v-for="({ fileName, dirName }) in files" id="trace-file-list" :key="`${dirName}/${fileName}`">
       <div>{{ fileName }} </div>
     </div>
     <div v-if="traceRunning" class="flex flex-row gap-2">

@@ -54,7 +54,7 @@ onMounted(() => {
         <PersistentState />
       </div>
       <file-manager />
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-2">
         <VTextField v-model="filters.startsWith" label="Trace Name" @change="setStartsWith" />
         <VTextField v-model="filters.sourceFileName" label="Source File" @change="setSourceFileName" />
         <VTextField v-model="filters.position" label="Position" type="number" @change="setPosition" />
@@ -73,6 +73,7 @@ onMounted(() => {
         </vscode-dropdown>
       </div>
     </div>
+    <hr class="m-2">
     <div>
       <tree-root :sort-by="sortBy" />
     </div>
@@ -100,7 +101,7 @@ body {
   background-color: var(--vscode-editor-background);
 }
 
-.dropdown-container .label {
+label {
   display: block;
   color: var(--vscode-foreground);
   cursor: pointer;

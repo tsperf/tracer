@@ -28,6 +28,13 @@ export const gotoLocation = z.object({
 })
 export type GotoLocation = z.infer<typeof gotoPosition>
 
+export const deleteTraceFile = z.object({
+  message: z.literal('deletTraceFile'),
+  fileName: z.string(),
+  dirName: z.string(),
+})
+export type DeleteTraceFile = z.infer<typeof deleteTraceFile>
+
 export const traceFileLoaded = z.object({
   message: z.literal('traceFileLoaded'),
   fileName: z.string(),
@@ -154,6 +161,7 @@ export const message = z.union([
   ping,
   pong,
   childrenById,
+  deleteTraceFile,
   fileStats,
   filterTree,
   gotoLocation,
