@@ -76,8 +76,7 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
   if (show)
     panel.reveal()
 
-  sendStorageMeta()
-  showTree('check', '', 0)
+  sendStorageMeta().then(() => showTree('check', '', 0))
 
   return ret
 }

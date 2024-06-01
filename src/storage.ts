@@ -1,8 +1,9 @@
-import { mkdir as mkdirC, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import { mkdir as mkdirC, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
 import * as vscode from 'vscode'
+import { Statement } from 'ts-morph'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
 import { postMessage } from './webview'
@@ -41,11 +42,17 @@ export async function getProjectName() {
   return projectName
 }
 
-export function sendStorageMeta() {
+let traceFiles: Record<string, TraceData> = {}
+
+export async function sendStorageMeta() {
   postMessage({ message: 'projectNames', names: projectNames })
   postMessage({ message: 'saveNames', names: saveNames })
   postMessage({ message: 'projectOpen', name: projectName })
   postMessage({ message: 'saveOpen', name: saveName })
+  const traceDir = await getTraceDir()
+  Object.keys(traceFiles).forEach((fileName, idx) => {
+    postMessage({ message: 'traceFileLoaded', fileName, dirName: traceDir, resetFileList: idx === 0 })
+  })
 }
 
 export async function openSave(name: string) {
@@ -173,7 +180,6 @@ export async function openTraceDirectoryExternal() {
   }
 }
 
-let traceFiles: Record<string, TraceData> = {}
 export function addTraceFile(fileName: string, contents: string) {
   try {
     const json = JSON.parse(contents)
@@ -230,4 +236,22 @@ function simpleHash(str: string) {
   }
   // Convert to 32bit unsigned integer in base 36 and pad with "0" to ensure length is 7.
   return (hash >>> 0).toString(36).padStart(7, '0')
+}
+
+export async function deleteTraceFiles(fileName: string, dirName?: string) {
+  const deleteDirName = dirName ?? await getTraceDir()
+  if (fileName === '*') {
+    const files = readdirSync(deleteDirName)
+    for (const file of files) {
+      if (!file.endsWith('.json'))
+        continue
+      const stat = statSync(file)
+      if (stat.isFile()) {
+        rmSync(join(deleteDirName, file))
+      }
+    }
+  }
+  else if (fileName.endsWith('.json')) {
+    rmSync(join(deleteDirName, fileName))
+  }
 }

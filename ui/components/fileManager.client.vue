@@ -1,7 +1,9 @@
 <script setup lang="ts">
 const Messages = useNuxtApp().$Messages
 
-const files = reactive([] as { fileName: string, dirName: string }[])
+const sendMessage = useNuxtApp().$sendMessage
+
+const files = ref([] as { fileName: string, dirName: string }[])
 
 const traceRunning = ref(false)
 
@@ -13,9 +15,9 @@ function handleMessage(e: MessageEvent<unknown>) {
   switch (parsed.data.message) {
     case 'traceFileLoaded':
       if (parsed.data.resetFileList)
-        files.length = 0
+        files.value = []
       if (parsed.data.fileName)
-        files.push(parsed.data)
+        files.value.push(parsed.data)
       break
 
     case 'traceStart': {
@@ -30,6 +32,18 @@ function handleMessage(e: MessageEvent<unknown>) {
   }
 }
 
+function deleteTraceFile(fileName: string, dirName: string) {
+  sendMessage('deletTraceFile', { fileName, dirName })
+  const newFiles = files.value.filter(x => !(x.dirName === dirName && x.fileName === fileName))
+  files.value = newFiles
+}
+
+function deleteAllTraceFiles() {
+  for (const { fileName, dirName } of files.value) {
+    deleteTraceFile(fileName, dirName)
+  }
+}
+
 onMounted(async () => {
   window.addEventListener('message', handleMessage)
 })
@@ -37,6 +51,7 @@ onMounted(async () => {
 
 <template>
   <div>
+    <div> Files Loaded </div>
     <div v-for="({ fileName, dirName }) in files" :key="`${dirName}/${fileName}`">
       <div>{{ fileName }} </div>
     </div>
@@ -44,6 +59,8 @@ onMounted(async () => {
       <span> traceRunning</span>
       <vscode-progress-ring class="h-6" />
     </div>
-    <div />
+    <vscode-button @click="deleteAllTraceFiles">
+      Delete All
+    </vscode-button>
   </div>
 </template>

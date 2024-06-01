@@ -4,7 +4,7 @@ import * as Messages from '../shared/src/messages'
 import { getChildrenById, getTypesById, showTree } from './traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
-import { getWorkspacePath, openSave, setLastMessageTrigger } from './storage'
+import { deleteTraceFiles, getWorkspacePath, openSave, setLastMessageTrigger } from './storage'
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
   setLastMessageTrigger(message)
@@ -44,6 +44,10 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       postMessage({ ...data, types: getTypesById(data.id) })
       break
     }
+
+    case 'deletTraceFile': {
+      deleteTraceFiles(data.fileName, data.dirName)
+    }
   }
 }
 
@@ -56,7 +60,7 @@ async function gotoPosition(fileName: string, pos: number) {
 
   const editor = vscode.window.visibleTextEditors.find(editor => editor.document.fileName === fileName)
   if (editor) {
-    vscode.window.showTextDocument(editor.document, editor?.viewColumn)
+    vscode.window.showTextDocument(editor.document, editor?.viewColumn, false)
     editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.Default)
   }
 

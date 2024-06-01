@@ -45,7 +45,6 @@ async function sendTrace(dirName: string, fileName: string) {
     postMessage({ message: 'traceFileLoaded', fileName, dirName, resetFileList: false })
 
     addTraceFile(fileName, fileContents)
-    processTraceFiles() // todo wait for all files to avoid repeated work
     showTree('check', '', 0)
 
     for (const editor of vscode.window.visibleTextEditors) {
@@ -172,9 +171,9 @@ async function runTrace(args?: unknown[]) {
 export async function sendTraceDir(traceDir: string) {
   try {
     const fileNames = await readdir(traceDir)
-    postMessage({ message: 'traceFileLoaded', fileName: '', dirName: '', resetFileList: true })
-    for (const fileName of fileNames)
+    for (const fileName of fileNames) {
       sendTrace(traceDir, fileName)
+    }
   }
   catch (e) {
     vscode.window.showErrorMessage(e instanceof Error ? e.message : `${e}`)
