@@ -45,6 +45,9 @@ const commandRecord: Record<CommandId, Command> = {
       dark: 'resources/todo.svg',
       light: 'resources/todo.svg',
     },
+    when: {
+      explorerContext: 'resourceFilename =~ /./',
+    },
   },
   'tsperf.tracer.sendTrace': {
     title: 'Send Trace to Trace Viewer',

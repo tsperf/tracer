@@ -54,9 +54,8 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-1">
-    <VTextField v-model="projectName" label="Project Name" readonly />
     <div class="dropdown-container">
-      <label for="my-dropdown">Save Name  </label>
+      <label for="my-dropdown">Package</label>
       <vscode-dropdown id="my-dropdown" :value="saveName" class="w-full" @change="(loadSave)">
         <template v-for="value of saveNames" :key="value">
           <vscode-option :selected="value === saveName">

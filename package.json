@@ -324,6 +324,16 @@
       ],
       "explorer/context": [
         {
+          "title": "tsc trace",
+          "icon": {
+            "dark": "resources/todo.svg",
+            "light": "resources/todo.svg"
+          },
+          "when": "resourceFilename =~ /./",
+          "command": "tsperf.tracer.runTrace",
+          "category": "Tracer"
+        },
+        {
           "title": "Send Trace to Trace Viewer",
           "when": "resourceFilename =~ /.*((trace)|(types)).*.json/",
           "command": "tsperf.tracer.sendTrace",

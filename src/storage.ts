@@ -1,5 +1,5 @@
 import { mkdir as mkdirC, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
 import { log } from 'node:console'
@@ -21,7 +21,7 @@ let saveName = 'default'
 let projectName = 'Not Named'
 let attemptedGetProjectName = false
 
-async function getProjectName() {
+export async function getProjectName() {
   if (attemptedGetProjectName)
     return projectName
   attemptedGetProjectName = true
@@ -70,18 +70,28 @@ export async function openProject(name: string) {
   const projectPath = await getProjectPath()
   mkdir(projectPath, { recursive: true })
 
-  const files = readdirSync(projectPath)
-  for (const file of files) {
-    const savePath = join(projectPath, file)
-    const stat = statSync(savePath)
-    if (stat.isDirectory()) {
-      if (!saveNames.includes(file)) {
-        saveNames.push(file)
-        mkdir(savePath, { recursive: true })
-      }
+  function getSaves(atPath: string) {
+    const files = readdirSync(atPath)
+    for (const file of files) {
+      const fullPath = join(atPath, file)
+      const stat = statSync(fullPath)
+      if (stat.isDirectory()) {
+        if (basename(file) === 'traces') {
+          const savePath = dirname(fullPath)
+          const saveName = relative(projectPath, savePath)
+          if (!saveNames.includes(saveName)) {
+            saveNames.push(saveName)
+          }
+        }
+        else {
+          getSaves(fullPath)
+        }
       // TODO: check for project config file, particularly to get the last used save name
+      }
     }
   }
+
+  getSaves(projectPath)
 
   openSave('default')
 }
