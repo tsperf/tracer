@@ -2,6 +2,7 @@ import { mkdir as mkdirC, readFileSync, readdirSync, rmSync, statSync, writeFile
 import { basename, dirname, join, relative } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
+import { log } from 'node:console'
 import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
@@ -134,6 +135,7 @@ export function getWorkspacePath(): string {
     vscode.window.showErrorMessage('Could not determine project path')
     throw new Error('Could not determine workspace path')
   }
+  log(`workspacePath${workspacePath}`)
   return workspacePath
 }
 

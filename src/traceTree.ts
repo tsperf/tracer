@@ -1,4 +1,4 @@
-import { join, relative } from 'node:path'
+import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
 import type { DataLine, TraceData, TypeLine } from '../shared/src/traceData'
 import { getTraceFiles, getWorkspacePath } from './storage'
@@ -40,7 +40,7 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
   const data = traceData.filter(x => 'id' in x || ('cat' in x)).sort((a, b) => a.ts - b.ts)
   // const data = traceData.filter(x => 'id' in x || ('cat' in x && x.cat?.startsWith('check'))).sort((a, b) => a.ts - b.ts)
   for (const line of data) {
-    if ('args' in line && line.args?.path)
+    if ('args' in line && line.args?.path && isAbsolute(line.args?.path))
       line.args.path = relative(workspacePath, line.args.path)
 
     if (line.dur !== Number.MAX_SAFE_INTEGER && (line.dur ?? 0) > maxDur)
