@@ -17,7 +17,7 @@ function goto(fileName: string | undefined, pos: number | undefined) {
 <template>
   <span class="mx-auto">
     {{ props.line.name }} :
-    {{ Math.round(line.dur ?? 0 / 1000) / 1000 }}
+    {{ Math.round(line.dur ?? 0 / 1000) / 1000 }}ms
     {{ line.args?.path }}
     {{ line.args?.pos === undefined ? '' : `: ${line.args.pos} - ${line.args?.end}` }}
   </span>
