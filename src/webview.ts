@@ -1,4 +1,7 @@
 import { join } from 'node:path'
+import { env } from 'node:process'
+
+import { log } from 'node:console'
 import * as vscode from 'vscode'
 
 // error is not generated when running traces on just UI
@@ -11,9 +14,23 @@ import { showTree } from './traceTree'
 import { handleMessage } from './handleMessages'
 import { getProjectName, logMessage, sendStorageMeta } from './storage'
 
+let devEmitter = (_message: any) => {}
+
 let holdContext: vscode.ExtensionContext | undefined
 export function setPanelContext(extensionContext: vscode.ExtensionContext) {
   holdContext = extensionContext
+
+  // You have to export TRACER_DEV from your shell source file
+  // annoying, but I haven't found any other way to get the launcher to pass an env variable through
+  const isDev = env.env && (env.env as any).TRACER_DEV
+  // eslint-disable-next-line node/prefer-global/process
+  const isDev2 = process.env.TRACER_DEV
+  if (isDev || isDev2) {
+    import('../srcDev/dist/server/server').then((server) => {
+      devEmitter = server.emitMessage
+      server.setMessageHandler(message => handleMessage(getTracePanel(), message))
+    })
+  }
 }
 let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
 
@@ -83,6 +100,7 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
 
 export function postMessage(message: Message) {
   logMessage(message)
+  devEmitter(message)
   if (isTraceViewAlive())
     getTracePanel().webview.postMessage(message)
 }

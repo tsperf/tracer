@@ -9,7 +9,12 @@
     "esModuleInterop": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist/server/",
+    "declaration": true,
+    "declarationDir": "dist/server/"
   },
+    "files": ["src/server.ts"],
   "exclude": []
 }

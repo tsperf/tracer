@@ -6,8 +6,8 @@
   "license": "MIT",
   "main": "server.js",
   "scripts": {
-    "build": "esbuild --bundle src/index.ts --outdir=dist/client --sourcemap --platform=browser && rollup -c",
-    "dev": "rollup -c && esbuild --bundle src/index.ts --outdir=dist/client --sourcemap --platform=browser --watch"
+    "build": "tsc && esbuild --bundle src/index.ts --outdir=dist/client --sourcemap --platform=browser && rollup -c --sourcemap",
+    "dev": "tsc && rollup -c && esbuild --bundle src/index.ts --outdir=dist/client --sourcemap --platform=browser --watch"
   },
   "dependencies": {
     "socket.io-client": "^4.7.5"

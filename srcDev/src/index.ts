@@ -2,12 +2,15 @@ import { io } from 'socket.io-client'
 
 export const socket = io({ port: 3010, host: 'localhost' })
 
-export function ping() {
-  socket.emit('ping')
-  // eslint-disable-next-line no-alert
-  socket.on('pong', () => alert('pong'))
-}
+// const devBtn = document.getElementById('devBtn') as HTMLButtonElement
 
-const devBtn = document.getElementById('devBtn') as HTMLButtonElement
+const iframe = document.getElementById('dev') as HTMLIFrameElement
 
-devBtn.onclick = ping
+socket.onAny((name: string, ...args: any[]) => {
+  const message = { ...(args[0] as object), message: name }
+  iframe.contentWindow?.postMessage(message,'*')
+})
+
+window.addEventListener('message', (e) => {
+  socket.emit(e.data.message, e.data)
+})

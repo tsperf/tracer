@@ -275,20 +275,6 @@
     },
     "commands": [
       {
-        "title": "Goto position in trace",
-        "command": "tsperf.tracer.gotoTracePosition",
-        "category": "Tracer"
-      },
-      {
-        "title": "Open trace viewer",
-        "icon": {
-          "dark": "resources/todo.svg",
-          "light": "resources/todo.svg"
-        },
-        "command": "tsperf.tracer.openInBrowser",
-        "category": "Tracer"
-      },
-      {
         "title": "tsc trace",
         "icon": {
           "dark": "resources/todo.svg",
