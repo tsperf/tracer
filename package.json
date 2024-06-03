@@ -337,7 +337,7 @@
     "ui:dev": "nuxt dev ui",
     "ui:build": "nuxt build ui",
     "srcDev:dev": "nr build --filter ./srcDev --watch --srcmap",
-    "srcDev:build": "(cd srcDev; rollup -c)",
+    "srcDev:build": "cd srcDev && rollup -c && cd ..",
     "lint": "eslint .",
     "vscode:prepublish": "nr build",
     "publish": "vsce publish --no-dependencies",
