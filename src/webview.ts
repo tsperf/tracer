@@ -25,9 +25,11 @@ export function setPanelContext(extensionContext: vscode.ExtensionContext) {
   // eslint-disable-next-line node/prefer-global/process
   const isDev2 = process.env.TRACER_DEV
   if (isDev || isDev2) {
+    // eslint-disable-next-line ts/prefer-ts-expect-error
+    // @ts-ignore types may not be generated
     import('../srcDev/dist/server/server').then((server) => {
       devEmitter = server.emitMessage
-      server.setMessageHandler(message => handleMessage(getTracePanel(), message))
+      server.setMessageHandler((message: any) => handleMessage(getTracePanel(), message))
     })
   }
 }
