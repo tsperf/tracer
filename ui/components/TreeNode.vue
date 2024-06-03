@@ -56,33 +56,48 @@ onMounted(() => {
 
 <template>
   <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen">
-    <UExpand class="w-full min-h-1.5 " :expandable="tree.childCnt > 0" @expand="fetchChildren">
+    <UExpand class="w-full min-h-1.5" :expandable="tree.childCnt > 0" @expand="fetchChildren">
       <template #inset>
         <div :class="insetClass" />
       </template>
       <template #label>
         <div class="flex flex-row gap-5 w-full pl-1">
-          <TraceLine v-if="'name' in tree.line" :line="tree.line" class="pr-16" />
+          <div class="flex flex-row justify-start gap-2 grow text-left">
+            <span class="min-w-48">
+              {{ tree.line.name }}:
+            </span><span>
+              {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
+            </span>
+            <div class="grow opacity-20 hover:opacity-100 h-full">
+              <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />
+            </div>
+            <span class="text-right">
+              {{ tree.line.args?.path ?? '' }}
+            </span>
+          </div>
+          <div class="flex flex-row min-w-40">
+            <button v-if="'args' in tree.line && tree.line.args?.pos !== undefined" class="mr-2 pb-1 mb-1 bg-[var(--vscode-button-background, green)] rounded-sm focus:ring-[var(--vscode-focusBorder, blue)] focus:outline-none focus:ring-1 " @click="gotoPosition">
+              <UIcon primary name="i-heroicons-arrow-left-on-rectangle" class="relative top-1  hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
+            </button>
+            <div v-else />
+            <span>{{ tree.line.args?.pos === undefined ? '' : `${tree.line.args.pos} - ${tree.line.args?.end}` }}</span>
+          </div>
+
           <div class="flex flex-row justify-self-end justify-evenly">
             <UExpand v-if="props.tree.typeCnt > 0" class="min-w-40" @expand="fetchTypes">
               <template #label>
-                <span class="pl-1">{{ `Types: ${props.tree.typeCnt}` }}</span>
+                <span class="pl-1">{{ `Types: ${props.tree.typeCnt}` }} {{ `${props.tree.childTypeCnt || props.tree.typeCnt ? `/ ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
               </template>
               <TypeTable class="relative -left-auto right-auto" :types="types" />
             </UExpand>
             <div v-else class="min-w-40" />
-            <button v-if="'args' in tree.line && tree.line.args?.pos !== undefined" class="mr-2 pb-1 mb-1 bg-[var(--vscode-button-background, green)] rounded-sm focus:ring-[var(--vscode-focusBorder, blue)] focus:outline-none focus:ring-1 " @click="gotoPosition">
-              <UIcon primary name="i-heroicons-arrow-left-on-rectangle" class="relative top-1  hover:backdrop-invert-[05%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
-            </button>
-            <div v-else />
-            <span class="min-w-40 text-left pl-2 ">{{ `Children: ${props.tree.childCnt}` }} </span>
-            <span class="min-w-40 text-left"> {{ `${props.tree.childTypeCnt || props.tree.typeCnt ? `Types: ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
           </div>
         </div>
       </template>
-      <template v-for="(node, idx) of children" :key="idx">
-        <TreeNode v-if="'name' in tree.line" :depth="depth + 1" :tree="node" />
-      </template>
-    </Uexpand>
+    </UExpand>
+
+    <template v-for="(node, idx) of children" :key="idx">
+      <TreeNode v-if="'name' in tree.line" :depth="depth + 1" :tree="node" />
+    </template>
   </div>
 </template>

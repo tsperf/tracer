@@ -1,10 +1,10 @@
 import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
-import type { DataLine, TraceData, TypeLine } from '../shared/src/traceData'
+import type { DataLine, TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getTraceFiles, getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 
-export interface Tree { id: number, line: DataLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
+export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
   return {
     id: 0,
@@ -56,11 +56,10 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
       endTs = curr.line.ts + (curr.line.dur ?? 0)
     }
 
-    if (!line.dur) {
-      if ('id' in line)
-        curr.typeCnt = curr.types.push(line)
+    if ('id' in line) {
+      curr.typeCnt = curr.types.push(line)
     }
-    else {
+    else if (line.dur) {
       endTs = line.ts + (line.dur ?? 0)
       const child = { id: ++id, line, children: [], types: [], childTypeCnt: 0, childCnt: 0, typeCnt: 0 }
       treeIndexes[id] = child
