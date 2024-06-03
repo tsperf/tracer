@@ -3,24 +3,18 @@
 import type { TraceLine } from '../../shared/src/traceData'
 
 const props = defineProps<{ line: TraceLine }>()
-
-const sendMessage = useNuxtApp().$sendMessage
-
-function goto(fileName: string | undefined, pos: number | undefined) {
-  if (!fileName || !pos)
-    return
-
-  sendMessage('gotoPosition', { fileName, pos })
-}
 </script>
 
 <template>
-  <span class="mx-auto">
-    {{ props.line.name }} :
-    {{ Math.round(line.dur ?? 0 / 1000) / 1000 }}ms
-    {{ line.args?.path }}
-    {{ line.args?.pos === undefined ? '' : `: ${line.args.pos} - ${line.args?.end}` }}
-  </span>
-  <UIcon v-if="line.args?.pos !== undefined" primary name="i-heroicons-arrow-left-on-rectangle" @click="goto(line.args?.path, line.args?.pos)" />
-  <div v-else />
+  <div class="flex flex-row justify-start gap-2 grow text-left">
+    <span>
+      {{ props.line.name }}:
+    </span><span>
+      {{ Math.round(line.dur ?? 0 / 1000) / 1000 }}ms
+    </span><span class="grow text-right">
+      {{ line.args?.path ?? '' }}
+    </span><span>
+      {{ line.args?.pos === undefined ? '' : `${line.args.pos} - ${line.args?.end}` }}
+    </span>
+  </div>
 </template>

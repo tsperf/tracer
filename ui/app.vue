@@ -48,8 +48,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col w-max overflow-x-auto">
-    <div class="flex flex-row justify-evenly w-screen">
+  <div class="flex flex-col w-full ">
+    <div class="flex flex-row justify-evenly ">
       <div>
         <PersistentState />
       </div>
