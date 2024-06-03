@@ -1,6 +1,6 @@
 import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
-import type { DataLine, TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
+import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getTraceFiles, getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 
