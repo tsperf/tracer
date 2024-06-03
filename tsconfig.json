@@ -18,6 +18,7 @@
     "examples/*",
     "node_modules",
     "ui",
-    "devUiDriver"
+    "devUiDriver",
+    "srcDev"
   ]
 }
