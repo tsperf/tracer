@@ -40,9 +40,9 @@ onMounted(async () => {
     <div v-for="({ fileName, dirName }) in files" :key="`${dirName}/${fileName}`">
       <div>{{ fileName }} </div>
     </div>
-    <div v-if="traceRunning">
-      traceRunning
-      <UProgress :indeterminate="true" />
+    <div v-if="traceRunning" class="flex flex-row gap-2">
+      <span> traceRunning</span>
+      <vscode-progress-ring class="h-6" />
     </div>
     <div />
   </div>

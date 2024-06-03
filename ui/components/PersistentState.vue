@@ -9,6 +9,9 @@ const saveName = ref('default')
 const projectNames = ref([] as string[])
 const saveNames = ref([] as string[])
 
+if (!saveNames.value.includes('default'))
+  saveNames.value.unshift('default')
+
 function handleMessage(e: MessageEvent<unknown>) {
   const parsed = Messages.message.safeParse(e.data)
   if (!parsed.success)
@@ -39,7 +42,8 @@ function handleMessage(e: MessageEvent<unknown>) {
 //   sendMessage('projectOpen', { name: projectName.value })
 // }
 
-function loadSave() {
+function loadSave(event: any) {
+  saveName.value = event.target.value
   sendMessage('saveOpen', { name: saveName.value })
 }
 
@@ -50,20 +54,24 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-1">
-    <ULabled label="Project Name">
-      {{ projectName }}
-      <!-- <USelectMenu v-model="projectName" :options="projectNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadProject" /> -->
-    </ULabled>
-    <ULabled label="Save Name">
-      <USelectMenu v-model="saveName" :options="saveNames" searchable clear-search-on-close creatable class="min-w-48" @change="loadSave" />
-    </ULabled>
-    <!-- <div class="flex flex-row items-center text-center justify-between">
-      <vscode-button @click="manualSave">
-        Save
-      </vscode-button>
-      <vscode-button>
-        Load
-      </vscode-button>
-    </div> -->
+    <VTextField v-model="projectName" label="Project Name" readonly />
+    <div class="dropdown-container">
+      <label for="my-dropdown">Save Name  </label>
+      <vscode-dropdown id="my-dropdown" :value="saveName" class="w-full" @change="(loadSave)">
+        <template v-for="value of saveNames" :key="value">
+          <vscode-option :selected="value === saveName">
+            {{ value }}
+          </vscode-option>
+        </template>
+      </vscode-dropdown>
+    </div>
   </div>
 </template>
+
+<style>
+.vs-input {
+  color: var(--vscode-input-foreground);
+  background-color: var(--vscode-input-background);
+
+}
+</style>

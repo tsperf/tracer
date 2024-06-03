@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const Messages = useNuxtApp().$Messages
-const colorMode = useColorMode()
 
 const sendMesage = useNuxtApp().$sendMessage
 
@@ -10,6 +9,18 @@ const sortBy = ref('Timestamp' as (typeof sortOptions)[number])
 const secondButtonLabel = ref('Another button')
 
 const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
+
+function setStartsWith(event: any) {
+  filters.value.startsWith = event.target.value
+}
+
+function setSourceFileName(event: any) {
+  filters.value.sourceFileName = event.target.value
+}
+
+function setPosition(event: any) {
+  filters.value.position = +event.target.value
+}
 
 function handleMessage(e: MessageEvent<unknown>) {
   const message = Messages.message.safeParse(e.data)
@@ -26,67 +37,40 @@ function handleMessage(e: MessageEvent<unknown>) {
     filters.value = message.data
 }
 
-function doFilters() {
+function doFilters(event: any) {
+  sortBy.value = event.target.value
   sendMesage('filterTree', filters.value)
 }
 
 onMounted(() => {
   window.addEventListener('message', handleMessage)
 })
-
-const iconName = computed(() => colorMode.value === 'light' ? 'heroicons:sun' : 'heroicons:moon')
-function toggleDarkMode() {
-  colorMode.preference = colorMode.value === 'light' ? 'dark' : 'light'
-}
 </script>
 
 <template>
-  <div class="flex flex-col">
-    <div class="flex flex-row justify-evenly">
+  <div class="flex flex-col w-max overflow-x-auto">
+    <div class="flex flex-row justify-evenly w-screen">
       <div>
         <PersistentState />
       </div>
-      <!-- Note the kebab case is mandatory for the vscode components.  <VscodeButton> will not work -->
-      <!-- <dev-only>
-        <div>
-          <vscode-button appearance="primary" @click="ping">
-            Ping
-          </vscode-button>
-        </div>
-        <div>
-          <vscode-button appearance="secondary" @click="secondButtonLabel = 'Another button'">
-            {{ secondButtonLabel }}
-          </vscode-button>
-        </div>
-      </dev-only> -->
-
       <file-manager />
-      <ULabled icon="magnifying-glass-circle" label-div-class="h-full bg-primary text-black place-content-center" :icon-click="doFilters">
-        <div class="flex flex-col gap-1">
-          <ULabled label="Trace Name">
-            <UInput v-model="filters.startsWith" />
-          </ULabled>
-          <ULabled label="Source File">
-            <UInput v-model="filters.sourceFileName" />
-          </ULabled>
-          <ULabled label="Position">
-            <UInput v-model="filters.position" label="Position" type="number" />
-            <ULabled />
-          </ULabled>
-        </div>
-      </ULabled>
       <div class="flex flex-col gap-1">
-        <ULabled label="Dark Mode">
-          <p class="p-4 ">
-            <UIcon
-              v-model="colorMode.preference" :name="iconName"
-              :dynamic="true" @click="toggleDarkMode"
-            />
-          </p>
-        </ULabled>
-        <ULabled label="Sort By">
-          <USelect v-model="sortBy" :options="sortOptions" />
-        </ULabled>
+        <VTextField v-model="filters.startsWith" label="Trace Name" @change="setStartsWith" />
+        <VTextField v-model="filters.sourceFileName" label="Source File" @change="setSourceFileName" />
+        <VTextField v-model="filters.position" label="Position" type="number" @change="setPosition" />
+        <vscode-button class="w-full" @click="doFilters">
+          Filter Trace <UIcon name="heroicons:magnifying-glass-circle" :dynamic="true" size="20" />
+        </vscode-button>
+      </div>
+      <div class="dropdown-container">
+        <label for="my-dropdown">Sort By</label>
+        <vscode-dropdown id="my-dropdown" :value="sortBy" @change="doFilters">
+          <template v-for="value of sortOptions" :key="value">
+            <vscode-option :selected="value === sortBy">
+              {{ value }}
+            </vscode-option>
+          </template>
+        </vscode-dropdown>
       </div>
     </div>
     <div>
@@ -99,6 +83,31 @@ function toggleDarkMode() {
 
 <style lang="postcss">
 body {
-  @apply min-h-screen bg-white dark:bg-gray-800 dark:text-gray-200;
+  @apply min-h-screen;
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
+  font-family: var(--vscode-editor-font-family);
+  font-weight: var(--vscode-editor-font-weight);
+  font-size: var(--vscode-editor-font-size);
+}
+
+.dropdown-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  background-color: var(--vscode-editor-background);
+}
+
+.dropdown-container .label {
+  display: block;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family);
+  font-weight: var(--vscode-font-weight);
+  line-height: normal;
+  margin-bottom: 2px;
 }
 </style>

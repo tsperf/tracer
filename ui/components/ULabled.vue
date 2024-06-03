@@ -1,17 +1,20 @@
 <script setup lang="ts">
-const props = defineProps<{ label?: string, icon?: string, labelDivClass?: string, iconClick?: () => void }>()
+const props = withDefaults(defineProps<{ label?: string, icon?: string, labelClass?: string, containerClass?: string, iconClick?: () => void }>(), {
+  containerClass: 'flex flex-col items-start text-start justify-between',
+  labelClass: '',
+})
 </script>
 
 <template>
-  <div class="flex flex-row items-center text-center justify-between">
-    <div :class="props.labelDivClass ?? ''">
+  <div :class="containerClass">
+    <div :class="props.labelClass">
       {{ label }}
+      <div v-if="props.icon" :class="props.labelClass ?? ''" @click="iconClick">
+        <UIcon :dynamic="true" :name="`heroicons:${icon}`" size="30" />
+      </div>
     </div>
-    <div class="pl-1 ">
+    <div class="pl-0 ">
       <slot />
-    </div>
-    <div v-if="props.icon" :class="props.labelDivClass ?? ''" @click="iconClick">
-      <UIcon :dynamic="true" :name="`heroicons:${icon}`" size="30" />
     </div>
   </div>
 </template>

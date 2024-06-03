@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ label: string, expanded?: boolean }>()
+const props = defineProps<{ expanded?: boolean }>()
 
 const emit = defineEmits<{ (e: 'expand'): void }>()
 
@@ -13,15 +13,13 @@ function toggleExpand() {
 </script>
 
 <template>
-  <UContainer class="flex flex-col">
-    <UContainer class="flex flex-row">
-      <div>
-        {{ props.label }}
-      </div>
-      <UIcon :name="`i-heroicons-chevron-${showBody ? 'up' : 'down'}`" dynamic @click="toggleExpand" />
-    </UContainer>
+  <div class="m-0 p-0 f//lex flex-col">
+    <div class="m-0 p-0 flex flex-row justify-start align-center text-center">
+      <UIcon :name="`i-heroicons-chevron-${showBody ? 'up' : 'right'}`" dynamic class="mt-1 pt-1" @click="toggleExpand" />
+      <slot name="label" />
+    </div>
     <div v-if="showBody">
       <slot />
     </div>
-  </UContainer>
+  </div>
 </template>
