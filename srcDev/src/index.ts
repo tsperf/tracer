@@ -8,7 +8,7 @@ const iframe = document.getElementById('dev') as HTMLIFrameElement
 
 socket.onAny((name: string, ...args: any[]) => {
   const message = { ...(args[0] as object), message: name }
-  iframe.contentWindow?.postMessage(message,'*')
+  iframe.contentWindow?.postMessage(message, '*')
 })
 
 window.addEventListener('message', (e) => {

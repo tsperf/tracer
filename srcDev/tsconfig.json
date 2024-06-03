@@ -1,20 +1,20 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["esnext","DOM"],
+    "lib": ["esnext", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
     "strictNullChecks": true,
+    "declaration": true,
+    "declarationDir": "dist/server/",
+    "emitDeclarationOnly": true,
+    "outDir": "dist/server/",
     "esModuleInterop": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
-    "noErrorTruncation": true,
-    "emitDeclarationOnly": true,
-    "outDir": "dist/server/",
-    "declaration": true,
-    "declarationDir": "dist/server/"
+    "noErrorTruncation": true
   },
-    "files": ["src/server.ts"],
+  "files": ["src/server.ts"],
   "exclude": []
 }

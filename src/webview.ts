@@ -1,7 +1,6 @@
 import { join } from 'node:path'
 import { env } from 'node:process'
 
-import { log } from 'node:console'
 import * as vscode from 'vscode'
 
 // error is not generated when running traces on just UI
