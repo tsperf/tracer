@@ -26,9 +26,11 @@ function iconName() {
 
 <template>
   <div :class="`m-0 p-0 flex flex-col ${props.class}`">
-    <div class="m-0 p-0 flex flex-row justify-start align-center text-center ">
+    <div class="m-0 p-0 flex flex-row ">
       <slot name="inset" />
-      <UIcon :name="iconName()" dynamic class="mt-1.5 pt-0 hover:backdrop-invert-[05%] hover:invert-[20%]" @click="toggleExpand" />
+      <button class="mb-1 focus:ring-[var(--vscode-focusBorder, blue)] focus:outline-none focus:ring-1 " @click="toggleExpand">
+        <UIcon :name="iconName()" dynamic class="mb-1 -pt-1 hover:backdrop-invert-[05%] hover:invert-[20%]" />
+      </button>
       <slot name="label" />
     </div>
     <div v-if="expanded">
