@@ -89,8 +89,11 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   const start = editor.selection.start
   const startOffset = editor.document.offsetAt(start)
 
+  const workspacePth = getWorkspacePath()
+  const relativePath = relative(workspacePth, editor.document.fileName)
+
   getTracePanel(context)?.reveal()
-  showTree('', editor.document.fileName, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1))
+  showTree('', relativePath, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1))
 }
 
 async function runTrace(args?: unknown[]) {
