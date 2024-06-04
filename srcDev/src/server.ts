@@ -19,7 +19,7 @@ export function setMessageHandler(handler: (message: any) => void) {
 }
 
 export function emitMessage(message: any) {
-  globalSocket.emit(message.message, message)
+  globalSocket?.emit(message.message, message)
 }
 
 app.get('/', (req, res) => {
