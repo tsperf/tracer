@@ -1,132 +1,40 @@
-import { mkdir as mkdirC, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
-import { promisify } from 'node:util'
 import { env } from 'node:process'
-import { log } from 'node:console'
 import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
-import { postMessage } from './webview'
 import { sendTraceDir } from './commands'
 import { setStatusBarState } from './statusBar'
 import { getCurrentConfig } from './configuration'
+import { log } from './logger'
+import { state } from './appState'
 
-// TODO: track creation of directories to avoid excess mkdir calls
+export function getProjectName(): string {
+  if (state.projectName.value)
+    return state.projectName.value
 
-const mkdir = promisify(mkdirC)
-
-const saveNames: string[] = []
-const projectNames: string[] = []
-let saveName = 'default'
-let projectName = 'Not Named'
-let attemptedGetProjectName = false
-
-export async function getProjectName() {
-  if (attemptedGetProjectName)
-    return projectName
-  attemptedGetProjectName = true
-
-  const workspacePath = getWorkspacePath()
   try {
-    const packageStr = readFileSync(join(workspacePath, 'package.json'), { encoding: 'utf8' })
+    const packageStr = readFileSync(join(state.workspacePath.value, 'package.json'), { encoding: 'utf8' })
     const json = JSON.parse(packageStr)
     if ('name' in json && typeof json.name === 'string')
-      projectName = json.name
+      state.projectName.value = json.name
     else
-      projectName = `unnamed-${simpleHash(workspacePath)}`
+      state.projectName.value = `unnamed-${simpleHash(state.workspacePath.value)}`
   }
   catch (_e) {
-    projectName = `unnamed-${simpleHash(workspacePath)}`
+    state.projectName.value = `unnamed-${simpleHash(state.workspacePath.value)}`
   }
 
-  return projectName
+  return state.projectName.value
 }
 
-let traceFiles: Record<string, TraceData> = {}
-
-export async function sendStorageMeta() {
-  postMessage({ message: 'projectNames', names: projectNames })
-  postMessage({ message: 'saveNames', names: saveNames })
-  postMessage({ message: 'projectOpen', name: projectName })
-  postMessage({ message: 'saveOpen', name: saveName })
-  const traceDir = await getTraceDir()
-  Object.keys(traceFiles).forEach((fileName, idx) => {
-    postMessage({ message: 'traceFileLoaded', fileName, dirName: traceDir, resetFileList: idx === 0 })
-  })
+export function getSavePath(): string {
+  return state.savePath.value = join(state.projectPath.value, state.saveName.value)
 }
 
-export async function openSave(name: string) {
-  if (!saveNames.includes(name))
-    saveNames.push(name)
-  saveName = name
-  setStatusBarState('saveName', saveName)
-
-  const traceDir = await getTraceDir()
-  mkdir(traceDir, { recursive: true })
-
-  sendStorageMeta()
-  void sendTraceDir(traceDir)
-}
-
-export async function openProject(name: string) {
-  if (!projectNames.includes(name))
-    projectNames.push(name)
-  projectName = name
-  setStatusBarState('projectName', projectName)
-  const projectPath = await getProjectPath()
-  mkdir(projectPath, { recursive: true })
-
-  function getSaves(atPath: string) {
-    const files = readdirSync(atPath)
-    for (const file of files) {
-      const fullPath = join(atPath, file)
-      const stat = statSync(fullPath)
-      if (stat.isDirectory()) {
-        if (basename(file) === 'traces') {
-          const savePath = dirname(fullPath)
-          const saveName = relative(projectPath, savePath)
-          if (!saveNames.includes(saveName)) {
-            saveNames.push(saveName)
-          }
-        }
-        else {
-          getSaves(fullPath)
-        }
-      // TODO: check for project config file, particularly to get the last used save name
-      }
-    }
-  }
-
-  getSaves(projectPath)
-
-  openSave('default')
-}
-
-let context: vscode.ExtensionContext
-export async function initStorage(extensionContext: vscode.ExtensionContext) {
-  context = extensionContext
-
-  const projectName = await getProjectName()
-  openProject(projectName)
-}
-
-export async function getProjectPath() {
-  const storagePath = context.globalStorageUri.fsPath
-  const projectPath = join(storagePath, await getProjectName())
-  await mkdir(projectPath, { recursive: true })
-  return projectPath
-}
-
-export async function getSavePath() {
-  const savePath = join(await getProjectPath(), saveName)
-  await mkdir(savePath, { recursive: true })
-  return savePath
-}
-
-export async function getTraceDir() {
-  const traceDir = join(await getSavePath(), 'traces')
-  await mkdir(traceDir, { recursive: true })
-  return traceDir
+export function getTraceDir(): string {
+  return state.tracePath.value = join(state.savePath.value, 'traces')
 }
 
 export function getWorkspacePath(): string {
@@ -147,9 +55,7 @@ export async function openTerminal(show = true): Promise<vscode.Terminal> {
       terminal.show()
     return terminal
   }
-  const projectPath = await getProjectPath()
-  await mkdir(projectPath, { recursive: true })
-  terminal = vscode.window.createTerminal({ cwd: projectPath, name: terminalName })
+  terminal = vscode.window.createTerminal({ cwd: state.projectPath.value, name: terminalName })
 
   if (show)
     terminal.show()
@@ -158,7 +64,7 @@ export async function openTerminal(show = true): Promise<vscode.Terminal> {
 }
 
 export async function openTraceDirectoryExternal() {
-  const traceDir = await getTraceDir()
+  const traceDir = state.tracePath.value
   const terminal = await openTerminal(false)
 
   const executable = getCurrentConfig().fileBrowserExecutable
@@ -189,7 +95,7 @@ export function addTraceFile(fileName: string, contents: string) {
     if (!arr.success)
       return
 
-    traceFiles[fileName] = arr.data
+    state.traceFiles.value[fileName] = arr.data
   }
   catch (e) {
     vscode.window.showErrorMessage(`${e}`)
@@ -197,11 +103,7 @@ export function addTraceFile(fileName: string, contents: string) {
 }
 
 export function clearTraceFiles() {
-  traceFiles = {}
-}
-
-export function getTraceFiles() {
-  return traceFiles
+  state.traceFiles.value = {}
 }
 
 // allow setting this in the debugger
@@ -224,7 +126,8 @@ export const logMessage = logMessagesFileName
       const s = `${JSON.stringify({ trigger: lastMessageTrigger, response: message }, null, 2)},\n`
       writeFileSync(logMessagesFileName, s, { flag: 'a' })
     }
-  : () => {
+  : (message: any) => {
+      log(`message sent: ${message.message}`)
     /* do nothing */
     }
 

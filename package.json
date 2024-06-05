@@ -275,6 +275,20 @@
     },
     "commands": [
       {
+        "title": "Goto position in trace",
+        "command": "tsperf.tracer.gotoTracePosition",
+        "category": "Tracer"
+      },
+      {
+        "title": "Open trace viewer",
+        "icon": {
+          "dark": "resources/todo.svg",
+          "light": "resources/todo.svg"
+        },
+        "command": "tsperf.tracer.openInBrowser",
+        "category": "Tracer"
+      },
+      {
         "title": "tsc trace",
         "icon": {
           "dark": "resources/todo.svg",
@@ -366,5 +380,8 @@
     "typescript": "^5.4.5",
     "vitest": "^1.6.0",
     "zod": "^3.23.8"
+  },
+  "dependencies": {
+    "@vue/reactivity": "^3.4.27"
   }
 }

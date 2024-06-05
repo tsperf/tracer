@@ -66,7 +66,7 @@ const commandRecord: Record<CommandId, Command> = {
 }
 
 const includeExperimental = env.TraceExperimental === 'true'
-const experimentalCommands: CommandId[] = ['tsperf.tracer.gotoTracePosition', 'tsperf.tracer.openInBrowser']
+const experimentalCommands: CommandId[] = [] // 'tsperf.tracer.gotoTracePosition', 'tsperf.tracer.openInBrowser']
 
 const commands = Object.entries(commandRecord).map(([command, record]) => ({ ...record, command }))
 

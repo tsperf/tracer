@@ -1,21 +1,22 @@
-// TODO: on expand post message getTreeByID and handle receiving a result of the tree to expand
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
+import { childrenById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
 const sendMessage = useNuxtApp().$sendMessage
-const Messages = useNuxtApp().$Messages
 
-const children = shallowRef([] as Tree['children'])
-const types = shallowRef([] as Tree['types'])
+const children = computed(() => childrenById.get(props.tree.id) ?? [])
+const types = computed(() => typesById.get(props.tree.id) ?? [])
 
 function fetchChildren() {
-  sendMessage('childrenById', { id: props.tree.id })
+  if (children.value.length === 0)
+    sendMessage('childrenById', { id: props.tree.id })
 }
 
 function fetchTypes() {
-  sendMessage('typesById', { id: props.tree.id })
+  if (types.value.length === 0)
+    sendMessage('typesById', { id: props.tree.id })
 }
 
 function gotoPosition() {
@@ -28,43 +29,23 @@ function gotoPosition() {
   }
 }
 
-function handleMessage(e: MessageEvent<unknown>) {
-  const parsed = Messages.message.safeParse(e.data)
-  if (!parsed.success)
-    return
-
-  switch (parsed.data.message) {
-    case 'childrenById':
-      if (parsed.data.id === props.tree.id)
-        children.value = parsed.data.children ?? []
-      break
-    case 'typesById':
-      if (parsed.data.id === props.tree.id)
-        types.value = parsed.data.types ?? []
-      break
-  }
-}
-
-const insetClass = props.depth > 0
-  ? `-ml-1 min-w-[${props.depth / 2}rem] border-e border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
-  : `-ml-1 min-w-[${props.depth / 2}rem]`
-
-onMounted(() => {
-  window.addEventListener('message', handleMessage)
-})
+const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
 </script>
 
 <template>
-  <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen">
+  <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen ">
     <UExpand class="w-full min-h-1.5" :expandable="tree.childCnt > 0" @expand="fetchChildren">
       <template #inset>
-        <div :class="insetClass" />
+        <template v-for="n in depth" :key="n">
+          <div :class="insetClass" />
+        </template>
+        <!-- <div :class="insetClass" :style="{ minWidth: `${props.depth / 2}rem` }" /> -->
       </template>
       <template #label>
         <div class="flex flex-row gap-5 w-full pl-1">
           <div class="flex flex-row justify-start gap-2 grow text-left">
             <span class="min-w-48">
-              {{ tree.line.name }}:
+              {{ tree.line.name }} ({{ tree.childCnt }}):
             </span><span>
               {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
             </span>
@@ -94,10 +75,9 @@ onMounted(() => {
           </div>
         </div>
       </template>
+      <template v-for="(node, idx) of children" :key="idx">
+        <TreeNode :depth="depth + 1" :tree="node" />
+      </template>
     </UExpand>
-
-    <template v-for="(node, idx) of children" :key="idx">
-      <TreeNode v-if="'name' in tree.line" :depth="depth + 1" :tree="node" />
-    </template>
   </div>
 </template>

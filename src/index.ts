@@ -12,9 +12,9 @@ import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configurati
 import { getTsPath } from './tsUtil'
 import { registerCommands } from './commands'
 import { initDiagnostics } from './traceDiagnostics'
-import { setPanelContext } from './webview'
-import { initStorage } from './storage'
+import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
+import { initAppState } from './appState'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -27,6 +27,8 @@ function getTs() {
 }
 export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
+
+  initAppState(context)
 
   updateConfig({ force: ['typescriptPathMode'] })
 
@@ -54,8 +56,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => run([event.document.fileName])))
   run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
 
-  initStorage(context)
-  setPanelContext(context)
+  initWebviewPanel(context)
   registerCommands(context)
   initStatusBar(context)
   initDiagnostics(context)

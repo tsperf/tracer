@@ -9,14 +9,21 @@ import * as vscode from 'vscode'
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
 import type { Message } from '../shared/src/messages'
-import { showTree } from './traceTree'
+import { noop, triggerAll, watchT } from './appState'
 import { handleMessage } from './handleMessages'
-import { getProjectName, logMessage, sendStorageMeta } from './storage'
+import { logMessage } from './storage'
 
 let devEmitter = (_message: any) => {}
 
+let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
+let disposed = true
+
 let holdContext: vscode.ExtensionContext | undefined
-export function setPanelContext(extensionContext: vscode.ExtensionContext) {
+export function initWebviewPanel(extensionContext: vscode.ExtensionContext) {
+  watchT('projectName', (name) => {
+    if (panel)
+      panel.title = `Trace Viewer - ${name}`
+  }, noop)
   holdContext = extensionContext
 
   // You have to export TRACER_DEV from your shell source file
@@ -33,9 +40,6 @@ export function setPanelContext(extensionContext: vscode.ExtensionContext) {
     })
   }
 }
-let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
-
-let disposed = true
 
 export function isTraceViewAlive() {
   return panel && !disposed
@@ -83,18 +87,13 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
       handleMessage(getTracePanel(context), message)
     })
 
-    getProjectName().then((projectName) => {
-      if (panel)
-        panel.title = `Trace Viewer - ${projectName}`
-    })
-
     ret = panel
   }
 
   if (show)
     panel.reveal()
 
-  sendStorageMeta().then(() => showTree('check', '', 0))
+  triggerAll()
 
   return ret
 }

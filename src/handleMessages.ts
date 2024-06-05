@@ -4,7 +4,8 @@ import * as Messages from '../shared/src/messages'
 import { getChildrenById, getTypesById, showTree } from './traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
-import { deleteTraceFiles, getWorkspacePath, openSave, setLastMessageTrigger } from './storage'
+import { deleteTraceFiles, setLastMessageTrigger } from './storage'
+import { state } from './appState'
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
   setLastMessageTrigger(message)
@@ -33,11 +34,11 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       break
     }
     case 'saveOpen': {
-      openSave(data.name)
+      state.saveName.value = data.name
       break
     }
     case 'childrenById': {
-      postMessage({ ...data, children: getChildrenById(data.id) })
+      postMessage({ ...data, children: getChildrenById(data.id) }) // TODO: stream these
       break
     }
     case 'typesById': {
@@ -52,7 +53,7 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
 }
 
 async function gotoPosition(fileName: string, pos: number) {
-  const workspacePath = getWorkspacePath()
+  const workspacePath = state.workspacePath.value
   const uri = vscode.Uri.file(join(workspacePath, fileName))
   const document = vscode.workspace.textDocuments.find(x => x.fileName === fileName) ?? await vscode.workspace.openTextDocument(uri)
   const position = document.positionAt(pos + 1)

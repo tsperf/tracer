@@ -1,8 +1,9 @@
 import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
 import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
-import { getTraceFiles, getWorkspacePath } from './storage'
+import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
+import { traceFiles } from './appState'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -76,7 +77,7 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
 let traceTree: Tree | undefined
 export async function processTraceFiles() {
   const workspacePath = await getWorkspacePath()
-  traceTree = toTree(Object.values(getTraceFiles()).flat(1), workspacePath)
+  traceTree = toTree(Object.values(traceFiles.value).flat(1), workspacePath)
 }
 
 export function filterTree(startsWith: string, sourceFileName: string, position: number | '', tree = traceTree): Tree[] {
@@ -116,7 +117,7 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
       clearInterval(interval)
       postMessage({ message: 'showTree', nodes: [], step: 'done' })
     }
-  }, 0)
+  }, 30)
 
   nodes.forEach(node => treeIdNodes.set(node.id, node))
   return nodes
