@@ -10,6 +10,7 @@ import { state, triggerAll } from './appState'
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
   if (message === 'init client') {
     triggerAll(false, true)
+    showTree('check', '', 0)
     return
   }
 
