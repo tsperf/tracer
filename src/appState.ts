@@ -5,7 +5,7 @@ import { type Ref, type ShallowRef, type UnwrapRef, watch as plainWatch, ref, sh
 import type * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
-import { getProjectName, getTraceDir, getWorkspacePath } from './storage'
+import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
 

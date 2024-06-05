@@ -360,6 +360,9 @@
     "typecheck": "tsc --noEmit ",
     "release": "bumpp && git push"
   },
+  "dependencies": {
+    "@vue/reactivity": "^3.4.27"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^2.19.1",
     "@antfu/ni": "^0.21.12",
@@ -380,8 +383,5 @@
     "typescript": "^5.4.5",
     "vitest": "^1.6.0",
     "zod": "^3.23.8"
-  },
-  "dependencies": {
-    "@vue/reactivity": "^3.4.27"
   }
 }
