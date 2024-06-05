@@ -1,14 +1,15 @@
 import { mkdirSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
 import { log } from 'node:console'
-import { nextTick } from 'node:process'
-import { type Ref, type ShallowRef, type UnwrapRef, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
+import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
 import type * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
+
+export const afterWatches = nextTick
 
 export const workspacePath = ref('')
 export const projectName = ref('')
@@ -106,9 +107,13 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
     if (!name)
       return
 
-    postMessage({ message: 'saveOpen', name })
-    if (!saveNames.value.includes(name))
+    if (!saveNames.value.includes(name)) {
       saveNames.value.push(name)
+      triggerWatchRemote('saveNames')
+    }
+
+    postMessage({ message: 'saveOpen', name })
+
     setStatusBarState('saveName', saveName.value)
     tracePath.value = join(projectPath.value, name, 'traces')
 

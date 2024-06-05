@@ -12,7 +12,7 @@ import type { CommandId } from './constants'
 import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
-import { projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
 
 const readdir = promisify(readdirC)
 
@@ -115,59 +115,62 @@ async function runTrace(args?: unknown[]) {
   }
 
   if (dirName) {
+    log(`dirName: ${dirName}`)
     saveName.value = relative(workspacePath, dirName)
   }
 
+  const newDirName = dirName
   // TODO: use logic from real time metrics that get the tsconfig path
-
-  const traceDir = state.tracePath.value
-  if (!traceDir) {
-    vscode.window.showWarningMessage('No workspace or folder open')
-    return
-  }
-
-  const quotedTraceDir = `'${traceDir}'`
-  // eslint-disable-next-line no-template-curly-in-string
-  const fullCmd = `(cd '${dirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
-
-  log(fullCmd)
-
-  const newProjectPath = dirName ?? projectPath.value
-  if (!newProjectPath) {
-    vscode.window.showErrorMessage('could not get project path from workspace folders')
-    return
-  }
-
-  traceRunning.value = true
-
-  traceFiles.value = {}
-  treeIdNodes.clear()
-
-  setStatusBarState('traceError', false)
-
-  log(`shell: ${process.env.SHELL}`)
-  const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
-
-  let err = ''
-  cmdProcess.stderr.on('data', data => err += data.toString())
-
-  cmdProcess.stdout.on('data', data => log(data.toString()))
-
-  cmdProcess.on('error', (error) => {
-    vscode.window.showErrorMessage(error.message)
-  })
-
-  cmdProcess.on('exit', async (code) => {
-    log('---- trace stderr -----')
-    log(err)
-    traceRunning.value = false
-    if (code) {
-      setStatusBarState('traceError', true)
-      vscode.window.showErrorMessage('error running trace')
+  afterWatches(() => {
+    const traceDir = state.tracePath.value
+    if (!traceDir) {
+      vscode.window.showWarningMessage('No workspace or folder open')
       return
     }
 
-    await sendTraceDir(traceDir)
+    const quotedTraceDir = `'${traceDir}'`
+    // eslint-disable-next-line no-template-curly-in-string
+    const fullCmd = `(cd '${newDirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
+
+    log(fullCmd)
+
+    const newProjectPath = newDirName ?? projectPath.value
+    if (!newProjectPath) {
+      vscode.window.showErrorMessage('could not get project path from workspace folders')
+      return
+    }
+
+    traceRunning.value = true
+
+    traceFiles.value = {}
+    treeIdNodes.clear()
+
+    setStatusBarState('traceError', false)
+
+    log(`shell: ${process.env.SHELL}`)
+    const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
+
+    let err = ''
+    cmdProcess.stderr.on('data', data => err += data.toString())
+
+    cmdProcess.stdout.on('data', data => log(data.toString()))
+
+    cmdProcess.on('error', (error) => {
+      vscode.window.showErrorMessage(error.message)
+    })
+
+    cmdProcess.on('exit', async (code) => {
+      log('---- trace stderr -----')
+      log(err)
+      traceRunning.value = false
+      if (code) {
+        setStatusBarState('traceError', true)
+        vscode.window.showErrorMessage('error running trace')
+        return
+      }
+
+      await sendTraceDir(traceDir)
+    })
   })
 }
 
