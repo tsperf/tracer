@@ -1,38 +1,7 @@
 <script setup lang="ts">
-const Messages = useNuxtApp().$Messages
+import { files, traceRunning } from '../src/appState'
 
 const sendMessage = useNuxtApp().$sendMessage
-
-const files = ref([] as { fileName: string, dirName: string }[])
-
-const traceRunning = ref(false)
-
-function handleMessage(e: MessageEvent<unknown>) {
-  const parsed = Messages.message.safeParse(e.data)
-  if (!parsed.success)
-    return
-
-  switch (parsed.data.message) {
-    case 'traceFileLoaded': {
-      const data = parsed.data
-      if (data.resetFileList)
-        files.value = []
-      if (parsed.data.fileName && !files.value.some(x => x.fileName === data.fileName && x.dirName === data.dirName))
-        files.value.push(parsed.data)
-      break
-    }
-
-    case 'traceStart': {
-      traceRunning.value = true
-      break
-    }
-
-    case 'traceStop': {
-      traceRunning.value = false
-      break
-    }
-  }
-}
 
 function deleteTraceFile(fileName: string, dirName: string) {
   sendMessage('deletTraceFile', { fileName, dirName })
@@ -45,10 +14,6 @@ function deleteAllTraceFiles() {
     deleteTraceFile(fileName, dirName)
   }
 }
-
-onMounted(async () => {
-  window.addEventListener('message', handleMessage)
-})
 </script>
 
 <template>

@@ -99,7 +99,13 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
 }
 
 export const treeIdNodes = new Map<number, Tree>()
+let showTreeInterval: undefined | ReturnType<typeof setInterval>
 export function showTree(startsWith: string, sourceFileName: string, position: number | '', updateUi = true, tree = traceTree) {
+  if (showTreeInterval) {
+    clearInterval(showTreeInterval)
+    showTreeInterval = undefined
+  }
+
   const nodes = filterTree(startsWith, sourceFileName, position, tree)
   const skinnyNodes = nodes.map(x => ({ ...x, children: [], types: [] }))
   if (updateUi)
@@ -110,11 +116,15 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
   let i = 0
 
   // this can be large enough to freeze the UI if sent at once
-  const interval = setInterval(() => {
+  showTreeInterval = setInterval(() => {
+    if (!showTreeInterval)
+      return
+
     postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + 10), step: 'add' })
     i += 10
     if (i >= skinnyNodes.length) {
-      clearInterval(interval)
+      clearInterval(showTreeInterval)
+      showTreeInterval = undefined
       postMessage({ message: 'showTree', nodes: [], step: 'done' })
     }
   }, 30)

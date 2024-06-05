@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process'
 import { createReadStream, existsSync, readdir as readdirC, statSync } from 'node:fs'
 import * as vscode from 'vscode'
 import { getStatsFromTree, processTraceFiles, showTree, treeIdNodes } from './traceTree'
-import { getTracePanel, postMessage, prepareWebView } from './webview'
+import { getTracePanel, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import type { CommandId } from './constants'
@@ -43,8 +43,6 @@ async function sendTrace(dirName: string, fileName: string) {
   let fileContents = ''
 
   stream.on('end', () => {
-    postMessage({ message: 'traceFileLoaded', fileName, dirName, resetFileList: false })
-
     addTraceFile(fileName, fileContents)
     processTraceFiles().then(() => {
       showTree('check', '', 0)

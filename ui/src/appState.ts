@@ -8,9 +8,11 @@ export const nodes = ref([] as Tree[])
 export const sortBy = ref('Timestamp' as keyof typeof sortValue)
 export const projectName = ref('')
 export const saveName = ref('default')
-
-export const projectNames = ref([] as string[])
 export const saveNames = ref(['default'] as string[])
+export const projectNames = ref([] as string[])
+
+export const files = ref([] as { fileName: string, dirName: string }[])
+export const traceRunning = ref(false)
 
 const sortValue = {
   'Timestamp': (t: Tree) => t.line.ts,
@@ -76,6 +78,27 @@ function handleMessage(e: MessageEvent<unknown>) {
 
     case 'projectOpen': {
       projectName.value = parsed.data.name
+      break
+    }
+
+    case 'traceFileLoaded': {
+      const data = parsed.data
+      if (data.resetFileList) {
+        files.value = []
+        nodes.value = []
+      }
+      if (parsed.data.fileName && !files.value.some(x => x.fileName === data.fileName && x.dirName === data.dirName))
+        files.value.push(parsed.data)
+      break
+    }
+
+    case 'traceStart': {
+      traceRunning.value = true
+      break
+    }
+
+    case 'traceStop': {
+      traceRunning.value = false
       break
     }
   }
