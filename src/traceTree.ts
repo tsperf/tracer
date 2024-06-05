@@ -98,7 +98,7 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
   return tree.children.map(child => filterTree(startsWith, sourceFileName, position, child)).flat()
 }
 
-const treeIdNodes = new Map<number, Tree>()
+export const treeIdNodes = new Map<number, Tree>()
 export function showTree(startsWith: string, sourceFileName: string, position: number | '', updateUi = true, tree = traceTree) {
   const nodes = filterTree(startsWith, sourceFileName, position, tree)
   const skinnyNodes = nodes.map(x => ({ ...x, children: [], types: [] }))

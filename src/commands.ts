@@ -4,15 +4,15 @@ import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import { createReadStream, existsSync, readdir as readdirC, statSync } from 'node:fs'
 import * as vscode from 'vscode'
-import { getStatsFromTree, processTraceFiles, showTree } from './traceTree'
+import { getStatsFromTree, processTraceFiles, showTree, treeIdNodes } from './traceTree'
 import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import type { CommandId } from './constants'
-import { addTraceFile, clearTraceFiles, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
-import { addTraceDiagnostics } from './traceDiagnostics'
+import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
+import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
-import { projectPath, saveName, state, traceRunning } from './appState'
+import { projectPath, saveName, state, traceFiles, traceRunning } from './appState'
 
 const readdir = promisify(readdirC)
 
@@ -46,13 +46,15 @@ async function sendTrace(dirName: string, fileName: string) {
     postMessage({ message: 'traceFileLoaded', fileName, dirName, resetFileList: false })
 
     addTraceFile(fileName, fileContents)
-    processTraceFiles()
-    showTree('check', '', 0)
+    processTraceFiles().then(() => {
+      showTree('check', '', 0)
 
-    for (const editor of vscode.window.visibleTextEditors) {
-      const visibleFileName = editor.document.fileName
-      addTraceDiagnostics(visibleFileName, getStatsFromTree(visibleFileName))
-    }
+      clearTaceDiagnostics()
+      for (const editor of vscode.window.visibleTextEditors) {
+        const visibleFileName = editor.document.fileName
+        addTraceDiagnostics(visibleFileName, getStatsFromTree(visibleFileName))
+      }
+    })
   })
 
   function readChunks() {
@@ -140,6 +142,9 @@ async function runTrace(args?: unknown[]) {
 
   traceRunning.value = true
 
+  traceFiles.value = {}
+  treeIdNodes.clear()
+
   log(`shell: ${process.env.SHELL}`)
   const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
 
@@ -161,8 +166,6 @@ async function runTrace(args?: unknown[]) {
       vscode.window.showErrorMessage('error running trace')
       return
     }
-
-    clearTraceFiles()
 
     await sendTraceDir(traceDir)
   })

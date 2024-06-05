@@ -99,10 +99,6 @@ export function addTraceFile(fileName: string, contents: string) {
   }
 }
 
-export function clearTraceFiles() {
-  state.traceFiles.value = {}
-}
-
 // allow setting this in the debugger
 // set it to the full path of devUiDriver/commands.ts to record for driver playback
 // eslint-disable-next-line prefer-const
