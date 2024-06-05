@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { env } from 'node:process'
 import * as vscode from 'vscode'
@@ -88,11 +88,12 @@ export function addTraceFile(fileName: string, contents: string) {
   try {
     const json = JSON.parse(contents)
 
-    const arr = traceData.safeParse(json)
-    if (!arr.success)
+    if (!Array.isArray(json)) {
+      vscode.window.showErrorMessage(`trace ${fileName} is not a json array`)
       return
+    }
 
-    state.traceFiles.value[fileName] = arr.data
+    state.traceFiles.value[fileName] = json
   }
   catch (e) {
     vscode.window.showErrorMessage(`${e}`)
@@ -151,4 +152,24 @@ export async function deleteTraceFiles(fileName: string, dirName?: string) {
   else if (fileName.endsWith('.json')) {
     rmSync(join(deleteDirName, fileName))
   }
+}
+
+const typeTimestampsFileName = 'timestamps.json'
+export async function writeTypeTimestamps(data: Map<number, number>) {
+  const traceDir = state.tracePath.value
+  const fileName = join(traceDir, typeTimestampsFileName)
+  writeFileSync(fileName, JSON.stringify([...data.entries()], null, 2))
+}
+
+export async function readTypeTimestamps() {
+  const traceDir = await getTraceDir()
+  const fileName = join(traceDir, typeTimestampsFileName)
+
+  if (!existsSync(fileName))
+    return undefined
+
+  const str = readFileSync(fileName).toString()
+  const json = JSON.parse(str)
+
+  return new Map<number, number>(json)
 }

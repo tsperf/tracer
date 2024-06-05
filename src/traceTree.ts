@@ -1,9 +1,11 @@
 import { isAbsolute, join, relative } from 'node:path'
+import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
-import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
+import { type TraceData, type TraceLine, type TypeLine, traceLine, typeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
-import { traceFiles } from './appState'
+import { state, traceFiles } from './appState'
+import { getTypeTimestamps } from './tsTrace'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -27,7 +29,7 @@ function getRoot(): Tree {
 }
 
 let treeIndexes: Tree[] = []
-export function toTree(traceData: TraceData, workspacePath: string): Tree {
+export function toTree(traceData: TraceData): Tree {
   const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
   let curr = tree
@@ -37,6 +39,8 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
   const stack: Tree[] = []
 
   treeIndexes = [tree]
+
+  const workspacePath = state.workspacePath.value
 
   const data = traceData.filter(x => 'id' in x || ('cat' in x)).sort((a, b) => a.ts - b.ts)
   // const data = traceData.filter(x => 'id' in x || ('cat' in x && x.cat?.startsWith('check'))).sort((a, b) => a.ts - b.ts)
@@ -75,9 +79,74 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
 }
 
 let traceTree: Tree | undefined
+const traceLines: TraceLine[] = []
+const typeLines: TypeLine[] = []
+export const processedFiles = new Set<string>()
+
 export async function processTraceFiles() {
-  const workspacePath = await getWorkspacePath()
-  traceTree = toTree(Object.values(traceFiles.value).flat(1), workspacePath)
+  const typeTimestamps = await getTypeTimestamps()
+  let newFiles = false
+  const workspacePath = state.workspacePath.value
+  const traceFiles = state.traceFiles.value
+
+  for (const name in traceFiles) {
+    if (processedFiles.has(name))
+      continue
+    processedFiles.add(name)
+    newFiles = true
+
+    const lines = traceFiles[name]
+
+    if (name.includes('trace')) {
+      const starts: TraceLine[] = []
+      for (const unparsed of lines) {
+        const parsed = traceLine.safeParse(unparsed)
+        if (!parsed.success) {
+          vscode.window.showErrorMessage(`trace file ${name} is not valid`)
+          return
+        }
+
+        const line = parsed.data
+        if ('args' in line && line.args?.path && isAbsolute(line.args?.path))
+          line.args.path = relative(workspacePath, line.args.path)
+
+        if (line.ph === 'B') {
+          starts.push(line)
+        }
+        else if (line.ph === 'E') {
+          const start = starts.pop()
+          if (start) {
+            start.dur = line.ts - start.ts
+            traceLines.push(start)
+          }
+        }
+        else {
+          traceLines.push(line)
+        }
+      }
+    }
+    else if (name.includes('type')) {
+      for (const unparsed of lines) {
+        const parsed = typeLine.safeParse(unparsed)
+        if (!parsed.success) {
+          vscode.window.showErrorMessage(`type file ${name} is not valid`)
+          return
+        }
+
+        const line = parsed.data
+        line.ts = typeTimestamps.get(line.id) ?? 0
+        typeLines.push(line)
+      }
+    }
+  }
+
+  if (!newFiles)
+    return traceTree
+
+  const allLines = [...traceLines, ...typeLines]
+  allLines.sort((a, b) => a.ts - b.ts)
+  traceTree = toTree(allLines)
+  return traceTree
 }
 
 export function filterTree(startsWith: string, sourceFileName: string, position: number | '', tree = traceTree): Tree[] {
