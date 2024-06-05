@@ -1,12 +1,11 @@
 <script setup lang="ts">
+import { sortBy } from './src/appState'
+
 const Messages = useNuxtApp().$Messages
 
 const sendMesage = useNuxtApp().$sendMessage
 
 const sortOptions = ['Timestamp', 'Duration', 'Types', 'Total Types'] as const
-const sortBy = ref('Timestamp' as (typeof sortOptions)[number])
-
-const secondButtonLabel = ref('Another button')
 
 const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
 
@@ -27,18 +26,18 @@ function handleMessage(e: MessageEvent<unknown>) {
   if (!message.success)
     return
 
-  if (message.data.message === 'pong')
-    secondButtonLabel.value = 'pong'
-
-  else if (message.data.message === 'gotoTracePosition')
+  if (message.data.message === 'gotoTracePosition')
     filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName }
 
   else if (message.data.message === 'filterTree')
     filters.value = message.data
 }
 
-function doFilters(event: any) {
-  sortBy.value = event.target.value
+function updateSort(event: any) {
+  if (event?.target?.value)
+    sortBy.value = event.target.value
+}
+function doFilters() {
   sendMesage('filterTree', filters.value)
 }
 
@@ -64,7 +63,7 @@ onMounted(() => {
       </div>
       <div class="dropdown-container">
         <label for="my-dropdown">Sort By</label>
-        <vscode-dropdown id="my-dropdown" :value="sortBy" @change="doFilters">
+        <vscode-dropdown id="my-dropdown" :value="sortBy" @change="updateSort">
           <template v-for="value of sortOptions" :key="value">
             <vscode-option :selected="value === sortBy">
               {{ value }}
@@ -75,7 +74,7 @@ onMounted(() => {
     </div>
     <hr class="m-2">
     <div>
-      <tree-root :sort-by="sortBy" />
+      <tree-root />
     </div>
 
     <dev-controls />
