@@ -1,11 +1,12 @@
 import { isAbsolute, join, relative } from 'node:path'
 import * as vscode from 'vscode'
+// import { getLineAndCharacterOfPosition } from 'typescript'
 import type { FileStat } from '../shared/src/messages'
 import { type TraceData, type TraceLine, type TypeLine, traceLine, typeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
-import { state, traceFiles } from './appState'
-import { getTypeTimestamps } from './tsTrace'
+import { state } from './appState'
+import { getProgram, getTypeDictionary, getTypeTimestamps } from './tsTrace'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -29,7 +30,7 @@ function getRoot(): Tree {
 }
 
 let treeIndexes: Tree[] = []
-export function toTree(traceData: TraceData): Tree {
+export function toTree(data: TraceData): Tree {
   const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
   let curr = tree
@@ -42,16 +43,15 @@ export function toTree(traceData: TraceData): Tree {
 
   const workspacePath = state.workspacePath.value
 
-  const data = traceData.filter(x => 'id' in x || ('cat' in x)).sort((a, b) => a.ts - b.ts)
-  // const data = traceData.filter(x => 'id' in x || ('cat' in x && x.cat?.startsWith('check'))).sort((a, b) => a.ts - b.ts)
+  // zod won't allow default for TS in the tree message so we have to assert it here
   for (const line of data) {
     if ('args' in line && line.args?.path && isAbsolute(line.args?.path))
       line.args.path = relative(workspacePath, line.args.path)
 
     if (line.dur !== Number.MAX_SAFE_INTEGER && (line.dur ?? 0) > maxDur)
-      maxDur = line.ts
+      maxDur = line.ts!
 
-    while (line.ts > endTs) {
+    while (line.ts! > endTs) {
       if (stack.length === 0)
         throw new Error('tree stack empty')
 
@@ -135,6 +135,7 @@ export async function processTraceFiles() {
 
         const line = parsed.data
         line.ts = typeTimestamps.get(line.id) ?? 0
+
         typeLines.push(line)
       }
     }
@@ -144,7 +145,7 @@ export async function processTraceFiles() {
     return traceTree
 
   const allLines = [...traceLines, ...typeLines]
-  allLines.sort((a, b) => a.ts - b.ts)
+  allLines.sort((a, b) => a.ts! - b.ts!)
   traceTree = toTree(allLines)
   return traceTree
 }
@@ -213,7 +214,23 @@ export function getChildrenById(id: number) {
 }
 
 export function getTypesById(id: number) {
-  return treeIdNodes.get(id)?.types ?? []
+  const ret = treeIdNodes.get(id)?.types
+  const typeDictionary = getTypeDictionary()
+  if (!ret)
+    return []
+
+  const checker = getProgram()?.getTypeChecker()
+  if (!checker)
+    return ret
+
+  for (const line of ret) {
+    if (!line.display) {
+      const type = typeDictionary.get(line.id)
+      if (type)
+        line.display = checker.typeToString(type)
+    }
+  }
+  return ret
 }
 
 export function getStatsFromTree(fileName: string) {

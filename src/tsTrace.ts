@@ -4,17 +4,21 @@ import { readTypeTimestamps, writeTypeTimestamps } from './storage'
 
 export type ExecuteCommandLineCallbacks = (program: Program | BuilderProgram | ParsedCommandLine) => void
 
-let program: Program
+let program: Program | undefined
 export function getProgram() {
   return program
 }
 
 let typeTimestamps = new Map<number, number>()
+const typeDictionary = new Map<number, Type>()
 export async function getTypeTimestamps() {
   if (typeTimestamps.size === 0) {
     typeTimestamps = await readTypeTimestamps() ?? typeTimestamps
   }
   return typeTimestamps
+}
+export function getTypeDictionary() {
+  return typeDictionary
 }
 
 // TODO: see src/comipler/path.ts:632
@@ -158,11 +162,14 @@ function canTrace(system: System, compilerOptions: CompilerOptions) {
 function enableTracing(system: System, compilerOptions: CompilerOptions, isBuildMode: boolean) {
   if (canTrace(system, compilerOptions)) {
     typeTimestamps.clear()
+    typeDictionary.clear()
+
     startTracing(isBuildMode ? 'build' : 'project', compilerOptions.generateTrace!, compilerOptions.configFilePath)
     if (tracing) {
       const holdRecordType = tracing.recordType
       tracing.recordType = (type: Type) => {
         typeTimestamps.set(type.id, 1000 * timestamp())
+        typeDictionary.set(type.id, type)
         holdRecordType(type)
       }
     }

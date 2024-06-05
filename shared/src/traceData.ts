@@ -6,7 +6,7 @@ export const typeLine = z.object({
   intrinsicName: z.string().optional(),
   recursionId: z.number().optional(),
   flags: z.array(z.string()).optional(),
-  ts: z.number().optional().default(0),
+  ts: z.number().default(0).optional(),
   dur: z.number().optional(),
   display: z.string().optional(),
 })
