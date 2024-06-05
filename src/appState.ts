@@ -1,6 +1,7 @@
 import { mkdirSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
 import { log } from 'node:console'
+import { nextTick } from 'node:process'
 import { type Ref, type ShallowRef, type UnwrapRef, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
 import type * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
@@ -45,7 +46,9 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
   context = extensionContext
   storagePath = context.globalStorageUri.fsPath
 
-  watchT('saveNames', noop, names => postMessage({ message: 'saveNames', names }))
+  watchT('saveNames', noop, (names) => {
+    postMessage({ message: 'saveNames', names })
+  })
   watchT('projectNames', noop, names => postMessage({ message: 'projectNames', names }))
 
   watchT('projectName', (name) => {
@@ -67,10 +70,10 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
         const stat = statSync(fullPath)
         if (stat.isDirectory()) {
           if (basename(file) === 'traces') {
-            savePath.value = dirname(fullPath)
-            saveName.value = relative(projectPath.value, savePath.value)
-            if (!saveNames.value.includes(saveName.value)) {
-              saveNames.value.push(saveName.value)
+            const savePath = dirname(fullPath)
+            const saveName = relative(projectPath.value, savePath)
+            if (!saveNames.value.includes(saveName)) {
+              saveNames.value.push(saveName)
             }
           }
           else {
@@ -103,20 +106,25 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
     if (!name)
       return
 
+    postMessage({ message: 'saveOpen', name })
     if (!saveNames.value.includes(name))
       saveNames.value.push(name)
     setStatusBarState('saveName', saveName.value)
     tracePath.value = join(projectPath.value, name, 'traces')
 
     void sendTraceDir(tracePath.value)
-  }, name => postMessage({ message: 'saveOpen', name }))
+  }, (name) => {
+    postMessage({ message: 'saveOpen', name })
+  })
 
   watchT('traceFiles', noop, (files) => {
     postMessage({ message: 'traceFileLoaded', fileName: '', dirName: tracePath.value, resetFileList: true })
+    nextTick(() =>
 
-    Object.keys(files).forEach((fileName) => {
-      postMessage({ message: 'traceFileLoaded', fileName, dirName: tracePath.value, resetFileList: false })
-    })
+      Object.keys(files).forEach((fileName) => {
+        postMessage({ message: 'traceFileLoaded', fileName, dirName: tracePath.value, resetFileList: false })
+      }),
+    )
   })
 
   watchT('traceRunning', (running: boolean) => setStatusBarState('tracing', running), (running: boolean) => {
@@ -167,9 +175,9 @@ export function triggerWatch(watchName: keyof State, local = true, remote = true
     trigger.remoteHandler(value)
   }
 }
-export function triggerAll() {
+export function triggerAll(local: boolean, remote: boolean) {
   for (const watchName in triggers) {
-    triggerWatch(watchName as keyof State)
+    triggerWatch(watchName as keyof State, local, remote)
   }
 }
 

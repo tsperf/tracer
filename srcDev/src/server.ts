@@ -37,6 +37,7 @@ app.get('/index.js.map', (req, res) => {
 io.on('connection', (socket) => {
   globalSocket = socket // dumb but good enough.  latest connection get's the vscode emits
   console.log('a user connected')
+  messageHandler('init client')
   socket.onAny((name, ...args: any[]) => {
     console.log('message from client', name, args)
     messageHandler({ ...args[0], message: name })

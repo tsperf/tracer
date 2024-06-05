@@ -5,9 +5,14 @@ import { getChildrenById, getTypesById, showTree } from './traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
-import { state } from './appState'
+import { state, triggerAll } from './appState'
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
+  if (message === 'init client') {
+    triggerAll(false, true)
+    return
+  }
+
   setLastMessageTrigger(message)
   const parsed = Messages.message.safeParse(message)
   if (!parsed.success) {

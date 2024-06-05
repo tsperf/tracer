@@ -42,6 +42,8 @@ function doFilters() {
 }
 
 onMounted(() => {
+  useNuxtApp().$initAppState()
+  useNuxtApp().$initClient()
   window.addEventListener('message', handleMessage)
 })
 </script>

@@ -145,6 +145,8 @@ async function runTrace(args?: unknown[]) {
   traceFiles.value = {}
   treeIdNodes.clear()
 
+  setStatusBarState('traceError', false)
+
   log(`shell: ${process.env.SHELL}`)
   const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
 
@@ -173,6 +175,10 @@ async function runTrace(args?: unknown[]) {
 
 export async function sendTraceDir(traceDir: string) {
   try {
+    if (!existsSync(traceDir)) {
+      return
+    }
+
     const fileNames = await readdir(traceDir)
     for (const fileName of fileNames) {
       sendTrace(traceDir, fileName)

@@ -9,7 +9,7 @@ import * as vscode from 'vscode'
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
 import type { Message } from '../shared/src/messages'
-import { noop, triggerAll, watchT } from './appState'
+import { noop, watchT } from './appState'
 import { handleMessage } from './handleMessages'
 import { logMessage } from './storage'
 
@@ -92,8 +92,6 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
 
   if (show)
     panel.reveal()
-
-  triggerAll()
 
   return ret
 }

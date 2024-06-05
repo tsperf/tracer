@@ -6,6 +6,11 @@ export const childrenById = shallowReactive(new Map<number, Tree[]>())
 export const typesById = shallowReactive(new Map<number, TypeLine[]>())
 export const nodes = ref([] as Tree[])
 export const sortBy = ref('Timestamp' as keyof typeof sortValue)
+export const projectName = ref('')
+export const saveName = ref('default')
+
+export const projectNames = ref([] as string[])
+export const saveNames = ref(['default'] as string[])
 
 const sortValue = {
   'Timestamp': (t: Tree) => t.line.ts,
@@ -54,8 +59,33 @@ function handleMessage(e: MessageEvent<unknown>) {
         case 'done':
           break
       }
+      break
+    }
+    case 'projectNames':
+      projectNames.value = parsed.data.names
+      break
+
+    case 'saveNames':
+      saveNames.value = parsed.data.names
+      break
+
+    case 'saveOpen': {
+      saveName.value = parsed.data.name
+      break
+    }
+
+    case 'projectOpen': {
+      projectName.value = parsed.data.name
+      break
     }
   }
 }
 
-window.addEventListener('message', handleMessage)
+let wasInit = false
+export function init() {
+  if (wasInit)
+    return
+
+  wasInit = true
+  window.addEventListener('message', handleMessage)
+}

@@ -1,55 +1,12 @@
 <script setup lang="ts">
+import { saveName, saveNames } from '~/src/appState'
+
 const sendMessage = useNuxtApp().$sendMessage
-
-const Messages = useNuxtApp().$Messages
-
-const projectName = ref('')
-const saveName = ref('default')
-
-const projectNames = ref([] as string[])
-const saveNames = ref([] as string[])
-
-if (!saveNames.value.includes('default'))
-  saveNames.value.unshift('default')
-
-function handleMessage(e: MessageEvent<unknown>) {
-  const parsed = Messages.message.safeParse(e.data)
-  if (!parsed.success)
-    return
-
-  switch (parsed.data.message) {
-    case 'projectNames':
-      projectNames.value = parsed.data.names
-      break
-
-    case 'saveNames':
-      saveNames.value = parsed.data.names
-      break
-
-    case 'saveOpen': {
-      saveName.value = parsed.data.name
-      break
-    }
-
-    case 'projectOpen': {
-      projectName.value = parsed.data.name
-      break
-    }
-  }
-}
-
-// function loadProject() {
-//   sendMessage('projectOpen', { name: projectName.value })
-// }
 
 function loadSave(event: any) {
   saveName.value = event.target.value
   sendMessage('saveOpen', { name: saveName.value })
 }
-
-onMounted(() => {
-  window.addEventListener('message', handleMessage)
-})
 </script>
 
 <template>
