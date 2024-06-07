@@ -1,6 +1,7 @@
 import type { BuilderProgram, CompilerHost, CompilerOptions, CreateProgramOptions, Diagnostic, DiagnosticReporter, ExtendedConfigCacheEntry, ParseConfigFileHost, ParsedCommandLine, PrinterOptions, Program, System, Type } from 'typescript'
-import { JSDocParsingMode, NewLineKind, combinePaths, createGetCanonicalFileName, createGetSourceFile, createProgram, createWriteFileMeasuringIO, emitFilesAndReportErrorsAndGetExitStatus, findConfigFile, getConfigFileParsingDiagnostics, getDefaultLibFileName, getDirectoryPath, getParsedCommandLineOfConfigFile, maybeBind, memoize, programContainsEsModules, startTracing, sys, timestamp, tracing } from 'typescript'
+import { JSDocParsingMode, NewLineKind, combinePaths, createGetCanonicalFileName, createGetSourceFile, createProgram, createWriteFileMeasuringIO, diagnosticToString, emitFilesAndReportErrorsAndGetExitStatus, findConfigFile, getConfigFileParsingDiagnostics, getDefaultLibFileName, getDirectoryPath, getParsedCommandLineOfConfigFile, maybeBind, memoize, programContainsEsModules, startTracing, sys, timestamp, tracing } from 'typescript'
 import { readTypeTimestamps, writeTypeTimestamps } from './storage'
+import { log } from './logger'
 
 export type ExecuteCommandLineCallbacks = (program: Program | BuilderProgram | ParsedCommandLine) => void
 
@@ -32,7 +33,9 @@ export function runLiveTrace(
 ) {
   const searchPath = normalizePath(projectDirectory)
   const configFileName = findConfigFile(searchPath, fileName => sys.fileExists(fileName))
-  const reportDiagnostic = (_diagnostic: Diagnostic) => {}
+  const reportDiagnostic = (_diagnostic: Diagnostic) => {
+    log(`${_diagnostic.messageText}`)
+  }
 
   if (configFileName) {
     const extendedConfigCache = new Map<string, ExtendedConfigCacheEntry>()
@@ -84,7 +87,14 @@ function performCompilation(
     program,
     reportDiagnostic,
     s => sys.write(s + sys.newLine),
-    () => undefined, // createReportErrorSummary(sys, options),
+    (a, b) => {
+      log(`summary a: ${a}`)
+      if (b) {
+        b.forEach((c) => {
+          log(`error at: ${c?.fileName}: ${c?.line}`)
+        })
+      }
+    }, // createReportErrorSummary(sys, options),
   )
 
   tracing?.stopTracing()
