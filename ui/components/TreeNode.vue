@@ -1,63 +1,83 @@
-// TODO: on expand post message getTreeByID and handle receiving a result of the tree to expand
 <script setup lang="ts">
-import type { Tree } from '../../shared/src/traceTree'
+import type { Tree } from '../../src/traceTree'
+import { childrenById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
-const sendMesage = useNuxtApp().$sendMessage
-const Messages = useNuxtApp().$Messages
+const sendMessage = useNuxtApp().$sendMessage
 
-const children = shallowRef([] as Tree['children'])
-const types = shallowRef([] as Tree['types'])
+const children = computed(() => childrenById.get(props.tree.id) ?? [])
+const types = computed(() => typesById.get(props.tree.id) ?? [])
 
 function fetchChildren() {
-  sendMesage('childrenById', { id: props.tree.id })
+  if (children.value.length === 0)
+    sendMessage('childrenById', { id: props.tree.id })
 }
 
 function fetchTypes() {
-  sendMesage('typesById', { id: props.tree.id })
+  if (types.value.length === 0)
+    sendMessage('typesById', { id: props.tree.id })
 }
 
-function handleMessage(e: MessageEvent<unknown>) {
-  const parsed = Messages.message.safeParse(e.data)
-  if (!parsed.success)
-    return
+function gotoPosition() {
+  if ('name' in props.tree.line) {
+    const { path, pos } = props.tree.line.args ?? { path: undefined, pos: undefined }
+    if (!path || !pos)
+      return
 
-  switch (parsed.data.message) {
-    case 'childrenById':
-      if (parsed.data.id === props.tree.id)
-        children.value = parsed.data.children ?? []
-      break
-    case 'typesById':
-      if (parsed.data.id === props.tree.id)
-        types.value = parsed.data.types ?? []
-      break
+    sendMessage('gotoPosition', { fileName: path, pos })
   }
 }
 
-onMounted(() => {
-  window.addEventListener('message', handleMessage)
-})
+const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
 </script>
 
 <template>
-  <div class="m-0 pl-3 flex flex-col justify-start">
-    <UExpand @expand="fetchChildren">
+  <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen ">
+    <UExpand class="w-full min-h-1.5" :expandable="tree.childCnt > 0" @expand="fetchChildren">
+      <template #inset>
+        <template v-for="n in depth" :key="n">
+          <div :class="insetClass" />
+        </template>
+        <!-- <div :class="insetClass" :style="{ minWidth: `${props.depth / 2}rem` }" /> -->
+      </template>
       <template #label>
-        <div class="flex flex-row gap-5 flex-nowrap">
-          <TraceLine v-if="'name' in tree.line" :line="tree.line" class="pr-16" />
-          <span>{{ `Children: ${props.tree.childCnt} ${props.tree.childTypeCnt || props.tree.typeCnt ? `Types: ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
+        <div class="flex flex-row gap-5 w-full pl-1">
+          <div class="flex flex-row justify-start gap-2 grow text-left">
+            <span class="min-w-48">
+              {{ tree.line.name }} ({{ tree.childCnt }}):
+            </span><span>
+              {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
+            </span>
+            <div class="grow opacity-20 hover:opacity-100 h-full">
+              <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />
+            </div>
+            <span class="text-right">
+              {{ tree.line.args?.path ?? '' }}
+            </span>
+          </div>
+          <div class="flex flex-row min-w-40">
+            <button v-if="'args' in tree.line && tree.line.args?.pos !== undefined" class="mr-2 pb-1 mb-1 bg-[var(--vscode-button-background, green)] rounded-sm focus:ring-[var(--vscode-focusBorder, blue)] focus:outline-none focus:ring-1 " @click="gotoPosition">
+              <UIcon primary name="i-heroicons-arrow-left-on-rectangle" class="relative top-1  hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
+            </button>
+            <div v-else />
+            <span>{{ tree.line.args?.pos === undefined ? '' : `${tree.line.args.pos} - ${tree.line.args?.end}` }}</span>
+          </div>
+
+          <div class="flex flex-row justify-self-end justify-evenly">
+            <UExpand v-if="props.tree.typeCnt > 0" class="min-w-40" @expand="fetchTypes">
+              <template #label>
+                <span class="pl-1">{{ `Types: ${props.tree.typeCnt}` }} {{ `${props.tree.childTypeCnt || props.tree.typeCnt ? `/ ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
+              </template>
+              <TypeTable class="relative -left-auto right-auto" :types="types" />
+            </UExpand>
+            <div v-else class="min-w-40" />
+          </div>
         </div>
       </template>
       <template v-for="(node, idx) of children" :key="idx">
-        <TreeNode v-if="'name' in tree.line" :depth="depth + 1" :tree="node" />
+        <TreeNode :depth="depth + 1" :tree="node" />
       </template>
-    </Uexpand>
-    <UExpand v-if="props.tree.typeCnt > 0" class="pl-1" @expand="fetchTypes">
-      <template #label>
-        {{ `Types: ${props.tree.typeCnt}` }}
-      </template>
-      <TypeTable :types="types" />
     </UExpand>
   </div>
 </template>

@@ -18,11 +18,16 @@ export default defineNuxtPlugin(() => {
     vscode.postMessage(fullMessage)
   }
 
+  function initClient() {
+    vscode.postMessage('init client')
+  }
+
   return {
     provide: {
       sendMessage,
       messageLog,
       Messages,
+      initClient,
     },
   }
 })

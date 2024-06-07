@@ -1,12 +1,11 @@
 <script setup lang="ts">
+import { sortBy } from './src/appState'
+
 const Messages = useNuxtApp().$Messages
 
 const sendMesage = useNuxtApp().$sendMessage
 
 const sortOptions = ['Timestamp', 'Duration', 'Types', 'Total Types'] as const
-const sortBy = ref('Timestamp' as (typeof sortOptions)[number])
-
-const secondButtonLabel = ref('Another button')
 
 const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
 
@@ -27,34 +26,36 @@ function handleMessage(e: MessageEvent<unknown>) {
   if (!message.success)
     return
 
-  if (message.data.message === 'pong')
-    secondButtonLabel.value = 'pong'
-
-  else if (message.data.message === 'gotoTracePosition')
+  if (message.data.message === 'gotoTracePosition')
     filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName }
 
   else if (message.data.message === 'filterTree')
     filters.value = message.data
 }
 
-function doFilters(event: any) {
-  sortBy.value = event.target.value
+function updateSort(event: any) {
+  if (event?.target?.value)
+    sortBy.value = event.target.value
+}
+function doFilters() {
   sendMesage('filterTree', filters.value)
 }
 
 onMounted(() => {
+  useNuxtApp().$initAppState()
+  useNuxtApp().$initClient()
   window.addEventListener('message', handleMessage)
 })
 </script>
 
 <template>
-  <div class="flex flex-col w-max overflow-x-auto">
-    <div class="flex flex-row justify-evenly w-screen">
+  <div class="flex flex-col w-full ">
+    <div class="flex flex-row justify-evenly ">
       <div>
         <PersistentState />
       </div>
       <file-manager />
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-2">
         <VTextField v-model="filters.startsWith" label="Trace Name" @change="setStartsWith" />
         <VTextField v-model="filters.sourceFileName" label="Source File" @change="setSourceFileName" />
         <VTextField v-model="filters.position" label="Position" type="number" @change="setPosition" />
@@ -64,7 +65,7 @@ onMounted(() => {
       </div>
       <div class="dropdown-container">
         <label for="my-dropdown">Sort By</label>
-        <vscode-dropdown id="my-dropdown" :value="sortBy" @change="doFilters">
+        <vscode-dropdown id="my-dropdown" :value="sortBy" @change="updateSort">
           <template v-for="value of sortOptions" :key="value">
             <vscode-option :selected="value === sortBy">
               {{ value }}
@@ -73,8 +74,9 @@ onMounted(() => {
         </vscode-dropdown>
       </div>
     </div>
+    <hr class="m-2">
     <div>
-      <tree-root :sort-by="sortBy" />
+      <tree-root />
     </div>
 
     <dev-controls />
@@ -100,7 +102,7 @@ body {
   background-color: var(--vscode-editor-background);
 }
 
-.dropdown-container .label {
+label {
   display: block;
   color: var(--vscode-foreground);
   cursor: pointer;

@@ -1,49 +1,33 @@
 <script setup lang="ts">
-const Messages = useNuxtApp().$Messages
+import { files, traceRunning } from '../src/appState'
 
-const files = reactive([] as { fileName: string, dirName: string }[])
+const sendMessage = useNuxtApp().$sendMessage
 
-const traceRunning = ref(false)
-
-function handleMessage(e: MessageEvent<unknown>) {
-  const parsed = Messages.message.safeParse(e.data)
-  if (!parsed.success)
-    return
-
-  switch (parsed.data.message) {
-    case 'traceFileLoaded':
-      if (parsed.data.resetFileList)
-        files.length = 0
-      if (parsed.data.fileName)
-        files.push(parsed.data)
-      break
-
-    case 'traceStart': {
-      traceRunning.value = true
-      break
-    }
-
-    case 'traceStop': {
-      traceRunning.value = false
-      break
-    }
-  }
+function deleteTraceFile(fileName: string, dirName: string) {
+  sendMessage('deletTraceFile', { fileName, dirName })
+  const newFiles = files.value.filter(x => !(x.dirName === dirName && x.fileName === fileName))
+  files.value = newFiles
 }
 
-onMounted(async () => {
-  window.addEventListener('message', handleMessage)
-})
+function deleteAllTraceFiles() {
+  for (const { fileName, dirName } of files.value) {
+    deleteTraceFile(fileName, dirName)
+  }
+}
 </script>
 
 <template>
   <div>
-    <div v-for="({ fileName, dirName }) in files" :key="`${dirName}/${fileName}`">
+    <label class="border-solid border-b border-current" for="trace-file-list"> {{ files.length === 0 ? 'No ' : '' }} Files Loaded </label>
+    <div v-for="({ fileName, dirName }) in files" id="trace-file-list" :key="`${dirName}/${fileName}`">
       <div>{{ fileName }} </div>
     </div>
     <div v-if="traceRunning" class="flex flex-row gap-2">
       <span> traceRunning</span>
       <vscode-progress-ring class="h-6" />
     </div>
-    <div />
+    <vscode-button @click="deleteAllTraceFiles">
+      Delete All
+    </vscode-button>
   </div>
 </template>

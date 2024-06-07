@@ -12,14 +12,12 @@ import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configurati
 import { getTsPath } from './tsUtil'
 import { registerCommands } from './commands'
 import { initDiagnostics } from './traceDiagnostics'
-import { setPanelContext } from './webview'
-import { initStorage } from './storage'
+import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
+import { initAppState } from './appState'
 
 let ts: typeof import('typescript')
 let tsPath: string
-
-export const collection = vscode.languages.createDiagnosticCollection('tsperf')
 
 function getTs() {
   tsPath = getTsPath()
@@ -29,6 +27,8 @@ function getTs() {
 }
 export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
+
+  initAppState(context)
 
   updateConfig({ force: ['typescriptPathMode'] })
 
@@ -41,12 +41,22 @@ export async function activate(context: vscode.ExtensionContext) {
   const _run = debounce(runDiagnostics, 500)
   const run = (filenames: string[]) => Promise.all(getTestFileNames(filenames).map(file => _run(collection, file)))
 
+  afterConfigUpdate(['enableRealtimeMetrics'], (config) => {
+    if (!config.enableRealtimeMetrics) {
+      collection.clear()
+      log('clearing realtime metrics')
+    }
+    else {
+      log('enabling realtime metrics')
+      run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
+    }
+  })
+
   context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(event => run([event.fileName])))
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => run([event.document.fileName])))
   run(vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath))
 
-  initStorage(context)
-  setPanelContext(context)
+  initWebviewPanel(context)
   registerCommands(context)
   initStatusBar(context)
   initDiagnostics(context)
@@ -189,7 +199,8 @@ async function createLanguageServiceTestMatrix(
 }
 
 async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
-  if (getCurrentConfig().benchmarkIterations < 1)
+  const config = getCurrentConfig()
+  if (config.benchmarkIterations < 1 || !config.enableRealtimeMetrics)
     return
 
   const tsConfigFile = await getTsconfigFile(filePath)

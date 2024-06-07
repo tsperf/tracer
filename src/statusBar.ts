@@ -2,15 +2,15 @@ import * as vscode from 'vscode'
 
 let bar: vscode.StatusBarItem
 
-const state = {
+const statusBarState = {
   tracing: false,
   traceError: false,
   projectName: '',
   saveName: '',
 }
 
-export function setStatusBarState<T extends keyof typeof state>(key: T, value: (typeof state)[T]) {
-  state[key] = value
+export function setStatusBarState<T extends keyof typeof statusBarState>(key: T, value: (typeof statusBarState)[T]) {
+  statusBarState[key] = value
   updateText()
 }
 
@@ -26,11 +26,11 @@ export function initStatusBar(extensionContext: vscode.ExtensionContext) {
 }
 
 function updateText() {
-  let text = `${state.projectName}/${state.saveName}`
-  if (state.tracing)
+  let text = `${statusBarState.projectName}/${statusBarState.saveName}`
+  if (statusBarState.tracing)
     text += '$(loading~spin)'
 
-  if (state.traceError)
+  if (statusBarState.traceError)
     text += '$(error)'
 
   bar.text = text

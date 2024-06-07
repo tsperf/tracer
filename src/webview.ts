@@ -1,4 +1,6 @@
 import { join } from 'node:path'
+import { env } from 'node:process'
+
 import * as vscode from 'vscode'
 
 // error is not generated when running traces on just UI
@@ -7,17 +9,42 @@ import * as vscode from 'vscode'
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
 import type { Message } from '../shared/src/messages'
-import { showTree } from '../shared/src/traceTree'
+import { noop, watchT } from './appState'
 import { handleMessage } from './handleMessages'
-import { logMessage, sendStorageMeta } from './storage'
+import { logMessage } from './storage'
+import { log } from './logger'
+
+let devEmitter = (_message: any) => {}
+
+let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
+let disposed = true
 
 let holdContext: vscode.ExtensionContext | undefined
-export function setPanelContext(extensionContext: vscode.ExtensionContext) {
+export function initWebviewPanel(extensionContext: vscode.ExtensionContext) {
+  watchT('projectName', (name) => {
+    if (panel)
+      panel.title = `Trace Viewer - ${name}`
+  }, noop)
   holdContext = extensionContext
-}
-let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
 
-let disposed = true
+  // You have to export TRACER_DEV from your shell source file
+  // annoying, but I haven't found any other way to get the launcher to pass an env variable through
+  const isDev = env.env && (env.env as any).TRACER_DEV
+  // eslint-disable-next-line node/prefer-global/process
+  const isDev2 = process.env.TRACER_DEV
+  if (isDev || isDev2) {
+    log('starting dev server')
+    // eslint-disable-next-line ts/prefer-ts-expect-error
+    // @ts-ignore types may not be generated
+    import('../srcDev/dist/server/server').then((server) => {
+      devEmitter = server.emitMessage
+      server.setMessageHandler((message: any) => handleMessage(getTracePanel(), message))
+    })
+  }
+  else {
+    log('skipping dev server')
+  }
+}
 
 export function isTraceViewAlive() {
   return panel && !disposed
@@ -71,14 +98,12 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
   if (show)
     panel.reveal()
 
-  sendStorageMeta()
-  showTree('check', '', 0)
-
   return ret
 }
 
 export function postMessage(message: Message) {
   logMessage(message)
+  devEmitter(message)
   if (isTraceViewAlive())
     getTracePanel().webview.postMessage(message)
 }

@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { Tree } from './traceTree'
+import type { Tree } from '../../src/traceTree'
 import { traceLine, typeLine } from './traceData'
 
 export const ping = z.object({
@@ -27,6 +27,13 @@ export const gotoLocation = z.object({
   character: z.number(),
 })
 export type GotoLocation = z.infer<typeof gotoPosition>
+
+export const deleteTraceFile = z.object({
+  message: z.literal('deletTraceFile'),
+  fileName: z.string(),
+  dirName: z.string(),
+})
+export type DeleteTraceFile = z.infer<typeof deleteTraceFile>
 
 export const traceFileLoaded = z.object({
   message: z.literal('traceFileLoaded'),
@@ -154,6 +161,7 @@ export const message = z.union([
   ping,
   pong,
   childrenById,
+  deleteTraceFile,
   fileStats,
   filterTree,
   gotoLocation,

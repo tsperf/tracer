@@ -45,6 +45,9 @@ const commandRecord: Record<CommandId, Command> = {
       dark: 'resources/todo.svg',
       light: 'resources/todo.svg',
     },
+    when: {
+      explorerContext: 'resourceFilename =~ /./',
+    },
   },
   'tsperf.tracer.sendTrace': {
     title: 'Send Trace to Trace Viewer',
@@ -56,10 +59,14 @@ const commandRecord: Record<CommandId, Command> = {
   'tsperf.tracer.openTerminal': {
     title: 'Open tracer directory in terminal',
   },
+  'tsperf.tracer.openTraceDirExternal': {
+    title: 'Open trace directory in file browser',
+  },
+
 }
 
 const includeExperimental = env.TraceExperimental === 'true'
-const experimentalCommands: CommandId[] = ['tsperf.tracer.gotoTracePosition', 'tsperf.tracer.openInBrowser']
+const experimentalCommands: CommandId[] = [] // 'tsperf.tracer.gotoTracePosition', 'tsperf.tracer.openInBrowser']
 
 const commands = Object.entries(commandRecord).map(([command, record]) => ({ ...record, command }))
 
@@ -156,10 +163,25 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.enableRealtimeMetrics': {
+      type: 'boolean',
+      default: true,
+      description: 'Create diagnostics from tsserver',
+    },
+  },
+  {
     'tsperf.tracer.enableTraceMetrics': {
       type: 'boolean',
       default: true,
       description: 'Create diagnostics from trace data',
+    },
+  },
+  {
+    'tsperf.tracer.fileBrowserExecutable': {
+      type: 'string',
+      default: '',
+      // eslint-disable-next-line no-template-curly-in-string
+      description: 'command to open your preferred file browser. Use the ${traceDir} substitution variable',
     },
   },
   {

@@ -1,9 +1,11 @@
-import { getTraceFiles } from '../../src/storage'
-import { postMessage } from '../../src/webview'
-import type { FileStat } from './messages'
-import type { DataLine, TraceData, TypeLine } from './traceData'
+import { isAbsolute, join, relative } from 'node:path'
+import type { FileStat } from '../shared/src/messages'
+import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
+import { getWorkspacePath } from './storage'
+import { postMessage } from './webview'
+import { traceFiles } from './appState'
 
-export interface Tree { id: number, line: DataLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
+export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
   return {
     id: 0,
@@ -25,7 +27,7 @@ function getRoot(): Tree {
 }
 
 let treeIndexes: Tree[] = []
-export function toTree(traceData: TraceData): Tree {
+export function toTree(traceData: TraceData, workspacePath: string): Tree {
   const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
   let curr = tree
@@ -39,6 +41,9 @@ export function toTree(traceData: TraceData): Tree {
   const data = traceData.filter(x => 'id' in x || ('cat' in x)).sort((a, b) => a.ts - b.ts)
   // const data = traceData.filter(x => 'id' in x || ('cat' in x && x.cat?.startsWith('check'))).sort((a, b) => a.ts - b.ts)
   for (const line of data) {
+    if ('args' in line && line.args?.path && isAbsolute(line.args?.path))
+      line.args.path = relative(workspacePath, line.args.path)
+
     if (line.dur !== Number.MAX_SAFE_INTEGER && (line.dur ?? 0) > maxDur)
       maxDur = line.ts
 
@@ -52,11 +57,10 @@ export function toTree(traceData: TraceData): Tree {
       endTs = curr.line.ts + (curr.line.dur ?? 0)
     }
 
-    if (!line.dur) {
-      if ('id' in line)
-        curr.typeCnt = curr.types.push(line)
+    if ('id' in line) {
+      curr.typeCnt = curr.types.push(line)
     }
-    else {
+    else if (line.dur) {
       endTs = line.ts + (line.dur ?? 0)
       const child = { id: ++id, line, children: [], types: [], childTypeCnt: 0, childCnt: 0, typeCnt: 0 }
       treeIndexes[id] = child
@@ -71,8 +75,9 @@ export function toTree(traceData: TraceData): Tree {
 }
 
 let traceTree: Tree | undefined
-export function processTraceFiles() {
-  traceTree = toTree(Object.values(getTraceFiles()).flat(1))
+export async function processTraceFiles() {
+  const workspacePath = await getWorkspacePath()
+  traceTree = toTree(Object.values(traceFiles.value).flat(1), workspacePath)
 }
 
 export function filterTree(startsWith: string, sourceFileName: string, position: number | '', tree = traceTree): Tree[] {
@@ -93,8 +98,14 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
   return tree.children.map(child => filterTree(startsWith, sourceFileName, position, child)).flat()
 }
 
-const treeIdNodes = new Map<number, Tree>()
+export const treeIdNodes = new Map<number, Tree>()
+let showTreeInterval: undefined | ReturnType<typeof setInterval>
 export function showTree(startsWith: string, sourceFileName: string, position: number | '', updateUi = true, tree = traceTree) {
+  if (showTreeInterval) {
+    clearInterval(showTreeInterval)
+    showTreeInterval = undefined
+  }
+
   const nodes = filterTree(startsWith, sourceFileName, position, tree)
   const skinnyNodes = nodes.map(x => ({ ...x, children: [], types: [] }))
   if (updateUi)
@@ -105,14 +116,18 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
   let i = 0
 
   // this can be large enough to freeze the UI if sent at once
-  const interval = setInterval(() => {
+  showTreeInterval = setInterval(() => {
+    if (!showTreeInterval)
+      return
+
     postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + 10), step: 'add' })
     i += 10
     if (i >= skinnyNodes.length) {
-      clearInterval(interval)
+      clearInterval(showTreeInterval)
+      showTreeInterval = undefined
       postMessage({ message: 'showTree', nodes: [], step: 'done' })
     }
-  }, 0)
+  }, 30)
 
   nodes.forEach(node => treeIdNodes.set(node.id, node))
   return nodes
@@ -133,6 +148,8 @@ export function getTypesById(id: number) {
 }
 
 export function getStatsFromTree(fileName: string) {
+  const workspacePath = getWorkspacePath()
+
   const stats: FileStat[] = []
   function visit(node: Tree) {
     if ('name' in node.line) {
@@ -140,7 +157,7 @@ export function getStatsFromTree(fileName: string) {
       if (
         line.dur
         && line.args?.path
-        && line.args.path === fileName
+        && join(workspacePath, line.args.path) === fileName
         && line.args?.pos
         && line.args?.end
       ) {
@@ -157,7 +174,7 @@ export function getStatsFromTree(fileName: string) {
     node.children.forEach(visit)
   }
 
-  const fileNodes = filterTree('', fileName, 0)
+  const fileNodes = filterTree('', relative(workspacePath, fileName), 0)
   fileNodes.forEach(visit)
 
   return stats
