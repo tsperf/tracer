@@ -13,7 +13,25 @@
       "group": {
         "kind": "build",
         "isDefault": true
-      }
+      },
+      "problemMatcher": [],
+      "label": "npm: dev",
+      "detail": "nr build --watch --sourcemap"
+    },
+    {
+      "type": "npm",
+      "script": "server:dev",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": [],
+      "label": "npm: server:dev",
+      "detail": "cd server && nr build --watch --sourcemap"
     }
   ]
 }

@@ -62,3 +62,6 @@ type MultiLine = typeof multiLine | `
 2
 3
 4`
+
+const opts
+  = { path: '/socket.io/', agent: false, withCredentials: false, upgrade: true, timestampParam: 't', rememberUpgrade: false, addTrailingSlash: true, rejectUnauthorized: false, perMessageDeflate: { threshold: 1024 }, transportOptions: {}, closeOnBeforeunload: false, host: '127.0.0.1', port: '80', hostname: 'undefined', secure: false, query: { EIO: 4, transport: 'polling' }, socket: { binaryType: 'nodebuffer', writeBuffer: [], secure: false, hostname: 'undefined', port: '80', transports: ['polling', 'websocket', 'webtransport'], prevBufferLen: 0, opts: { path: '/socket.io/', agent: false, withCredentials: false, upgrade: true, timestampParam: 't', rememberUpgrade: false, addTrailingSlash: true, rejectUnauthorized: false, perMessageDeflate: { threshold: 1024 }, transportOptions: {}, closeOnBeforeunload: false, host: '127.0.0.1', port: '80', hostname: 'undefined', secure: false }, id: null, upgrades: null, pingInterval: null, pingTimeout: null, pingTimeoutTimer: null, readyState: 'opening' } }

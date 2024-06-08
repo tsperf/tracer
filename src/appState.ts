@@ -8,6 +8,7 @@ import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
+import type { Tree } from './traceTree'
 
 export const afterWatches = nextTick
 
@@ -26,6 +27,8 @@ export const traceRunning = ref(false)
 
 export const tracePath = ref('')
 
+export const treeRoots = ref([] as Tree[])
+
 export const state = {
   workspacePath,
   projectName,
@@ -37,6 +40,7 @@ export const state = {
   traceFiles,
   traceRunning,
   tracePath,
+  treeRoots,
 } as const
 type State = typeof state
 type StateType<K extends keyof State> = State[K] extends Ref<any> ? UnwrapRef<State[K]> : State[K]
@@ -133,7 +137,10 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
   })
 
   watchT('traceRunning', (running: boolean) => setStatusBarState('tracing', running), (running: boolean) => {
-    postMessage({ message: running ? 'traceStart' : 'traceStop' })
+    if (running)
+      postMessage({ message: 'traceStart', projectPath: projectPath.value, traceDir: '' })
+    else
+      postMessage({ message: 'traceStop' })
   })
 
   workspacePath.value = getWorkspacePath()

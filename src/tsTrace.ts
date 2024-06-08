@@ -1,5 +1,5 @@
 import type { BuilderProgram, CompilerHost, CompilerOptions, CreateProgramOptions, Diagnostic, DiagnosticReporter, ExtendedConfigCacheEntry, ParseConfigFileHost, ParsedCommandLine, PrinterOptions, Program, System, Type } from 'typescript'
-import { JSDocParsingMode, NewLineKind, combinePaths, createGetCanonicalFileName, createGetSourceFile, createProgram, createWriteFileMeasuringIO, diagnosticToString, emitFilesAndReportErrorsAndGetExitStatus, findConfigFile, getConfigFileParsingDiagnostics, getDefaultLibFileName, getDirectoryPath, getParsedCommandLineOfConfigFile, maybeBind, memoize, programContainsEsModules, startTracing, sys, timestamp, tracing } from 'typescript'
+import { JSDocParsingMode, NewLineKind, combinePaths, createGetCanonicalFileName, createGetSourceFile, createProgram, createWriteFileMeasuringIO, emitFilesAndReportErrorsAndGetExitStatus, findConfigFile, getConfigFileParsingDiagnostics, getDefaultLibFileName, getDirectoryPath, getParsedCommandLineOfConfigFile, maybeBind, memoize, startTracing, sys, timestamp, tracing } from 'typescript'
 import { readTypeTimestamps, writeTypeTimestamps } from './storage'
 import { log } from './logger'
 

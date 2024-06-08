@@ -2,7 +2,6 @@ import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync 
 import { join } from 'node:path'
 import { env } from 'node:process'
 import * as vscode from 'vscode'
-import { traceData } from '../shared/src/traceData'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import { state } from './appState'

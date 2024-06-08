@@ -1,0 +1,32 @@
+{
+  "name": "ts-trace-server",
+  "version": "1.0.0",
+  "description": "server for generating and querying ts trace files",
+  "author": "typeholes",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "nr build --watch --sourcemap",
+    "test": "true"
+  },
+  "dependencies": {
+    "arktype": "^2.0.0-dev.21",
+    "express": "^4.19.2",
+    "install": "^0.13.0",
+    "prettier": "^3.3.1",
+    "socket.io": "^4.7.5",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.17.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/sqlite3": "^3.1.11",
+    "@types/ts-expose-internals": "npm:ts-expose-internals@5.4.5",
+    "@types/ws": "^8.5.10",
+    "esbuild": "^0.21.4",
+    "typescript": "^5.4.5"
+  }
+}

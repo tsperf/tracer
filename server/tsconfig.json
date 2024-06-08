@@ -1,20 +1,18 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["esnext", "DOM"],
+    "lib": ["esnext"],
+    "rootDir": "src",
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
-    "declaration": true,
-    "declarationDir": "dist/server/",
-    "emitDeclarationOnly": true,
-    "outDir": "dist/server/",
+    "outDir": "dist",
+    "sourceMap": true,
     "esModuleInterop": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "noErrorTruncation": true
-  },
-  "files": ["src/server.ts"],
-  "exclude": []
+  }
 }

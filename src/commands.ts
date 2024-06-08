@@ -13,7 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
-import { runLiveTrace } from './tsTrace'
+import * as actions from './client/actions'
 
 const readdir = promisify(readdirC)
 
@@ -133,20 +133,12 @@ async function runTrace(args?: unknown[]) {
       return
     }
 
-    if (liveTrace) {
-      try {
-        runLiveTrace(workspacePath, traceDir)
-        setStatusBarState('traceError', false)
-      }
-      catch (e) {
-        vscode.window.showErrorMessage('live trace failed')
-        log(`${e}`)
-        setStatusBarState('traceError', true)
-      }
-      setStatusBarState('tracing', false)
-      state.traceRunning.value = false
+    traceRunning.value = true
 
-      await sendTraceDir(traceDir)
+    // TODO: move after trace logic to response from startTrace
+    if (liveTrace) {
+      actions.runTrace(workspacePath, traceDir)
+      actions.filterTree('checkExpr', '', 0, true)
     }
     else {
       const quotedTraceDir = `'${traceDir}'`

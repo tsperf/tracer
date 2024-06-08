@@ -7,7 +7,7 @@ import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
 import { state, triggerAll } from './appState'
 
-export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
+export function handleMessage(message: unknown): void {
   if (message === 'init client') {
     triggerAll(false, true)
     showTree('check', '', 0)

@@ -15,6 +15,7 @@ import { initDiagnostics } from './traceDiagnostics'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
 import { initAppState } from './appState'
+import { initClient } from './client/client'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -29,6 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
 
   initAppState(context)
+  initClient()
 
   updateConfig({ force: ['typescriptPathMode'] })
 
