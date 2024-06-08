@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { Tree } from '../../src/traceTree'
+import type { Tree } from './tree'
 import { traceLine, typeLine } from './traceData'
 
 export const ping = z.object({
@@ -101,12 +101,14 @@ export type FilterTree = z.infer<typeof filterTree>
 const zodTree: z.ZodType<Tree> = z.lazy(() =>
   z.object({
     id: z.number(),
+    parentId: z.number(),
     line: traceLine,
     children: z.array(zodTree),
-    types: z.array(typeLine),
+    typeIds: z.array(z.number()),
     childTypeCnt: z.number(),
     childCnt: z.number(),
     typeCnt: z.number(),
+    maxDepth: z.number(),
   }),
 )
 

@@ -1,23 +1,38 @@
+/* eslint-disable no-console */
 import { performance } from 'node:perf_hooks'
 
 import type {
   BuilderProgram,
   CompilerHost,
   CompilerOptions,
+  ConditionalType,
   CreateProgramOptions,
   Diagnostic,
   DiagnosticReporter,
+  EvolvingArrayType,
   ExtendedConfigCacheEntry,
+  IndexType,
+  IndexedAccessType,
+  IntersectionType,
+  LineAndCharacter,
+  Node,
   ParseConfigFileHost,
   ParsedCommandLine,
   PrinterOptions,
   Program,
+  ReverseMappedType,
+  SubstitutionType,
   System,
   Type,
+  TypeReference,
+  UnionType,
 } from 'typescript'
 import {
+  Debug,
   JSDocParsingMode,
   NewLineKind,
+  ObjectFlags,
+  TypeFlags,
   combinePaths,
   createGetCanonicalFileName,
   createGetSourceFile,
@@ -28,13 +43,20 @@ import {
   getConfigFileParsingDiagnostics,
   getDefaultLibFileName,
   getDirectoryPath,
+  getLineAndCharacterOfPosition,
   getParsedCommandLineOfConfigFile,
+  getSourceFileOfNode,
   maybeBind,
   memoize,
   startTracing,
   sys,
   tracing,
+  unescapeLeadingUnderscores,
 } from 'typescript'
+
+import type { Tree } from '../../shared/src/tree'
+
+export type { Tree } from '../../shared/src/tree'
 
 export type ExecuteCommandLineCallbacks = (
   program: Program | BuilderProgram | ParsedCommandLine
@@ -45,29 +67,24 @@ export function getProgram() {
   return program
 }
 
+export const treeIdNodes = new Map<number, Tree>()
+
 let lastTreeId = 0
 const typeDictionary = new Map<number, Type>()
-export interface Tree {
-  id: number
-  parent: Tree | undefined
-  line: any
-  children: Tree[]
-  typeIds: number[]
-}
 export const treeRoot: Tree = {
   id: lastTreeId++,
-  parent: undefined,
-  line: { name: 'root', ts: performance.now() },
+  parentId: -1,
+  line: { pid: 1, tid: 1, ph: 'root', cat: 'root', ts: performance.now(), name: 'root', dur: 0 },
   children: [],
   typeIds: [],
-}
-let tree = treeRoot
+  childCnt: 0,
+  childTypeCnt: 0,
+  maxDepth: 0,
+  typeCnt: 0,
 
-export function printTree() {
-  console.log(
-    JSON.stringify(tree, (k, v) => (k === 'parent' ? undefined : v), 2),
-  )
 }
+let tree = { ...treeRoot }
+treeIdNodes.set(0, treeRoot)
 
 export function getTypeDictionary() {
   return typeDictionary
@@ -105,6 +122,9 @@ export function runLiveTrace(projectDirectory: string, traceDir: string) {
       configParseResult,
       traceDir,
     )
+
+    tree.line.dur = performance.now() - tree.line.ts
+    treeIdNodes.set(tree.id, tree)
 
     // writeTypeTimestamps(typeTimestamps);
     return program
@@ -149,7 +169,7 @@ function performCompilation(
     (a, b) => {
       if (b) {
         b.forEach((c) => {
-          //  console.log(`error at: ${c?.fileName}: ${c?.line}`);
+          console.log(`error at: ${c?.fileName}: ${c?.line}`)
         })
       }
     }, // createReportErrorSummary(sys, options),
@@ -250,6 +270,7 @@ function enableTracing(
 ) {
   if (canTrace(system, compilerOptions)) {
     typeDictionary.clear()
+    tree = { ...treeRoot }
 
     startTracing(
       isBuildMode ? 'build' : 'project',
@@ -263,49 +284,212 @@ function enableTracing(
         if (typeDictionary.size === 0)
           holdRecordType(type) // need one or ts crashes
         typeDictionary.set(type.id, type)
-        tree.typeIds.push(type.id)
+        tree.typeCnt = tree.typeIds.push(type.id)
       }
 
       tracing.instant = (phase: string, name: string, args?: object) => {
-        tree.children.push({
+        const node: Tree = {
           id: lastTreeId++,
-          parent: tree,
+          parentId: tree.id,
           line: {
-            phase,
+            pid: 1,
+            tid: 1,
+            cat: phase,
+            ph: 'x',
             name,
             args,
             ts: performance.now(),
           },
           children: [],
           typeIds: [],
-        })
+          childCnt: 0,
+          childTypeCnt: 0,
+          maxDepth: 0,
+          typeCnt: 0,
+        }
+        tree.childCnt = tree.children.push(node)
+        treeIdNodes.set(node.id, node)
       }
 
       tracing.push = (
         phase: string,
         name: string,
         args?: object,
-        separateBeginAndEnd = false,
+        _separateBeginAndEnd = false,
       ) => {
         const child: Tree = {
           id: lastTreeId++,
-          parent: tree,
-          line: { phase, name, args, ts: performance.now() },
+          parentId: tree.id,
+          line: {
+            pid: 1,
+            tid: 1,
+            cat: phase,
+            ph: 'x',
+            name,
+            args,
+            ts: performance.now(),
+          },
           children: [],
           typeIds: [],
+          childCnt: 0,
+          childTypeCnt: 0,
+          maxDepth: 0,
+          typeCnt: 0,
         }
         tree.children.push(child)
         tree = child
+        treeIdNodes.set(child.id, child)
       }
 
       tracing.pop = (results?: object) => {
-        if (!tree.parent) {
+        if (tree.parentId === -1) {
           throw new Error('Tree over popped')
         }
-        tree = tree.parent
+        const parent = treeIdNodes.get(tree.parentId)!
+        parent.maxDepth = Math.max(parent.maxDepth, tree.maxDepth + 1)
+        parent.childTypeCnt += tree.typeCnt
+        tree = parent
         tree.line.results = results ?? {}
         tree.line.dur = performance.now() - tree.line.ts
       }
+    }
+  }
+}
+
+// TODO: we may want to make this on demand, or only populate commonly used properties eagerly
+
+const recursionIdentityMap = new Map<object, number>()
+// ripped straight from the ts repo in tracing.ts dumpTypes
+export function typeToDescriptor(type: Type) {
+  const objectFlags = (type as any).objectFlags
+  const symbol = type.aliasSymbol ?? type.symbol
+
+  // It's slow to compute the display text, so skip it unless it's really valuable (or cheap)
+  let display: string | undefined
+  if ((objectFlags & ObjectFlags.Anonymous) | (type.flags & TypeFlags.Literal)) {
+    try {
+      display = type.checker?.typeToString(type)
+    }
+    catch {
+      display = undefined
+    }
+  }
+
+  let indexedAccessProperties: object = {}
+  if (type.flags & TypeFlags.IndexedAccess) {
+    const indexedAccessType = type as IndexedAccessType
+    indexedAccessProperties = {
+      indexedAccessObjectType: indexedAccessType.objectType?.id,
+      indexedAccessIndexType: indexedAccessType.indexType?.id,
+    }
+  }
+
+  let referenceProperties: object = {}
+  if (objectFlags & ObjectFlags.Reference) {
+    const referenceType = type as TypeReference
+    referenceProperties = {
+      instantiatedType: referenceType.target?.id,
+      typeArguments: referenceType.resolvedTypeArguments?.map(t => t.id),
+      referenceLocation: getLocation(referenceType.node),
+    }
+  }
+
+  let conditionalProperties: object = {}
+  if (type.flags & TypeFlags.Conditional) {
+    const conditionalType = type as ConditionalType
+    conditionalProperties = {
+      conditionalCheckType: conditionalType.checkType?.id,
+      conditionalExtendsType: conditionalType.extendsType?.id,
+      conditionalTrueType: conditionalType.resolvedTrueType?.id ?? -1,
+      conditionalFalseType: conditionalType.resolvedFalseType?.id ?? -1,
+    }
+  }
+
+  let substitutionProperties: object = {}
+  if (type.flags & TypeFlags.Substitution) {
+    const substitutionType = type as SubstitutionType
+    substitutionProperties = {
+      substitutionBaseType: substitutionType.baseType?.id,
+      constraintType: substitutionType.constraint?.id,
+    }
+  }
+
+  let reverseMappedProperties: object = {}
+  if (objectFlags & ObjectFlags.ReverseMapped) {
+    const reverseMappedType = type as ReverseMappedType
+    reverseMappedProperties = {
+      reverseMappedSourceType: reverseMappedType.source?.id,
+      reverseMappedMappedType: reverseMappedType.mappedType?.id,
+      reverseMappedConstraintType: reverseMappedType.constraintType?.id,
+    }
+  }
+
+  let evolvingArrayProperties: object = {}
+  if (objectFlags & ObjectFlags.EvolvingArray) {
+    const evolvingArrayType = type as EvolvingArrayType
+    evolvingArrayProperties = {
+      evolvingArrayElementType: evolvingArrayType.elementType.id,
+      evolvingArrayFinalType: evolvingArrayType.finalArrayType?.id,
+    }
+  }
+
+  // We can't print out an arbitrary object, so just assign each one a unique number.
+  // Don't call it an "id" so people don't treat it as a type id.
+  let recursionToken: number | undefined
+  const recursionIdentity = type.checker.getRecursionIdentity(type)
+  if (recursionIdentity) {
+    recursionToken = recursionIdentityMap.get(recursionIdentity)
+    if (!recursionToken) {
+      recursionToken = recursionIdentityMap.size
+      recursionIdentityMap.set(recursionIdentity, recursionToken)
+    }
+  }
+
+  const descriptor = {
+    id: type.id,
+    intrinsicName: (type as any).intrinsicName,
+    symbolName: symbol?.escapedName && unescapeLeadingUnderscores(symbol.escapedName),
+    recursionId: recursionToken,
+    isTuple: objectFlags & ObjectFlags.Tuple ? true : undefined,
+    unionTypes: (type.flags & TypeFlags.Union) ? (type as UnionType).types?.map(t => t.id) : undefined,
+    intersectionTypes: (type.flags & TypeFlags.Intersection) ? (type as IntersectionType).types.map(t => t.id) : undefined,
+    aliasTypeArguments: type.aliasTypeArguments?.map(t => t.id),
+    keyofType: (type.flags & TypeFlags.Index) ? (type as IndexType).type?.id : undefined,
+    ...indexedAccessProperties,
+    ...referenceProperties,
+    ...conditionalProperties,
+    ...substitutionProperties,
+    ...reverseMappedProperties,
+    ...evolvingArrayProperties,
+    destructuringPattern: getLocation(type.pattern),
+    firstDeclaration: getLocation(symbol?.declarations?.[0]),
+    flags: Debug.formatTypeFlags(type.flags).split('|'),
+    display,
+  }
+  return descriptor
+}
+
+// ripped from tracing.ts
+function getLocation(node: Node | undefined) {
+  const file = getSourceFileOfNode(node)
+  return !file
+    ? undefined
+    : {
+        path: file.path,
+        start: indexFromOne(getLineAndCharacterOfPosition(file, node!.pos)),
+        _end: indexFromOne(getLineAndCharacterOfPosition(file, node!.end)),
+        get end() {
+          return this._end
+        },
+        set end(value) {
+          this._end = value
+        },
+      }
+
+  function indexFromOne(lc: LineAndCharacter): LineAndCharacter {
+    return {
+      line: lc.line + 1,
+      character: lc.character + 1,
     }
   }
 }

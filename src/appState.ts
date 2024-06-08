@@ -4,11 +4,11 @@ import { log } from 'node:console'
 import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
 import type * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
+import type { Tree } from '../shared/src/tree'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
-import type { Tree } from './traceTree'
 
 export const afterWatches = nextTick
 
@@ -20,8 +20,6 @@ export const savePath = ref('')
 
 export const saveNames: Ref<string[]> = ref([])
 export const projectNames: Ref<string[]> = ref([])
-
-export const traceFiles: ShallowRef<Record<string, TraceData>> = shallowRef({})
 
 export const traceRunning = ref(false)
 
@@ -37,7 +35,6 @@ export const state = {
   savePath,
   saveNames,
   projectNames,
-  traceFiles,
   traceRunning,
   tracePath,
   treeRoots,
@@ -124,16 +121,6 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
     void sendTraceDir(tracePath.value)
   }, (name) => {
     postMessage({ message: 'saveOpen', name })
-  })
-
-  watchT('traceFiles', noop, (files) => {
-    postMessage({ message: 'traceFileLoaded', fileName: '', dirName: tracePath.value, resetFileList: true })
-    nextTick(() =>
-
-      Object.keys(files).forEach((fileName) => {
-        postMessage({ message: 'traceFileLoaded', fileName, dirName: tracePath.value, resetFileList: false })
-      }),
-    )
   })
 
   watchT('traceRunning', (running: boolean) => setStatusBarState('tracing', running), (running: boolean) => {

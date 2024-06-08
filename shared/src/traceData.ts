@@ -33,6 +33,7 @@ export const traceLine = z.object({
         .optional(),
     })
     .optional(),
+  results: z.object({}).optional(),
 })
 
 export type DataLine = TraceLine | TypeLine
