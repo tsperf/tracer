@@ -1,17 +1,31 @@
 <script setup lang="ts">
 import type { Tree } from '../../shared/src/tree'
+import { shiftHeld } from '../src/appState'
 import { childrenById, doSort, typesById } from '~/src/appState'
 
-const props = defineProps<{ tree: Tree, depth: number }>()
+const props = defineProps<{ tree: Tree, depth: number, forceExpand: boolean }>()
 
 const sendMessage = useNuxtApp().$sendMessage
+
+const expandFirst = ref(props.forceExpand)
 
 const children = computed(() => doSort(childrenById.get(props.tree.id) ?? []))
 const types = computed(() => typesById.get(props.tree.id) ?? [])
 
 function fetchChildren() {
+  if (shiftHeld.value) {
+    expandFirst.value = !expandFirst.value
+    shiftHeld.value = false
+  }
   if (children.value.length === 0)
     sendMessage('childrenById', { id: props.tree.id })
+}
+
+function onUnexpand() {
+  if (shiftHeld.value) {
+    expandFirst.value = !expandFirst.value
+    shiftHeld.value = false
+  }
 }
 
 function fetchTypes() {
@@ -29,12 +43,29 @@ function gotoPosition() {
   }
 }
 
+const childrenExpand = ref(props.forceExpand)
+
+onBeforeMount(() => {
+  if (props.forceExpand && children.value.length === 0) {
+  // eslint-disable-next-line no-console
+    console.log('force expanding', props.tree.id)
+    sendMessage('childrenById', { id: props.tree.id })
+  }
+})
+
+const expandIconNames = computed((): [string, string] => {
+  if (!(expandFirst.value !== shiftHeld.value))
+    return ['', '']
+
+  return ['i-heroicons-chevron-double-right', 'i-heroicons-chevron-double-up']
+})
+
 const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
 </script>
 
 <template>
-  <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen ">
-    <UExpand class="w-full min-h-1.5" :expandable="tree.childCnt > 0" @expand="fetchChildren">
+  <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen">
+    <UExpand :initial-expand="childrenExpand" class="w-full min-h-1.5" :expandable="tree.childCnt > 0" :expand-icon="expandIconNames" @expand="fetchChildren" @unexpand="onUnexpand">
       <template #inset>
         <template v-for="n in depth" :key="n">
           <div :class="insetClass" />
@@ -77,7 +108,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
         </div>
       </template>
       <template v-for="(node, idx) of children" :key="idx">
-        <TreeNode :depth="depth + 1" :tree="node" />
+        <TreeNode :depth="depth + 1" :tree="node" :force-expand="expandFirst && idx === 0" />
       </template>
     </UExpand>
   </div>

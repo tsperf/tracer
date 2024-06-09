@@ -14,6 +14,18 @@ export const projectNames = ref([] as string[])
 export const files = ref([] as { fileName: string, dirName: string }[])
 export const traceRunning = ref(false)
 
+export const autoExpandNodeIds = ref([] as number[])
+
+export const shiftHeld = ref(false)
+window.document.addEventListener('keydown', (evt: KeyboardEvent) => {
+  if (evt.key === 'Shift')
+    shiftHeld.value = true
+})
+window.document.addEventListener('keyup', (evt: KeyboardEvent) => {
+  if (evt.key === 'Shift')
+    shiftHeld.value = false
+})
+
 const sortValue = {
   'Timestamp': (t: Tree) => t.line.ts,
   'Duration': (t: Tree) => -(t.line.dur ?? 0),
@@ -40,6 +52,8 @@ function handleMessage(e: MessageEvent<unknown>) {
       const id = parsed.data.id
       const children = childrenById.get(id) ?? []
       childrenById.set(id, [...children, ...parsed.data.children])
+      // eslint-disable-next-line no-console
+      console.log('received children by id', id, children.length)
       break
     }
     case 'typesById': {
