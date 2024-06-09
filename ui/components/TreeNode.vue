@@ -45,7 +45,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
         <div class="flex flex-row gap-5 w-full pl-1">
           <div class="flex flex-row justify-start gap-2 grow text-left">
             <span class="min-w-48">
-              {{ tree.line.name }} ({{ tree.childCnt }}):
+              {{ tree.line.name }} ({{ tree.maxDepth }}):
             </span><span>
               {{ Math.round(props.tree.line.dur ?? 0) }}ms
             </span>
