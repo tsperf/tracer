@@ -73,6 +73,7 @@ async function runTrace(args?: unknown[]) {
     saveName.value = relative(workspacePath, dirName)
   }
 
+  const packagePath = dirName ?? workspacePath
   // TODO: use logic from real time metrics that get the tsconfig path
   afterWatches(async () => {
     const traceDir = state.tracePath.value
@@ -85,7 +86,7 @@ async function runTrace(args?: unknown[]) {
 
     // TODO: move after trace logic to response from startTrace
     if (liveTrace) {
-      actions.runTrace(workspacePath, traceDir)
+      actions.runTrace(packagePath, traceDir)
       actions.filterTree('checkExpr', '', 0, true)
     }
   })
