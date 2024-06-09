@@ -1,13 +1,12 @@
 import { mkdirSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
 import { log } from 'node:console'
-import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
+import { type Ref, type UnwrapRef, nextTick, watch as plainWatch, ref } from '@vue/runtime-core'
 import type * as vscode from 'vscode'
 import type { Tree } from '../shared/src/tree'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
-import * as actions from './client/actions'
 
 export const afterWatches = nextTick
 

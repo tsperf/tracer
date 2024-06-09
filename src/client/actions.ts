@@ -1,13 +1,11 @@
 import { log } from 'node:console'
 import { isAbsolute, relative } from 'node:path'
 import * as vscode from 'vscode'
-import { nodeSeenTracker } from 'typescript'
 import { state, traceRunning, workspacePath } from '../appState'
 import { setStatusBarState } from '../statusBar'
 import type { Tree } from '../../shared/src/tree'
 import { postMessage } from '../webview'
 import { addTraceDiagnostics } from '../traceDiagnostics'
-import { childrenById } from '../../shared/src/messages'
 import { wsMessage } from './client'
 
 export function runTrace(projectPath: string, traceDir: string) {

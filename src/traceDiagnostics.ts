@@ -1,7 +1,6 @@
 import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
-import { wsMessage } from './client/client'
 import { getFileStats } from './client/actions'
 
 let diagnosticCollection: vscode.DiagnosticCollection
