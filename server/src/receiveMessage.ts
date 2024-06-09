@@ -4,7 +4,7 @@ import type { Tree } from './tsTrace'
 import { runLiveTrace, treeRoot } from './tsTrace'
 import * as Messages from './messages'
 import { sendResponse } from './server'
-import { getStatsFromTree } from './traceMetrics'
+import { getChildrenById, getStatsFromTree, getTypesById } from './traceMetrics'
 
 export function receiveMessage(id: number, args: unknown, ws: WebSocket) {
   const parsed = Messages.message.safeParse(args)
@@ -17,6 +17,18 @@ export function receiveMessage(id: number, args: unknown, ws: WebSocket) {
     case 'traceStart': {
       runLiveTrace(parsed.data.projectPath, parsed.data.traceDir)
       const response: Messages.Message = { message: 'traceStop' }
+      sendResponse(ws, id, response)
+      break
+    }
+
+    case 'childrenById': {
+      const response: Messages.ChildrenById = { ...parsed.data, children: getChildrenById(parsed.data.id) }
+      sendResponse(ws, id, response)
+      break
+    }
+
+    case 'typesById': {
+      const response: Messages.TypesById = { ...parsed.data, types: getTypesById(parsed.data.id) }
       sendResponse(ws, id, response)
       break
     }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Tree } from '../../src/traceTree'
+import type { Tree } from '../../shared/src/tree'
 import { childrenById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
@@ -47,7 +47,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
             <span class="min-w-48">
               {{ tree.line.name }} ({{ tree.childCnt }}):
             </span><span>
-              {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
+              {{ Math.round(props.tree.line.dur ?? 0) }}ms
             </span>
             <div class="grow opacity-20 hover:opacity-100 h-full">
               <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />
@@ -61,7 +61,8 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
               <UIcon primary name="i-heroicons-arrow-left-on-rectangle" class="relative top-1  hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
             </button>
             <div v-else />
-            <span>{{ tree.line.args?.pos === undefined ? '' : `${tree.line.args.pos} - ${tree.line.args?.end}` }}</span>
+            <span v-if="tree.line.args?.location"> {{ tree.line.args.location.line }}:{{ tree.line.args.location.character }}</span>
+            <span v-else>{{ tree.line.args?.pos === undefined ? '' : `${tree.line.args.pos} - ${tree.line.args?.end}` }}</span>
           </div>
 
           <div class="flex flex-row justify-self-end justify-evenly">

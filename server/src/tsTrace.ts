@@ -92,11 +92,11 @@ export function getTypeDictionary() {
   return typeDictionary
 }
 
-// TODO: see src/compiler/path.ts:632
 function normalizePath(path: string) {
   return path
 }
 
+// TODO: report errors via request error handler
 export function runLiveTrace(projectDirectory: string, traceDir: string) {
   const searchPath = normalizePath(projectDirectory)
   const configFileName = findConfigFile(searchPath, fileName =>
@@ -127,6 +127,12 @@ export function runLiveTrace(projectDirectory: string, traceDir: string) {
 
     tree.line.dur = performance.now() - tree.line.ts
     treeIdNodes.set(tree.id, tree)
+
+    function go(node: Tree) {
+      addLocation(node.line.args)
+      node.children.forEach(go)
+    }
+    go(tree)
 
     // writeTypeTimestamps(typeTimestamps);
     return program
@@ -290,8 +296,6 @@ function enableTracing(
       }
 
       tracing.instant = (phase: string, name: string, args?: Record<string, any>) => {
-        addLocation(args)
-
         const node: Tree = {
           id: lastTreeId++,
           parentId: tree.id,
@@ -321,7 +325,6 @@ function enableTracing(
         args?: object,
         _separateBeginAndEnd = false,
       ) => {
-        addLocation(args)
         const child: Tree = {
           id: lastTreeId++,
           parentId: tree.id,
@@ -356,6 +359,7 @@ function enableTracing(
         tree = parent
         tree.line.results = results ?? {}
         tree.line.dur = performance.now() - tree.line.ts
+        tree.childCnt = tree.children.length
       }
     }
   }
@@ -366,9 +370,8 @@ function enableTracing(
 const recursionIdentityMap = new Map<object, number>()
 function addLocation(args: Record<string, any> | undefined) {
   if (args) {
-    args.location = (args && 'path' in args && 'pos' in args && typeof args.path === 'string' && typeof args.pos === 'number')
-      ? posToLocation(args.path, args.pos)
-      : undefined
+    if (args && 'path' in args && 'pos' in args && typeof args.path === 'string' && typeof args.pos === 'number')
+      args.location = posToLocation(args.path, args.pos)
   }
 }
 
