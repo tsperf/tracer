@@ -49,13 +49,6 @@ const commandRecord: Record<CommandId, Command> = {
       explorerContext: 'resourceFilename =~ /./',
     },
   },
-  'tsperf.tracer.sendTrace': {
-    title: 'Send Trace to Trace Viewer',
-    when: {
-      pallete: '!notebookEditorFocused && editorLangId == \'json\'',
-      explorerContext: 'resourceFilename =~ /.*((trace)|(types)).*\.json/',
-    },
-  },
   'tsperf.tracer.openTerminal': {
     title: 'Open tracer directory in terminal',
   },

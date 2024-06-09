@@ -83,22 +83,6 @@ export async function openTraceDirectoryExternal() {
   }
 }
 
-export function addTraceFile(fileName: string, contents: string) {
-  try {
-    const json = JSON.parse(contents)
-
-    if (!Array.isArray(json)) {
-      vscode.window.showErrorMessage(`trace ${fileName} is not a json array`)
-      return
-    }
-
-    state.traceFiles.value[fileName] = json
-  }
-  catch (e) {
-    vscode.window.showErrorMessage(`${e}`)
-  }
-}
-
 // allow setting this in the debugger
 // set it to the full path of devUiDriver/commands.ts to record for driver playback
 // eslint-disable-next-line prefer-const
