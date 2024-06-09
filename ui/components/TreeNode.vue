@@ -61,7 +61,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
               <UIcon primary name="i-heroicons-arrow-left-on-rectangle" class="relative top-1  hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
             </button>
             <div v-else />
-            <span v-if="tree.line.args?.location"> {{ tree.line.args.location.line }}:{{ tree.line.args.location.character }}</span>
+            <span v-if="tree.line.args?.location"> {{ tree.line.args.location.line }}:{{ tree.line.args.location.character + 1 }}</span>
             <span v-else>{{ tree.line.args?.pos === undefined ? '' : `${tree.line.args.pos} - ${tree.line.args?.end}` }}</span>
           </div>
 

@@ -1,10 +1,13 @@
 import { log } from 'node:console'
+import { isAbsolute, relative } from 'node:path'
 import * as vscode from 'vscode'
-import { state, traceRunning } from '../appState'
+import { nodeSeenTracker } from 'typescript'
+import { state, traceRunning, workspacePath } from '../appState'
 import { setStatusBarState } from '../statusBar'
 import type { Tree } from '../../shared/src/tree'
 import { postMessage } from '../webview'
 import { addTraceDiagnostics } from '../traceDiagnostics'
+import { childrenById } from '../../shared/src/messages'
 import { wsMessage } from './client'
 
 export function runTrace(projectPath: string, traceDir: string) {
@@ -25,8 +28,14 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
     'showTree',
     (message, complete) => {
       treeRoots.push(...message.nodes)
-      if (updateUi)
-        postMessage(message)
+      if (updateUi) {
+        message.nodes.forEach((node) => {
+          if (node.line.args?.path && isAbsolute(node.line.args.path)) {
+            node.line.args.path = relative(workspacePath.value, node.line.args.path)
+          }
+        })
+      }
+      postMessage(message)
 
       if (complete)
         state.treeRoots.value = treeRoots
@@ -50,7 +59,14 @@ export function getFileStats(fileName: string) {
 export function getChildrenById(id: number) {
   wsMessage('childrenById', { id }) (
     'childrenById',
-    postMessage,
+    (message) => {
+      message.children?.forEach((child) => {
+        if (child.line.args?.path && isAbsolute(child.line.args.path)) {
+          child.line.args.path = relative(workspacePath.value, child.line.args.path)
+        }
+      })
+      postMessage(message)
+    },
     (error: string) => {
       vscode.window.showErrorMessage(error)
     },
