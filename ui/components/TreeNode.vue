@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { Tree } from '../../shared/src/tree'
-import { childrenById, typesById } from '~/src/appState'
+import { childrenById, doSort, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
 const sendMessage = useNuxtApp().$sendMessage
 
-const children = computed(() => childrenById.get(props.tree.id) ?? [])
+const children = computed(() => doSort(childrenById.get(props.tree.id) ?? []))
 const types = computed(() => typesById.get(props.tree.id) ?? [])
 
 function fetchChildren() {

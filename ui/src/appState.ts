@@ -1,5 +1,5 @@
 import type { TypeLine } from '../../shared/src/traceData'
-import type { Tree } from '../../src/traceTree'
+import type { Tree } from '../../shared/src/tree'
 import * as Messages from '../../shared/src/messages'
 
 export const childrenById = shallowReactive(new Map<number, Tree[]>())
@@ -21,7 +21,7 @@ const sortValue = {
   'Total Types': (t: Tree) => -(t.childTypeCnt + t.typeCnt),
 } as const
 
-function doSort(arr: Tree[]) {
+export function doSort(arr: Tree[]) {
   const ord = sortValue[sortBy.value]
   return ord ? arr.toSorted((a, b) => ord(a) - ord(b)) : arr
 }
