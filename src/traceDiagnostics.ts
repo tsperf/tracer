@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
-import { getStatsFromTree } from './traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
+import { wsMessage } from './client/client'
+import { getFileStats } from './client/actions'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -20,7 +21,7 @@ vscode.workspace.onDidChangeTextDocument((event) => {
 vscode.window.onDidChangeActiveTextEditor((event) => {
   const fileName = event?.document?.fileName
   if (fileName)
-    addTraceDiagnostics(fileName, getStatsFromTree(fileName))
+    getFileStats(fileName)
 })
 
 export function clearTaceDiagnostics() {
@@ -174,7 +175,7 @@ afterConfigUpdate(['enableTraceMetrics'], (config) => {
   else {
     vscode.window.visibleTextEditors.forEach((editor) => {
       const fileName = editor.document.uri.fsPath
-      addTraceDiagnostics(fileName, getStatsFromTree(fileName))
+      getFileStats(fileName)
     })
   }
 })

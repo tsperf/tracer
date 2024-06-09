@@ -2,8 +2,9 @@ import { log } from 'node:console'
 import * as vscode from 'vscode'
 import { state, traceRunning } from '../appState'
 import { setStatusBarState } from '../statusBar'
-import type { Tree } from '../traceTree'
+import type { Tree } from '../../shared/src/tree'
 import { postMessage } from '../webview'
+import { addTraceDiagnostics } from '../traceDiagnostics'
 import { wsMessage } from './client'
 
 export function runTrace(projectPath: string, traceDir: string) {
@@ -32,6 +33,36 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
     },
     (error: string) => {
       log(`error filtering tree: ${error}`)
+    },
+  )
+}
+
+export function getFileStats(fileName: string) {
+  wsMessage('fileStats', { fileName, stats: [] }) (
+    'fileStats',
+    message => addTraceDiagnostics(message.fileName, message.stats),
+    (error: string) => {
+      vscode.window.showErrorMessage(error)
+    },
+  )
+}
+
+export function getChildrenById(id: number) {
+  wsMessage('childrenById', { id }) (
+    'childrenById',
+    postMessage,
+    (error: string) => {
+      vscode.window.showErrorMessage(error)
+    },
+  )
+}
+
+export function getTypesById(id: number) {
+  wsMessage('typesById', { id }) (
+    'typesById',
+    postMessage,
+    (error: string) => {
+      vscode.window.showErrorMessage(error)
     },
   )
 }

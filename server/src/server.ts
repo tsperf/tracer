@@ -2,9 +2,8 @@
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 
-import * as Messages from './messages'
-import type { Tree } from './tsTrace'
-import { runLiveTrace, treeRoot } from './tsTrace'
+import type * as Messages from './messages'
+import { receiveMessage } from './receiveMessage'
 
 const wss = new WebSocketServer({ port: 3010 })
 
@@ -81,123 +80,8 @@ server.listen(3010, 'localhost', () => {
 });
 
 */
-function receiveMessage(id: number, args: unknown, ws: WebSocket) {
-  const parsed = Messages.message.safeParse(args)
-  if (parsed.error) {
-    console.log(JSON.stringify(args, null, 2))
-    return
-  }
 
-  switch (parsed.data.message) {
-    case 'traceStart': {
-      runLiveTrace(parsed.data.projectPath, parsed.data.traceDir)
-      const response: Messages.Message = { message: 'traceStop' }
-      sendResponse(ws, id, response)
-      break
-    }
-
-    case 'filterTree': {
-      const { startsWith, sourceFileName, position } = parsed.data
-      const roots = filterTree(startsWith, sourceFileName, position)
-      showTree(ws, id, roots)
-    }
-  }
-}
-
-export function filterTree(
-  startsWith: string,
-  sourceFileName: string,
-  position: number | '',
-  tree = treeRoot,
-): Tree[] {
-  if (position === '')
-    position = 0
-
-  if (!tree)
-    return []
-
-  if (
-    'name' in tree.line
-    && tree.line.name.startsWith(startsWith)
-    && (!sourceFileName
-    || (tree.line.args?.path ?? '').endsWith(sourceFileName))
-    && (!(position > 0) || (tree.line.args?.pos ?? 0) === position)
-  ) {
-    return [tree]
-  }
-
-  return tree.children
-    .map(child => filterTree(startsWith, sourceFileName, position, child))
-    .flat()
-}
-
-export const treeIdNodes = new Map<number, Tree>()
-let showTreeInterval: undefined | ReturnType<typeof setInterval>
-export function showTree(ws: WebSocket, requestId: number, nodes: Tree[]) {
-  if (showTreeInterval) {
-    clearInterval(showTreeInterval)
-    showTreeInterval = undefined
-  }
-
-  // TODO: parent should be a node id
-  const skinnyNodes = nodes.map(x => ({
-    ...x,
-    parent: undefined,
-    children: [],
-    types: [],
-  }))
-
-  sendResponse(
-    ws,
-    requestId,
-    {
-      message: 'showTree',
-      nodes: [],
-      step: 'start',
-    },
-    false,
-  )
-
-  let i = 0
-
-  // this can be large enough to freeze the UI if sent at once
-  showTreeInterval = setInterval(() => {
-    if (!showTreeInterval)
-      return
-
-    sendResponse(
-      ws,
-      requestId,
-      {
-        message: 'showTree',
-        nodes: skinnyNodes.slice(i, i + 10),
-        step: 'add',
-      },
-      false,
-    )
-
-    i += 10
-    if (i >= skinnyNodes.length) {
-      clearInterval(showTreeInterval)
-      showTreeInterval = undefined
-      sendResponse(
-        ws,
-        requestId,
-        {
-          message: 'showTree',
-          nodes: [],
-          step: 'done',
-        },
-        true,
-      )
-    }
-  }, 30)
-
-  nodes.forEach(node => treeIdNodes.set(node.id, node))
-  return nodes
-}
-
-function sendResponse(
+export function sendResponse(
   ws: WebSocket,
   id: number,
   response: Messages.Message,
@@ -208,10 +92,6 @@ function sendResponse(
   )
 }
 
-function sendError(ws: WebSocket, id: number, errorMessage: string) {
+export function sendError(ws: WebSocket, id: number, errorMessage: string) {
   ws.send(JSON.stringify([id, 'error', errorMessage]))
 }
-
-// function sendMessage(ws: WebSocket, message: Messages.Message) {
-//   ws.send(JSON.stringify(message))
-// }

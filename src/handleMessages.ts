@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
-import { getChildrenById, getTypesById, showTree } from './traceTree'
+import { filterTree, getChildrenById, getTypesById } from './client/actions'
 import { log } from './logger'
 import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
@@ -10,7 +10,7 @@ import { state, triggerAll } from './appState'
 export function handleMessage(message: unknown): void {
   if (message === 'init client') {
     triggerAll(false, true)
-    showTree('check', '', 0)
+    filterTree('check', '', 0, true)
     return
   }
 
@@ -36,7 +36,7 @@ export function handleMessage(message: unknown): void {
       log(...data.value)
       break
     case 'filterTree': {
-      showTree(data.startsWith, data.sourceFileName, data.position, false)
+      filterTree(data.startsWith, data.sourceFileName, data.position || 0, true)
       break
     }
     case 'saveOpen': {
@@ -44,11 +44,11 @@ export function handleMessage(message: unknown): void {
       break
     }
     case 'childrenById': {
-      postMessage({ ...data, children: getChildrenById(data.id) }) // TODO: stream these
+      getChildrenById(data.id)
       break
     }
     case 'typesById': {
-      postMessage({ ...data, types: getTypesById(data.id) })
+      getTypesById(data.id)
       break
     }
 

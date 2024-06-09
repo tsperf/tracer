@@ -3,12 +3,11 @@ import { basename, dirname, join, relative } from 'node:path'
 import { log } from 'node:console'
 import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
 import type * as vscode from 'vscode'
-import type { TraceData } from '../shared/src/traceData'
 import type { Tree } from '../shared/src/tree'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
-import { sendTraceDir } from './commands'
+import * as actions from './client/actions'
 
 export const afterWatches = nextTick
 
@@ -117,8 +116,6 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
 
     setStatusBarState('saveName', saveName.value)
     tracePath.value = join(projectPath.value, name, 'traces')
-
-    void sendTraceDir(tracePath.value)
   }, (name) => {
     postMessage({ message: 'saveOpen', name })
   })

@@ -1,9 +1,8 @@
 import { join, relative } from 'node:path'
 import type { FileStat } from '../../shared/src/messages'
-import { type TraceData, type TraceLine, type TypeLine, traceLine, typeLine } from '../../shared/src/traceData'
 import { workspacePath } from './serverState'
 import { type Tree, getProgram, getTypeDictionary, treeIdNodes, typeToDescriptor } from './tsTrace'
-import { filterTree } from './server'
+import { filterTree } from './receiveMessage'
 
 export const processedFiles = new Set<string>()
 

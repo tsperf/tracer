@@ -67,6 +67,8 @@ export function getProgram() {
   return program
 }
 
+// let getExistingSourceFile(fileName: string)
+
 export const treeIdNodes = new Map<number, Tree>()
 
 let lastTreeId = 0
@@ -287,7 +289,9 @@ function enableTracing(
         tree.typeCnt = tree.typeIds.push(type.id)
       }
 
-      tracing.instant = (phase: string, name: string, args?: object) => {
+      tracing.instant = (phase: string, name: string, args?: Record<string, any>) => {
+        addLocation(args)
+
         const node: Tree = {
           id: lastTreeId++,
           parentId: tree.id,
@@ -317,6 +321,7 @@ function enableTracing(
         args?: object,
         _separateBeginAndEnd = false,
       ) => {
+        addLocation(args)
         const child: Tree = {
           id: lastTreeId++,
           parentId: tree.id,
@@ -359,6 +364,14 @@ function enableTracing(
 // TODO: we may want to make this on demand, or only populate commonly used properties eagerly
 
 const recursionIdentityMap = new Map<object, number>()
+function addLocation(args: Record<string, any> | undefined) {
+  if (args) {
+    args.location = (args && 'path' in args && 'pos' in args && typeof args.path === 'string' && typeof args.pos === 'number')
+      ? posToLocation(args.path, args.pos)
+      : undefined
+  }
+}
+
 // ripped straight from the ts repo in tracing.ts dumpTypes
 export function typeToDescriptor(type: Type) {
   const objectFlags = (type as any).objectFlags
@@ -485,11 +498,17 @@ function getLocation(node: Node | undefined) {
           this._end = value
         },
       }
+}
 
-  function indexFromOne(lc: LineAndCharacter): LineAndCharacter {
-    return {
-      line: lc.line + 1,
-      character: lc.character + 1,
-    }
+function indexFromOne(lc: LineAndCharacter): LineAndCharacter {
+  return {
+    line: lc.line + 1,
+    character: lc.character + 1,
   }
+}
+
+export function posToLocation(filename: string, position: number) {
+  const sourceFile = program?.getSourceFile(filename)
+  if (sourceFile)
+    return indexFromOne(getLineAndCharacterOfPosition(sourceFile, position))
 }
