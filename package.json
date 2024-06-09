@@ -298,11 +298,6 @@
         "category": "Tracer"
       },
       {
-        "title": "Send Trace to Trace Viewer",
-        "command": "tsperf.tracer.sendTrace",
-        "category": "Tracer"
-      },
-      {
         "title": "Open tracer directory in terminal",
         "command": "tsperf.tracer.openTerminal",
         "category": "Tracer"
@@ -314,14 +309,7 @@
       }
     ],
     "menus": {
-      "commandPalette": [
-        {
-          "title": "Send Trace to Trace Viewer",
-          "when": "!notebookEditorFocused && editorLangId == 'json'",
-          "command": "tsperf.tracer.sendTrace",
-          "category": "Tracer"
-        }
-      ],
+      "commandPalette": [],
       "explorer/context": [
         {
           "title": "tsc trace",
@@ -331,12 +319,6 @@
           },
           "when": "resourceFilename =~ /./",
           "command": "tsperf.tracer.runTrace",
-          "category": "Tracer"
-        },
-        {
-          "title": "Send Trace to Trace Viewer",
-          "when": "resourceFilename =~ /.*((trace)|(types)).*.json/",
-          "command": "tsperf.tracer.sendTrace",
           "category": "Tracer"
         }
       ]

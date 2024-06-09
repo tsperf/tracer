@@ -42,7 +42,6 @@ import {
   findConfigFile,
   getConfigFileParsingDiagnostics,
   getDefaultLibFileName,
-  getDirectoryPath,
   getLineAndCharacterOfPosition,
   getParsedCommandLineOfConfigFile,
   getSourceFileOfNode,
@@ -55,6 +54,7 @@ import {
 } from 'typescript'
 
 import type { Tree } from '../../shared/src/tree'
+import { tsdk } from './serverState'
 
 export type { Tree } from '../../shared/src/tree'
 
@@ -208,7 +208,15 @@ export function createCompilerHostWorker(
   }
 
   function getDefaultLibLocation(): string {
-    return getDirectoryPath(normalizePath(system.getExecutingFilePath()))
+    return tsdk.value
+  }
+
+  function libFileName(options: CompilerOptions) {
+    const loc = getDefaultLibLocation()
+    const file = getDefaultLibFileName(options)
+    const ret = combinePaths(loc, file)
+    console.log('default lib file name', ret)
+    return ret
   }
 
   const newLine = getNewLineCharacter(options)
@@ -221,8 +229,7 @@ export function createCompilerHostWorker(
       setParentNodes,
     ),
     getDefaultLibLocation,
-    getDefaultLibFileName: options =>
-      combinePaths(getDefaultLibLocation(), getDefaultLibFileName(options)),
+    getDefaultLibFileName: options => combinePaths(getDefaultLibLocation(), libFileName(options)),
     writeFile: createWriteFileMeasuringIO(
       (path, data, writeByteOrderMark) =>
         system.writeFile(path, data, writeByteOrderMark),
