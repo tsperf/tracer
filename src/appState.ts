@@ -20,6 +20,7 @@ export const saveNames: Ref<string[]> = ref([])
 export const projectNames: Ref<string[]> = ref([])
 
 export const traceRunning = ref(false)
+export const metricsRunning = ref(false)
 
 export const tracePath = ref('')
 
@@ -34,6 +35,7 @@ export const state = {
   saveNames,
   projectNames,
   traceRunning,
+  metricsRunning,
   tracePath,
   treeRoots,
 } as const
@@ -119,10 +121,12 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
     postMessage({ message: 'saveOpen', name })
   })
 
-  watchT('traceRunning', (running: boolean) => setStatusBarState('tracing', running), (running: boolean) => {
+  watchT('traceRunning', (running: boolean) => setStatusBarState('traceRunning', running), (running: boolean) => {
     if (!running)
       postMessage({ message: 'traceStop' })
   })
+
+  watchT('metricsRunning', (running: boolean) => setStatusBarState('metricsRunning', running), () => {})
 
   workspacePath.value = getWorkspacePath()
   projectName.value = getProjectName()

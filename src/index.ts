@@ -14,7 +14,7 @@ import { registerCommands } from './commands'
 import { getRelativeSeverity, getSeverity, initDiagnostics } from './traceDiagnostics'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
-import { initAppState, traceRunning } from './appState'
+import { initAppState, metricsRunning } from './appState'
 import { initClient } from './client/client'
 
 let ts: typeof import('typescript')
@@ -39,6 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
   afterConfigUpdate(['typescriptPath', 'typescriptPathMode'], getTs)
 
   const collection = vscode.languages.createDiagnosticCollection('tsperf')
+  afterConfigUpdate(['enableRealtimeMetrics'], () => collection.clear())
 
   const _run = debounce(runDiagnostics, 500)
   const run = (filenames: string[]) => Promise.all(getTestFileNames(filenames).map(file => _run(collection, file)))
@@ -202,10 +203,12 @@ async function createLanguageServiceTestMatrix(
 
 async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
   try {
-    traceRunning.value = true
     const config = getCurrentConfig()
     if (config.benchmarkIterations < 1 || !config.enableRealtimeMetrics)
       return
+
+    metricsRunning.value = true
+    log('running benchmarks')
 
     const tsConfigFile = await getTsconfigFile(filePath)
     const rootDir = path.dirname(tsConfigFile.fsPath)
@@ -272,7 +275,7 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
       }
     })
 
-    traceRunning.value = false
+    metricsRunning.value = false
     log('updated benchmarks')
   }
   catch (e) {
