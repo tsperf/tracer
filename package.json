@@ -88,17 +88,23 @@
           "description": "Create diagnostics from tsserver",
           "order": 6
         },
+        "tsperf.tracer.maxDiagnosticsPerFile": {
+          "type": "number",
+          "default": 20,
+          "description": "maximum diagnostics to create per file for realtime metrics",
+          "order": 7
+        },
         "tsperf.tracer.enableTraceMetrics": {
           "type": "boolean",
           "default": true,
           "description": "Create diagnostics from trace data",
-          "order": 7
+          "order": 8
         },
         "tsperf.tracer.fileBrowserExecutable": {
           "type": "string",
           "default": "",
           "description": "command to open your preferred file browser. Use the ${traceDir} substitution variable",
-          "order": 8
+          "order": 9
         },
         "tsperf.tracer.traceTimeThresholds": {
           "type": "object",
@@ -125,7 +131,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 9,
+          "order": 10,
           "markdownDescription": "# Trace Time Thresholds\n\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTypeThresholds": {
@@ -153,7 +159,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 10,
+          "order": 11,
           "markdownDescription": "# Trace Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created locally in this check call exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTotalTypeThresholds": {
@@ -181,14 +187,14 @@
             "error": -1
           },
           "description": "todo",
-          "order": 11,
+          "order": 12,
           "markdownDescription": "# Trace Total Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created in this check call stack exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceDiagnosticsRelative": {
           "type": "boolean",
           "default": false,
           "description": "Use measurements relative to the average for trace diagnostics",
-          "order": 12
+          "order": 13
         },
         "tsperf.tracer.traceTimeRelativeThresholds": {
           "type": "object",
@@ -215,7 +221,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 13
+          "order": 14
         },
         "tsperf.tracer.traceTypeRelativeThresholds": {
           "type": "object",
@@ -242,7 +248,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 14
+          "order": 15
         },
         "tsperf.tracer.traceTotalTypeRelativeThresholds": {
           "type": "object",
@@ -269,7 +275,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 15
+          "order": 16
         }
       }
     },
@@ -298,11 +304,6 @@
         "category": "Tracer"
       },
       {
-        "title": "Send Trace to Trace Viewer",
-        "command": "tsperf.tracer.sendTrace",
-        "category": "Tracer"
-      },
-      {
         "title": "Open tracer directory in terminal",
         "command": "tsperf.tracer.openTerminal",
         "category": "Tracer"
@@ -314,14 +315,7 @@
       }
     ],
     "menus": {
-      "commandPalette": [
-        {
-          "title": "Send Trace to Trace Viewer",
-          "when": "!notebookEditorFocused && editorLangId == 'json'",
-          "command": "tsperf.tracer.sendTrace",
-          "category": "Tracer"
-        }
-      ],
+      "commandPalette": [],
       "explorer/context": [
         {
           "title": "tsc trace",
@@ -332,12 +326,6 @@
           "when": "resourceFilename =~ /./",
           "command": "tsperf.tracer.runTrace",
           "category": "Tracer"
-        },
-        {
-          "title": "Send Trace to Trace Viewer",
-          "when": "resourceFilename =~ /.*((trace)|(types)).*.json/",
-          "command": "tsperf.tracer.sendTrace",
-          "category": "Tracer"
         }
       ]
     }
@@ -346,12 +334,12 @@
     "generate:contributes": "jiti ./scripts/generate-contributes.ts",
     "generate:experimental": "TraceExperimental=true jiti ./scripts/generate-contributes.ts",
     "pretest": "nr build && nr lint",
-    "build": "nr generate:contributes && nr srcDev:build && nr ui:build && rollup -c",
+    "build": "nr generate:contributes &&  nr ui:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
+    "server:build": "cd server && rollup -c",
+    "server:dev": "cd server && nr build --watch --sourcemap",
     "ui:dev": "nuxt dev ui",
     "ui:build": "nuxt build ui",
-    "srcDev:dev": "nr build --filter ./srcDev --watch --srcmap",
-    "srcDev:build": "cd srcDev && rollup -c && cd ..",
     "lint": "eslint .",
     "vscode:prepublish": "nr build",
     "publish": "vsce publish --no-dependencies",
@@ -361,15 +349,20 @@
     "release": "bumpp && git push"
   },
   "dependencies": {
-    "@vue/reactivity": "^3.4.27"
+    "@vue/reactivity": "^3.4.27",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.19.1",
     "@antfu/ni": "^0.21.12",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@types/d3": "^7.4.3",
     "@types/node": "^20.12.12",
+    "@types/ts-expose-internals": "npm:ts-expose-internals@5.4.5",
     "@types/vscode": "1.70.0",
+    "@types/ws": "^8.5.10",
     "@vscode/vsce": "^2.26.1",
     "bumpp": "^9.4.1",
     "d3": "^7.9.0",

@@ -1,5 +1,4 @@
 import { join } from 'node:path'
-import { env } from 'node:process'
 
 import * as vscode from 'vscode'
 
@@ -12,9 +11,8 @@ import type { Message } from '../shared/src/messages'
 import { noop, watchT } from './appState'
 import { handleMessage } from './handleMessages'
 import { logMessage } from './storage'
-import { log } from './logger'
 
-let devEmitter = (_message: any) => {}
+function devEmitter(_message: any) {}
 
 let panel: undefined | ReturnType<typeof vscode.window.createWebviewPanel>
 let disposed = true
@@ -26,24 +24,6 @@ export function initWebviewPanel(extensionContext: vscode.ExtensionContext) {
       panel.title = `Trace Viewer - ${name}`
   }, noop)
   holdContext = extensionContext
-
-  // You have to export TRACER_DEV from your shell source file
-  // annoying, but I haven't found any other way to get the launcher to pass an env variable through
-  const isDev = env.env && (env.env as any).TRACER_DEV
-  // eslint-disable-next-line node/prefer-global/process
-  const isDev2 = process.env.TRACER_DEV
-  if (isDev || isDev2) {
-    log('starting dev server')
-    // eslint-disable-next-line ts/prefer-ts-expect-error
-    // @ts-ignore types may not be generated
-    import('../srcDev/dist/server/server').then((server) => {
-      devEmitter = server.emitMessage
-      server.setMessageHandler((message: any) => handleMessage(getTracePanel(), message))
-    })
-  }
-  else {
-    log('skipping dev server')
-  }
 }
 
 export function isTraceViewAlive() {
@@ -89,7 +69,7 @@ export function prepareWebView(context: vscode.ExtensionContext | undefined = ho
 
     panel.webview.html = processedHTML
     panel.webview.onDidReceiveMessage((message) => {
-      handleMessage(getTracePanel(context), message)
+      handleMessage(message)
     })
 
     ret = panel

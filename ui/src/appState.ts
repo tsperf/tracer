@@ -1,5 +1,5 @@
 import type { TypeLine } from '../../shared/src/traceData'
-import type { Tree } from '../../src/traceTree'
+import type { Tree } from '../../shared/src/tree'
 import * as Messages from '../../shared/src/messages'
 
 export const childrenById = shallowReactive(new Map<number, Tree[]>())
@@ -14,6 +14,20 @@ export const projectNames = ref([] as string[])
 export const files = ref([] as { fileName: string, dirName: string }[])
 export const traceRunning = ref(false)
 
+export const autoExpandNodeIds = ref([] as number[])
+
+export const projectPath = ref('')
+
+export const shiftHeld = ref(false)
+window.document.addEventListener('keydown', (evt: KeyboardEvent) => {
+  if (evt.key === 'Shift')
+    shiftHeld.value = true
+})
+window.document.addEventListener('keyup', (evt: KeyboardEvent) => {
+  if (evt.key === 'Shift')
+    shiftHeld.value = false
+})
+
 const sortValue = {
   'Timestamp': (t: Tree) => t.line.ts,
   'Duration': (t: Tree) => -(t.line.dur ?? 0),
@@ -21,7 +35,7 @@ const sortValue = {
   'Total Types': (t: Tree) => -(t.childTypeCnt + t.typeCnt),
 } as const
 
-function doSort(arr: Tree[]) {
+export function doSort(arr: Tree[]) {
   const ord = sortValue[sortBy.value]
   return ord ? arr.toSorted((a, b) => ord(a) - ord(b)) : arr
 }
@@ -40,6 +54,8 @@ function handleMessage(e: MessageEvent<unknown>) {
       const id = parsed.data.id
       const children = childrenById.get(id) ?? []
       childrenById.set(id, [...children, ...parsed.data.children])
+      // eslint-disable-next-line no-console
+      console.log('received children by id', id, children.length)
       break
     }
     case 'typesById': {
@@ -93,6 +109,7 @@ function handleMessage(e: MessageEvent<unknown>) {
     }
 
     case 'traceStart': {
+      projectPath.value = parsed.data.projectPath
       traceRunning.value = true
       break
     }

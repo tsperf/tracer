@@ -49,13 +49,6 @@ const commandRecord: Record<CommandId, Command> = {
       explorerContext: 'resourceFilename =~ /./',
     },
   },
-  'tsperf.tracer.sendTrace': {
-    title: 'Send Trace to Trace Viewer',
-    when: {
-      pallete: '!notebookEditorFocused && editorLangId == \'json\'',
-      explorerContext: 'resourceFilename =~ /.*((trace)|(types)).*\.json/',
-    },
-  },
   'tsperf.tracer.openTerminal': {
     title: 'Open tracer directory in terminal',
   },
@@ -167,6 +160,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
       type: 'boolean',
       default: true,
       description: 'Create diagnostics from tsserver',
+    },
+  },
+  {
+    'tsperf.tracer.maxDiagnosticsPerFile': {
+      type: 'number',
+      default: 20,
+      description: 'maximum diagnostics to create per file for realtime metrics',
     },
   },
   {

@@ -2,12 +2,11 @@ import { defineConfig } from 'rollup'
 import esbuild from 'rollup-plugin-esbuild'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
-// import json from '@rollup/plugin-json'
-import { raw } from './build/raw.mjs'
+import { copy } from '@web/rollup-plugin-copy'
 
 export default defineConfig({
-  external: ['vscode', 'typescript', /^node:.*/],
+  external: [/^node:.*/],
   input: ['./src/index.ts'],
   output: { format: 'cjs', dir: 'dist' },
-  plugins: [esbuild(), raw(), resolve(), commonjs()],
+  plugins: [esbuild(), resolve(), commonjs(), copy({ patterns: 'lib/**/*', rootDir: '../node_modules/typescript/' })],
 })

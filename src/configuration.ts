@@ -21,6 +21,7 @@ const currentConfig = {
   enableTraceMetrics: true,
   enableRealtimeMetrics: true,
   fileBrowserExecutable: '',
+  maxDiagnosticsPerFile: 20,
 } satisfies Record<ConfigKey, any>
 
 export function getCurrentConfig() {
@@ -67,6 +68,7 @@ const configValidate = {
   enableTraceMetrics: isBoolean,
   enableRealtimeMetrics: isBoolean,
   fileBrowserExecutable: isString,
+  maxDiagnosticsPerFile: isNumber,
 } satisfies Record<ConfigKey, any>
 
 function noop() {
@@ -89,6 +91,7 @@ const configHandlers = {
   enableTraceMetrics: noop,
   enableRealtimeMetrics: noop,
   fileBrowserExecutable: noop,
+  maxDiagnosticsPerFile: noop,
 } satisfies Record<ConfigKey, any>
 
 let configuration = vscode.workspace.getConfiguration(extPrefix)

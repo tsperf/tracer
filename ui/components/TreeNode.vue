@@ -1,17 +1,31 @@
 <script setup lang="ts">
-import type { Tree } from '../../src/traceTree'
-import { childrenById, typesById } from '~/src/appState'
+import type { Tree } from '../../shared/src/tree'
+import { projectPath, shiftHeld } from '../src/appState'
+import { childrenById, doSort, typesById } from '~/src/appState'
 
-const props = defineProps<{ tree: Tree, depth: number }>()
+const props = defineProps<{ tree: Tree, depth: number, forceExpand: boolean }>()
 
 const sendMessage = useNuxtApp().$sendMessage
 
-const children = computed(() => childrenById.get(props.tree.id) ?? [])
+const expandFirst = ref(props.forceExpand)
+
+const children = computed(() => doSort(childrenById.get(props.tree.id) ?? []))
 const types = computed(() => typesById.get(props.tree.id) ?? [])
 
 function fetchChildren() {
+  if (shiftHeld.value) {
+    expandFirst.value = !expandFirst.value
+    shiftHeld.value = false
+  }
   if (children.value.length === 0)
     sendMessage('childrenById', { id: props.tree.id })
+}
+
+function onUnexpand() {
+  if (shiftHeld.value) {
+    expandFirst.value = !expandFirst.value
+    shiftHeld.value = false
+  }
 }
 
 function fetchTypes() {
@@ -29,12 +43,39 @@ function gotoPosition() {
   }
 }
 
+const childrenExpand = ref(props.forceExpand)
+
+onBeforeMount(() => {
+  if (props.forceExpand && children.value.length === 0) {
+  // eslint-disable-next-line no-console
+    console.log('force expanding', props.tree.id)
+    sendMessage('childrenById', { id: props.tree.id })
+  }
+})
+
+const expandIconNames = computed((): [string, string] => {
+  if (!(expandFirst.value !== shiftHeld.value))
+    return ['', '']
+
+  return ['i-heroicons-chevron-double-up', 'i-heroicons-chevron-double-right']
+})
+
 const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
+
+function shortenPath(fileName: string | undefined) {
+  if (!fileName)
+    return ''
+
+  if (projectPath.value && fileName.startsWith(projectPath.value))
+    return `.${fileName.slice(projectPath.value.length, fileName.length)}`
+
+  return fileName
+}
 </script>
 
 <template>
-  <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen ">
-    <UExpand class="w-full min-h-1.5" :expandable="tree.childCnt > 0" @expand="fetchChildren">
+  <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen">
+    <UExpand :initial-expand="childrenExpand" class="w-full min-h-1.5" :expandable="tree.childCnt > 0" :expand-icon="expandIconNames" @expand="fetchChildren" @unexpand="onUnexpand">
       <template #inset>
         <template v-for="n in depth" :key="n">
           <div :class="insetClass" />
@@ -45,15 +86,15 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
         <div class="flex flex-row gap-5 w-full pl-1">
           <div class="flex flex-row justify-start gap-2 grow text-left">
             <span class="min-w-48">
-              {{ tree.line.name }} ({{ tree.childCnt }}):
+              {{ tree.line.name }} ({{ tree.maxDepth }}):
             </span><span>
-              {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
+              {{ Math.round(props.tree.line.dur ?? 0) }}ms
             </span>
             <div class="grow opacity-20 hover:opacity-100 h-full">
               <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />
             </div>
             <span class="text-right">
-              {{ tree.line.args?.path ?? '' }}
+              {{ shortenPath(tree.line.args?.path) }}
             </span>
           </div>
           <div class="flex flex-row min-w-40">
@@ -61,7 +102,8 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
               <UIcon primary name="i-heroicons-arrow-left-on-rectangle" class="relative top-1  hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
             </button>
             <div v-else />
-            <span>{{ tree.line.args?.pos === undefined ? '' : `${tree.line.args.pos} - ${tree.line.args?.end}` }}</span>
+            <span v-if="tree.line.args?.location"> {{ tree.line.args.location.line }}:{{ tree.line.args.location.character + 1 }}</span>
+            <span v-else>{{ tree.line.args?.pos === undefined ? '' : `${tree.line.args.pos} - ${tree.line.args?.end}` }}</span>
           </div>
 
           <div class="flex flex-row justify-self-end justify-evenly">
@@ -76,7 +118,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
         </div>
       </template>
       <template v-for="(node, idx) of children" :key="idx">
-        <TreeNode :depth="depth + 1" :tree="node" />
+        <TreeNode :depth="depth + 1" :tree="node" :force-expand="expandFirst && idx === 0" />
       </template>
     </UExpand>
   </div>
