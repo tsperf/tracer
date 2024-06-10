@@ -1,5 +1,4 @@
 import * as vscode from 'vscode'
-import { metricsRunning } from './appState'
 
 let bar: vscode.StatusBarItem
 

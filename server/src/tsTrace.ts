@@ -55,7 +55,6 @@ import {
 
 import type { Tree } from '../../shared/src/tree'
 import { tsdk } from './serverState'
-import { typesById } from './messages'
 
 export type { Tree } from '../../shared/src/tree'
 
