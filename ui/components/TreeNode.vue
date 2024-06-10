@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Tree } from '../../shared/src/tree'
-import { shiftHeld } from '../src/appState'
+import { projectPath, shiftHeld } from '../src/appState'
 import { childrenById, doSort, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number, forceExpand: boolean }>()
@@ -61,6 +61,16 @@ const expandIconNames = computed((): [string, string] => {
 })
 
 const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
+
+function shortenPath(fileName: string | undefined) {
+  if (!fileName)
+    return ''
+
+  if (projectPath.value && fileName.startsWith(projectPath.value))
+    return `.${fileName.slice(projectPath.value.length, fileName.length)}`
+
+  return fileName
+}
 </script>
 
 <template>
@@ -84,7 +94,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
               <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />
             </div>
             <span class="text-right">
-              {{ tree.line.args?.path ?? '' }}
+              {{ shortenPath(tree.line.args?.path) }}
             </span>
           </div>
           <div class="flex flex-row min-w-40">

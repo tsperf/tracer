@@ -16,6 +16,8 @@ export const traceRunning = ref(false)
 
 export const autoExpandNodeIds = ref([] as number[])
 
+export const projectPath = ref('')
+
 export const shiftHeld = ref(false)
 window.document.addEventListener('keydown', (evt: KeyboardEvent) => {
   if (evt.key === 'Shift')
@@ -107,6 +109,7 @@ function handleMessage(e: MessageEvent<unknown>) {
     }
 
     case 'traceStart': {
+      projectPath.value = parsed.data.projectPath
       traceRunning.value = true
       break
     }

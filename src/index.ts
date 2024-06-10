@@ -6,7 +6,6 @@ import { debounce } from 'perfect-debounce'
 
 import * as vscode from 'vscode'
 
-import { max } from 'd3'
 import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
 import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configuration'

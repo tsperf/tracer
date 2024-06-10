@@ -120,9 +120,7 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
   })
 
   watchT('traceRunning', (running: boolean) => setStatusBarState('tracing', running), (running: boolean) => {
-    if (running)
-      postMessage({ message: 'traceStart', projectPath: projectPath.value, traceDir: '' })
-    else
+    if (!running)
       postMessage({ message: 'traceStop' })
   })
 

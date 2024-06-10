@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
 import { filterTree, getChildrenById, getTypesById } from './client/actions'
@@ -60,7 +60,8 @@ export function handleMessage(message: unknown): void {
 
 async function gotoPosition(fileName: string, pos: number) {
   const workspacePath = state.workspacePath.value
-  const uri = vscode.Uri.file(join(workspacePath, fileName))
+  const absoluteFileName = isAbsolute(fileName) ? fileName : join(workspacePath, fileName)
+  const uri = vscode.Uri.file(absoluteFileName)
   const document = vscode.workspace.textDocuments.find(x => x.fileName === fileName) ?? await vscode.workspace.openTextDocument(uri)
   const position = document.positionAt(pos + 1)
   const location = new vscode.Location(uri, position)

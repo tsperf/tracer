@@ -1,7 +1,7 @@
 import { dirname, relative } from 'node:path'
 import { existsSync, statSync } from 'node:fs'
 import * as vscode from 'vscode'
-import { getTracePanel, prepareWebView } from './webview'
+import { getTracePanel, postMessage, prepareWebView } from './webview'
 import { log } from './logger'
 import type { CommandId } from './constants'
 import { openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
@@ -45,7 +45,9 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   const startOffset = editor.document.offsetAt(start)
 
   getTracePanel(context)?.reveal()
-  filterTree('', editor.document.fileName, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1), true)
+  const position = startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1)
+  postMessage({ message: 'filterTree', startsWith: '', sourceFileName: editor.document.fileName, position })
+  filterTree('', editor.document.fileName, position, true)
 }
 
 const liveTrace = true // TODO config setting
@@ -83,6 +85,7 @@ async function runTrace(args?: unknown[]) {
 
     // TODO: move after trace logic to response from startTrace
     if (liveTrace) {
+      postMessage({ message: 'traceStart', projectPath: packagePath, traceDir })
       actions.runTrace(packagePath, traceDir)
       actions.filterTree('checkExpr', '', 0, true)
     }
