@@ -57,7 +57,7 @@ const expandIconNames = computed((): [string, string] => {
   if (!(expandFirst.value !== shiftHeld.value))
     return ['', '']
 
-  return ['i-heroicons-chevron-double-right', 'i-heroicons-chevron-double-up']
+  return ['i-heroicons-chevron-double-up', 'i-heroicons-chevron-double-right']
 })
 
 const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
