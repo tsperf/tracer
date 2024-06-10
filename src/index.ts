@@ -6,15 +6,16 @@ import { debounce } from 'perfect-debounce'
 
 import * as vscode from 'vscode'
 
+import { max } from 'd3'
 import { log } from './logger'
 import { getParsedCommandLine, getTsconfigFile } from './shared'
 import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configuration'
 import { getTsPath } from './tsUtil'
 import { registerCommands } from './commands'
-import { initDiagnostics } from './traceDiagnostics'
+import { getRelativeSeverity, getSeverity, initDiagnostics } from './traceDiagnostics'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
-import { initAppState } from './appState'
+import { initAppState, traceRunning } from './appState'
 import { initClient } from './client/client'
 
 let ts: typeof import('typescript')
@@ -201,68 +202,83 @@ async function createLanguageServiceTestMatrix(
 }
 
 async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath: string) {
-  const config = getCurrentConfig()
-  if (config.benchmarkIterations < 1 || !config.enableRealtimeMetrics)
-    return
+  try {
+    traceRunning.value = true
+    const config = getCurrentConfig()
+    if (config.benchmarkIterations < 1 || !config.enableRealtimeMetrics)
+      return
 
-  const tsConfigFile = await getTsconfigFile(filePath)
-  const rootDir = path.dirname(tsConfigFile.fsPath)
+    const tsConfigFile = await getTsconfigFile(filePath)
+    const rootDir = path.dirname(tsConfigFile.fsPath)
 
-  const openFiles = vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath)
+    const openFiles = vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath)
 
-  const parsedCommandLine = await getParsedCommandLine(filePath)!
-  const testPaths = getTestFileNames(parsedCommandLine.fileNames).filter(path => openFiles.includes(path))
+    const parsedCommandLine = await getParsedCommandLine(filePath)!
+    const testPaths = getTestFileNames(parsedCommandLine.fileNames).filter(path => openFiles.includes(path))
 
-  const matrix = await createLanguageServiceTestMatrix(testPaths, rootDir, parsedCommandLine.options, parsedCommandLine)
+    const matrix = await createLanguageServiceTestMatrix(testPaths, rootDir, parsedCommandLine.options, parsedCommandLine)
 
-  log({ openFiles, testPaths })
+    log({ openFiles, testPaths })
 
-  for (const input of matrix.inputs) {
-    const positionMeasurement = await measureLanguageService(input)
-    matrix.addMeasurement(positionMeasurement)
-  }
-
-  const benchmarks = matrix.getAllBenchmarks()
-  const allMeasures = Array.from(benchmarks.values()).flatMap(b => [...b.completionsDurations, ...b.quickInfoDurations])
-  const baseline = allMeasures.reduce((a, b) => a + b, 0) / allMeasures.length
-
-  const map: Record<string, vscode.Diagnostic[]> = {}
-  for (const benchmark of benchmarks) {
-    map[benchmark.fileName] ||= []
-    log(benchmark)
-
-    const durations = [...benchmark.completionsDurations, ...benchmark.quickInfoDurations]
-    const duration = durations.reduce((a, b) => a + b, 0) / durations.length
-    const proportionalTime = duration / baseline
-
-    if (proportionalTime > 1) {
-      const comparisonPercentage = Math.round(proportionalTime * 100) - 100
-      const sign = comparisonPercentage > 1 ? '+' : ''
-      const logLevel = proportionalTime > 2
-        ? vscode.DiagnosticSeverity.Error
-        : proportionalTime > 1.2
-          ? vscode.DiagnosticSeverity.Warning
-          : vscode.DiagnosticSeverity.Information
-
-      const range = new vscode.Range(
-        new vscode.Position(benchmark.line, benchmark.start),
-        new vscode.Position(benchmark.line, benchmark.end),
-      )
-      const diagnostic = new vscode.Diagnostic(range, `${Math.round(duration)}ms (${sign}${comparisonPercentage}%)`, logLevel)
-
-      diagnostic.source = 'tsperf'
-      diagnostic.code = 102
-
-      map[benchmark.fileName].push(diagnostic)
+    for (const input of matrix.inputs) {
+      const positionMeasurement = await measureLanguageService(input)
+      matrix.addMeasurement(positionMeasurement)
     }
-  }
 
-  for (const file in map) {
-    const uri = vscode.Uri.file(file)
-    collection.set(uri, map[file])
-  }
+    const benchmarks = matrix.getAllBenchmarks()
+    const allMeasures = Array.from(benchmarks.values()).flatMap(b => [...b.completionsDurations, ...b.quickInfoDurations])
+    const baseline = allMeasures.reduce((a, b) => a + b, 0) / allMeasures.length
 
-  log('updated benchmarks')
+    const newDiagnostics: Map<string, [number, vscode.Diagnostic][]> = new Map()
+    for (const benchmark of benchmarks) {
+      log(benchmark)
+
+      const durations = [...benchmark.completionsDurations, ...benchmark.quickInfoDurations]
+      const duration = durations.reduce((a, b) => a + b, 0) / durations.length
+      const proportionalTime = duration / baseline
+
+      const relative = getCurrentConfig().traceDiagnosticsRelative
+      const severity = relative ? getRelativeSeverity({ dur: proportionalTime - 1 }) : getSeverity({ dur: duration })
+
+      if (severity <= vscode.DiagnosticSeverity.Information) {
+        const comparisonPercentage = Math.round(proportionalTime * 100) - 100
+        const sign = comparisonPercentage > 1 ? '+' : ''
+
+        const range = new vscode.Range(
+          new vscode.Position(benchmark.line, benchmark.start),
+          new vscode.Position(benchmark.line, benchmark.end),
+        )
+        const diagnostic = new vscode.Diagnostic(range, `${Math.round(duration)}ms (${sign}${comparisonPercentage}%)`, severity)
+
+        diagnostic.source = 'tsperf'
+        diagnostic.code = 102
+
+        const diagnostics = newDiagnostics.get(benchmark.fileName)
+        if (diagnostics === undefined)
+          newDiagnostics.set(benchmark.fileName, [[duration, diagnostic]])
+        else
+          diagnostics.push([duration, diagnostic])
+      }
+    }
+
+    const maxDiagnostics = getCurrentConfig().maxDiagnosticsPerFile
+    newDiagnostics.forEach((items, file) => {
+      const uri = vscode.Uri.file(file)
+      if (maxDiagnostics < 0 || items.length <= maxDiagnostics) {
+        collection.set(uri, items.map(x => x[1]))
+      }
+      else {
+        items.sort((a, b) => b[0] - a[0])
+        collection.set(uri, items.slice(0, maxDiagnostics).map(x => x[1]))
+      }
+    })
+
+    traceRunning.value = false
+    log('updated benchmarks')
+  }
+  catch (e) {
+    log(`error running benchmarks ${e}`)
+  }
 }
 
 async function getCompletionsAtPosition(fileName: string, line: number, offset: number): Promise<boolean> {

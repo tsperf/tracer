@@ -12,6 +12,9 @@ export function initClient() {
   const ws = new WebSocket('ws://localhost:3010')
 
   send = (payload: unknown) => {
+    if (ws.readyState !== ws.OPEN)
+      return
+
     if (typeof payload === 'string') {
       payload = [payload]
     }

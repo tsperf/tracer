@@ -163,6 +163,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.maxDiagnosticsPerFile': {
+      type: 'number',
+      default: 20,
+      description: 'maximum diagnostics to create per file for realtime metrics',
+    },
+  },
+  {
     'tsperf.tracer.enableTraceMetrics': {
       type: 'boolean',
       default: true,

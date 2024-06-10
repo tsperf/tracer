@@ -151,7 +151,7 @@ afterConfigUpdate(['traceTimeRelativeThresholds', 'traceTypeRelativeThresholds',
   severityRelativeThresholds.totalTypes = [config.traceTotalTypeRelativeThresholds.error, config.traceTotalTypeRelativeThresholds.warning, config.traceTotalTypeRelativeThresholds.info]
 })
 
-function getSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
+export function getSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
   const [thresholdType, value] = Object.entries(measure)[0]
   const thresholds = severityThresholds[thresholdType as keyof typeof severityThresholds]
 
@@ -159,7 +159,7 @@ function getSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: 
   return index === -1 ? 99 : index
 }
 
-function getRelativeSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
+export function getRelativeSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
   const [thresholdType, value] = Object.entries(measure)[0]
   const thresholds = severityRelativeThresholds[thresholdType as keyof typeof severityRelativeThresholds]
 
