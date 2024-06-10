@@ -1,4 +1,4 @@
-import { join, relative } from 'node:path'
+import { join } from 'node:path'
 import type { FileStat } from '../../shared/src/messages'
 import { workspacePath } from './serverState'
 import { type Tree, getProgram, getTypeDictionary, treeIdNodes, typeToDescriptor } from './tsTrace'
@@ -69,7 +69,7 @@ export function getStatsFromTree(fileName: string) {
     node.children.forEach(visit)
   }
 
-  const fileNodes = filterTree('', relative(workspacePath.value, fileName), 0)
+  const fileNodes = filterTree('', fileName, 0)
   fileNodes.forEach(visit)
 
   return stats

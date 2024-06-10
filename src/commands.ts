@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 import { getTracePanel, prepareWebView } from './webview'
 import { log } from './logger'
 import type { CommandId } from './constants'
-import { getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
+import { openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
 import { afterWatches, saveName, state, traceRunning } from './appState'
 import * as actions from './client/actions'
 import { filterTree } from './client/actions'
@@ -44,11 +44,8 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   const start = editor.selection.start
   const startOffset = editor.document.offsetAt(start)
 
-  const workspacePth = getWorkspacePath()
-  const relativePath = relative(workspacePth, editor.document.fileName)
-
   getTracePanel(context)?.reveal()
-  filterTree('', relativePath, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1), true)
+  filterTree('', editor.document.fileName, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1), true)
 }
 
 const liveTrace = true // TODO config setting
