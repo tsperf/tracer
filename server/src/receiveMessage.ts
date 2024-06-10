@@ -1,50 +1,55 @@
 /* eslint-disable no-console */
 import type WebSocket from 'ws'
 import type { Tree } from './tsTrace'
-import { runLiveTrace, treeRoot } from './tsTrace'
+import { runLiveTrace, tree as treeRoot } from './tsTrace'
 import * as Messages from './messages'
-import { sendResponse } from './server'
+import { sendError, sendResponse } from './server'
 import { getChildrenById, getStatsFromTree, getTypesById } from './traceMetrics'
 
 export function receiveMessage(id: number, args: unknown, ws: WebSocket) {
-  const parsed = Messages.message.safeParse(args)
-  if (parsed.error) {
-    console.log(JSON.stringify(args, null, 2))
-    return
+  try {
+    const parsed = Messages.message.safeParse(args)
+    if (parsed.error) {
+      console.log(JSON.stringify(args, null, 2))
+      return
+    }
+
+    switch (parsed.data.message) {
+      case 'traceStart': {
+        runLiveTrace(parsed.data.projectPath, parsed.data.traceDir)
+        const response: Messages.Message = { message: 'traceStop' }
+        sendResponse(ws, id, response)
+        break
+      }
+
+      case 'childrenById': {
+        const response: Messages.ChildrenById = { ...parsed.data, children: getChildrenById(parsed.data.id) }
+        sendResponse(ws, id, response)
+        break
+      }
+
+      case 'typesById': {
+        const response: Messages.TypesById = { ...parsed.data, types: getTypesById(parsed.data.id) }
+        sendResponse(ws, id, response)
+        break
+      }
+
+      case 'filterTree': {
+        const { startsWith, sourceFileName, position } = parsed.data
+        const roots = filterTree(startsWith, sourceFileName, position)
+        showTree(ws, id, roots)
+        break
+      }
+
+      case 'fileStats': {
+        const stats = getStatsFromTree(parsed.data.fileName)
+        sendResponse(ws, id, { ...parsed.data, stats })
+        break
+      }
+    }
   }
-
-  switch (parsed.data.message) {
-    case 'traceStart': {
-      runLiveTrace(parsed.data.projectPath, parsed.data.traceDir)
-      const response: Messages.Message = { message: 'traceStop' }
-      sendResponse(ws, id, response)
-      break
-    }
-
-    case 'childrenById': {
-      const response: Messages.ChildrenById = { ...parsed.data, children: getChildrenById(parsed.data.id) }
-      sendResponse(ws, id, response)
-      break
-    }
-
-    case 'typesById': {
-      const response: Messages.TypesById = { ...parsed.data, types: getTypesById(parsed.data.id) }
-      sendResponse(ws, id, response)
-      break
-    }
-
-    case 'filterTree': {
-      const { startsWith, sourceFileName, position } = parsed.data
-      const roots = filterTree(startsWith, sourceFileName, position)
-      showTree(ws, id, roots)
-      break
-    }
-
-    case 'fileStats': {
-      const stats = getStatsFromTree(parsed.data.fileName)
-      sendResponse(ws, id, { ...parsed.data, stats })
-      break
-    }
+  catch (e) {
+    sendError(ws, id, `${e}`)
   }
 }
 

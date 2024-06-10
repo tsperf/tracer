@@ -55,6 +55,7 @@ import {
 
 import type { Tree } from '../../shared/src/tree'
 import { tsdk } from './serverState'
+import { typesById } from './messages'
 
 export type { Tree } from '../../shared/src/tree'
 
@@ -73,20 +74,29 @@ export const treeIdNodes = new Map<number, Tree>()
 
 let lastTreeId = 0
 const typeDictionary = new Map<number, Type>()
-export const treeRoot: Tree = {
-  id: lastTreeId++,
-  parentId: -1,
-  line: { pid: 1, tid: 1, ph: 'root', cat: 'root', ts: performance.now(), name: 'root', dur: 0 },
-  children: [],
-  typeIds: [],
-  childCnt: 0,
-  childTypeCnt: 0,
-  maxDepth: 0,
-  typeCnt: 0,
+function mkTreeRoot(): Tree {
+  const tree: Tree = {
+    id: 0,
+    parentId: -1,
+    line: { pid: 1, tid: 1, ph: 'root', cat: 'root', ts: performance.now(), name: 'root', dur: 0 },
+    children: [],
+    typeIds: [],
+    childCnt: 0,
+    childTypeCnt: 0,
+    maxDepth: 0,
+    typeCnt: 0,
+  }
 
+  treeIdNodes.clear()
+  treeIdNodes.set(0, tree)
+  typeDictionary.clear()
+  lastTreeId = 1
+
+  return tree
 }
-let tree = { ...treeRoot }
-treeIdNodes.set(0, treeRoot)
+
+// eslint-disable-next-line import/no-mutable-exports
+export let tree = mkTreeRoot()
 
 export function getTypeDictionary() {
   return typeDictionary
@@ -98,6 +108,8 @@ function normalizePath(path: string) {
 
 // TODO: report errors via request error handler
 export function runLiveTrace(projectDirectory: string, traceDir: string) {
+  tree = mkTreeRoot()
+
   const searchPath = normalizePath(projectDirectory)
   const configFileName = findConfigFile(searchPath, fileName =>
     sys.fileExists(fileName))
@@ -284,9 +296,6 @@ function enableTracing(
   isBuildMode: boolean,
 ) {
   if (canTrace(system, compilerOptions)) {
-    typeDictionary.clear()
-    tree = { ...treeRoot }
-
     startTracing(
       isBuildMode ? 'build' : 'project',
       compilerOptions.generateTrace!,
