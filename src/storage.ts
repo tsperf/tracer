@@ -1,8 +1,7 @@
-import { readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { env } from 'node:process'
 import * as vscode from 'vscode'
-import { traceData } from '../shared/src/traceData'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import { state } from './appState'
@@ -84,21 +83,6 @@ export async function openTraceDirectoryExternal() {
   }
 }
 
-export function addTraceFile(fileName: string, contents: string) {
-  try {
-    const json = JSON.parse(contents)
-
-    const arr = traceData.safeParse(json)
-    if (!arr.success)
-      return
-
-    state.traceFiles.value[fileName] = arr.data
-  }
-  catch (e) {
-    vscode.window.showErrorMessage(`${e}`)
-  }
-}
-
 // allow setting this in the debugger
 // set it to the full path of devUiDriver/commands.ts to record for driver playback
 // eslint-disable-next-line prefer-const
@@ -151,4 +135,24 @@ export async function deleteTraceFiles(fileName: string, dirName?: string) {
   else if (fileName.endsWith('.json')) {
     rmSync(join(deleteDirName, fileName))
   }
+}
+
+const typeTimestampsFileName = 'timestamps.json'
+export async function writeTypeTimestamps(data: Map<number, number>) {
+  const traceDir = state.tracePath.value
+  const fileName = join(traceDir, typeTimestampsFileName)
+  writeFileSync(fileName, JSON.stringify([...data.entries()], null, 2))
+}
+
+export async function readTypeTimestamps() {
+  const traceDir = await getTraceDir()
+  const fileName = join(traceDir, typeTimestampsFileName)
+
+  if (!existsSync(fileName))
+    return undefined
+
+  const str = readFileSync(fileName).toString()
+  const json = JSON.parse(str)
+
+  return new Map<number, number>(json)
 }

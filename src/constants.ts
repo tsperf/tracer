@@ -17,6 +17,7 @@ export const configKeys = [
   'enableTraceMetrics',
   'enableRealtimeMetrics',
   'fileBrowserExecutable',
+  'maxDiagnosticsPerFile',
 ] as const
 
 export type ConfigKey = typeof configKeys[number]
@@ -25,7 +26,6 @@ export const commandIds = [
   'tsperf.tracer.gotoTracePosition',
   'tsperf.tracer.openInBrowser',
   'tsperf.tracer.runTrace',
-  'tsperf.tracer.sendTrace',
   'tsperf.tracer.openTerminal',
   'tsperf.tracer.openTraceDirExternal',
 ] as const

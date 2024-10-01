@@ -1,6 +1,5 @@
 import z from 'zod'
-import type { Tree } from './tree'
-import { traceLine, typeLine } from './traceData'
+import { typeLine } from './traceData'
 
 export const ping = z.object({
   message: z.literal('ping'),
@@ -98,25 +97,9 @@ export const filterTree = z.object({
 })
 export type FilterTree = z.infer<typeof filterTree>
 
-const zodTree: z.ZodType<Tree> = z.lazy(() =>
-  z.object({
-    id: z.number(),
-    parentId: z.number(),
-    line: traceLine,
-    children: z.array(zodTree),
-    typeIds: z.array(z.number()),
-    childTypeCnt: z.number(),
-    childCnt: z.number(),
-    typeCnt: z.number(),
-    maxDepth: z.number(),
-  }),
-)
-
 const showTree = z.object({
   message: z.literal('showTree'),
   nodes: z.array(z.any()),
-  // TODO: type nodes correctly
-  // nodes: z.array(zodTree),
   step: z.literal('start').or(z.literal('add').or(z.literal('done'))),
 })
 export type ShowTree = z.infer<typeof showTree>
@@ -151,7 +134,7 @@ export type SaveNames = z.infer<typeof saveNames>
 export const childrenById = z.object({
   message: z.literal('childrenById'),
   id: z.number(),
-  children: z.array(zodTree).optional(),
+  children: z.array(z.any()).optional(),
 })
 export type ChildrenById = z.infer<typeof childrenById>
 
@@ -189,4 +172,7 @@ export const message = z.union([
 export type MessageType = Message['message']
 
 export type SpecificMessage<T extends MessageType> = Message & { message: T }
-export type MessageValues<T extends MessageType> = Omit<SpecificMessage<T>, 'message'>
+export type MessageValues<T extends MessageType> = Omit<
+   SpecificMessage<T>,
+   'message'
+>

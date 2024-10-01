@@ -1,13 +1,12 @@
 import { mkdirSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
 import { log } from 'node:console'
-import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
+import { type Ref, type UnwrapRef, nextTick, watch as plainWatch, ref } from '@vue/runtime-core'
 import type * as vscode from 'vscode'
-import type { TraceData } from '../shared/src/traceData'
+import type { Tree } from '../shared/src/tree'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
-import { sendTraceDir } from './commands'
 
 export const afterWatches = nextTick
 
@@ -20,11 +19,12 @@ export const savePath = ref('')
 export const saveNames: Ref<string[]> = ref([])
 export const projectNames: Ref<string[]> = ref([])
 
-export const traceFiles: ShallowRef<Record<string, TraceData>> = shallowRef({})
-
 export const traceRunning = ref(false)
+export const metricsRunning = ref(false)
 
 export const tracePath = ref('')
+
+export const treeRoots = ref([] as Tree[])
 
 export const state = {
   workspacePath,
@@ -34,9 +34,10 @@ export const state = {
   savePath,
   saveNames,
   projectNames,
-  traceFiles,
   traceRunning,
+  metricsRunning,
   tracePath,
+  treeRoots,
 } as const
 type State = typeof state
 type StateType<K extends keyof State> = State[K] extends Ref<any> ? UnwrapRef<State[K]> : State[K]
@@ -116,25 +117,16 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
 
     setStatusBarState('saveName', saveName.value)
     tracePath.value = join(projectPath.value, name, 'traces')
-
-    void sendTraceDir(tracePath.value)
   }, (name) => {
     postMessage({ message: 'saveOpen', name })
   })
 
-  watchT('traceFiles', noop, (files) => {
-    postMessage({ message: 'traceFileLoaded', fileName: '', dirName: tracePath.value, resetFileList: true })
-    nextTick(() =>
-
-      Object.keys(files).forEach((fileName) => {
-        postMessage({ message: 'traceFileLoaded', fileName, dirName: tracePath.value, resetFileList: false })
-      }),
-    )
+  watchT('traceRunning', (running: boolean) => setStatusBarState('traceRunning', running), (running: boolean) => {
+    if (!running)
+      postMessage({ message: 'traceStop' })
   })
 
-  watchT('traceRunning', (running: boolean) => setStatusBarState('tracing', running), (running: boolean) => {
-    postMessage({ message: running ? 'traceStart' : 'traceStop' })
-  })
+  watchT('metricsRunning', (running: boolean) => setStatusBarState('metricsRunning', running), () => {})
 
   workspacePath.value = getWorkspacePath()
   projectName.value = getProjectName()

@@ -25,10 +25,6 @@ export const traceLine = z.object({
       kind: z.number().optional(),
       pos: z.number().optional(),
       end: z.number().optional(),
-      location: z.object({
-        line: z.number(),
-        character: z.number(),
-      }).optional(),
       path: z.string().optional(),
       results: z
         .object({
@@ -37,7 +33,6 @@ export const traceLine = z.object({
         .optional(),
     })
     .optional(),
-  results: z.object({}).optional(),
 })
 
 export type DataLine = TraceLine | TypeLine

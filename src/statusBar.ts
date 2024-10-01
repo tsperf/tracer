@@ -3,7 +3,8 @@ import * as vscode from 'vscode'
 let bar: vscode.StatusBarItem
 
 const statusBarState = {
-  tracing: false,
+  traceRunning: false,
+  metricsRunning: false,
   traceError: false,
   projectName: '',
   saveName: '',
@@ -26,8 +27,13 @@ export function initStatusBar(extensionContext: vscode.ExtensionContext) {
 }
 
 function updateText() {
-  let text = `${statusBarState.projectName}/${statusBarState.saveName}`
-  if (statusBarState.tracing)
+  let text = ''
+  if (statusBarState.metricsRunning)
+    text += '$(loading~spin)'
+
+  text += `${statusBarState.projectName}/${statusBarState.saveName}`
+
+  if (statusBarState.traceRunning)
     text += '$(loading~spin)'
 
   if (statusBarState.traceError)

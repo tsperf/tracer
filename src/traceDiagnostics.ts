@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
-import { getStatsFromTree } from './traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
+import { getFileStats } from './client/actions'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -20,7 +20,7 @@ vscode.workspace.onDidChangeTextDocument((event) => {
 vscode.window.onDidChangeActiveTextEditor((event) => {
   const fileName = event?.document?.fileName
   if (fileName)
-    addTraceDiagnostics(fileName, getStatsFromTree(fileName))
+    getFileStats(fileName)
 })
 
 export function clearTaceDiagnostics() {
@@ -101,7 +101,7 @@ function fileStatToRelativeDiagnostic({ pos, dur, types, totalTypes }: FileStat,
 
   const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes} ${relativeString(relative.types)} / ${relativeString(relative.totalTypes)}` : ''
 
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
+  const msg = `Check ms: ${Math.round(dur)} ${relativeString(relative.dur)} ${typeStr}`
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
@@ -118,7 +118,7 @@ function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, documen
 
   const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes}` : ''
 
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${typeStr}`
+  const msg = `Check ms: ${Math.round(dur)} ${typeStr}`
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
@@ -151,15 +151,15 @@ afterConfigUpdate(['traceTimeRelativeThresholds', 'traceTypeRelativeThresholds',
   severityRelativeThresholds.totalTypes = [config.traceTotalTypeRelativeThresholds.error, config.traceTotalTypeRelativeThresholds.warning, config.traceTotalTypeRelativeThresholds.info]
 })
 
-function getSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
+export function getSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
   const [thresholdType, value] = Object.entries(measure)[0]
   const thresholds = severityThresholds[thresholdType as keyof typeof severityThresholds]
 
-  const index = thresholds.findIndex(x => x >= 0 && x <= value / 1000)
+  const index = thresholds.findIndex(x => x >= 0 && x <= value)
   return index === -1 ? 99 : index
 }
 
-function getRelativeSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
+export function getRelativeSeverity(measure: Partial<{ [k in keyof typeof severityThresholds]: number }>) {
   const [thresholdType, value] = Object.entries(measure)[0]
   const thresholds = severityRelativeThresholds[thresholdType as keyof typeof severityRelativeThresholds]
 
@@ -174,7 +174,7 @@ afterConfigUpdate(['enableTraceMetrics'], (config) => {
   else {
     vscode.window.visibleTextEditors.forEach((editor) => {
       const fileName = editor.document.uri.fsPath
-      addTraceDiagnostics(fileName, getStatsFromTree(fileName))
+      getFileStats(fileName)
     })
   }
 })
