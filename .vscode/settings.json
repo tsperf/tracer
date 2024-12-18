@@ -1,7 +1,7 @@
 {
   "npm.packageManager": "pnpm",
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  "eslint.experimental.useFlatConfig": true,
+  "eslint.useFlatConfig": true,
   "eslint.format.enable": true,
   "eslint.lintTask.enable": false,
   "[typescript]": {
