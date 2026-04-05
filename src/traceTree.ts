@@ -133,14 +133,16 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
   return nodes
 }
 
-export function getChildrenById(id: number) {
+export function getChildrenById(id: number, limit: number = 50, offset: number = 0) {
   const nodes = treeIdNodes.get(id)?.children ?? []
-  const ret: typeof nodes = []
-  nodes.forEach((node) => {
+  const total = nodes.length
+  const paginatedNodes = nodes.slice(offset, offset + limit)
+  const ret: typeof paginatedNodes = []
+  paginatedNodes.forEach((node) => {
     treeIdNodes.set(node.id, node)
     ret.push({ ...node, children: [], types: [] })
   })
-  return ret
+  return { children: ret, total }
 }
 
 export function getTypesById(id: number) {
