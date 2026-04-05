@@ -3,6 +3,7 @@ import type { Tree } from '../../src/traceTree'
 import * as Messages from '../../shared/src/messages'
 
 export const childrenById = shallowReactive(new Map<number, Tree[]>())
+export const childrenTotalById = shallowReactive(new Map<number, number>())
 export const typesById = shallowReactive(new Map<number, TypeLine[]>())
 export const nodes = ref([] as Tree[])
 export const sortBy = ref('Timestamp' as keyof typeof sortValue)
@@ -40,6 +41,8 @@ function handleMessage(e: MessageEvent<unknown>) {
       const id = parsed.data.id
       const children = childrenById.get(id) ?? []
       childrenById.set(id, [...children, ...parsed.data.children])
+      if (parsed.data.total !== undefined)
+        childrenTotalById.set(id, parsed.data.total)
       break
     }
     case 'typesById': {
