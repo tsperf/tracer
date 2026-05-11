@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
-import { childrenById, typesById } from '~/src/appState'
+import type { HotPathNode } from '../../shared/src/messages'
+import { childrenById, hotPathById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
@@ -8,6 +9,8 @@ const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+const hotPath = computed(() => hotPathById.get(props.tree.id) ?? [])
+const showHotPath = ref(false)
 
 function fetchChildren() {
   if (children.value.length === 0)
@@ -19,6 +22,12 @@ function fetchTypes() {
     sendMessage('typesById', { id: props.tree.id })
 }
 
+function toggleHotPath() {
+  showHotPath.value = !showHotPath.value
+  if (showHotPath.value && hotPath.value.length === 0)
+    sendMessage('hotPathById', { id: props.tree.id })
+}
+
 function gotoPosition() {
   if ('name' in props.tree.line) {
     const { path, pos } = props.tree.line.args ?? { path: undefined, pos: undefined }
@@ -27,6 +36,13 @@ function gotoPosition() {
 
     sendMessage('gotoPosition', { fileName: path, pos })
   }
+}
+
+function gotoHotPathPosition(node: HotPathNode) {
+  if (!node.path || node.pos === undefined)
+    return
+
+  sendMessage('gotoPosition', { fileName: node.path, pos: node.pos })
 }
 
 const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGuidesStroke)] hover:border-[var(--vscode-tree-indentGuidesStroke)]`
@@ -65,6 +81,14 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
           </div>
 
           <div class="flex flex-row justify-self-end justify-evenly">
+            <button
+              v-if="props.tree.childCnt > 0"
+              class="mr-2 pb-1 mb-1 bg-[var(--vscode-button-background,green)] rounded-sm focus:ring-[var(--vscode-focusBorder,blue)] focus:outline-none focus:ring-1"
+              title="Show longest-running child path"
+              @click.stop="toggleHotPath"
+            >
+              <UIcon primary name="i-heroicons-chart-bar-square" class="relative top-1 hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground,white)]" />
+            </button>
             <UExpand v-if="props.tree.typeCnt > 0" class="min-w-40" @expand="fetchTypes">
               <template #label>
                 <span class="pl-1">{{ `Types: ${props.tree.typeCnt}` }} {{ `${props.tree.childTypeCnt || props.tree.typeCnt ? `/ ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
@@ -74,6 +98,9 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
             <div v-else class="min-w-40" />
           </div>
         </div>
+      </template>
+      <template #panel>
+        <HotPathChart v-if="showHotPath" :nodes="hotPath" @goto-position="gotoHotPathPosition" />
       </template>
       <template v-for="(node, idx) of children" :key="idx">
         <TreeNode :depth="depth + 1" :tree="node" />

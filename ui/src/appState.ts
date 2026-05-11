@@ -4,6 +4,7 @@ import * as Messages from '../../shared/src/messages'
 
 export const childrenById = shallowReactive(new Map<number, Tree[]>())
 export const typesById = shallowReactive(new Map<number, TypeLine[]>())
+export const hotPathById = shallowReactive(new Map<number, Messages.HotPathNode[]>())
 export const nodes = ref([] as Tree[])
 export const sortBy = ref('Timestamp' as keyof typeof sortValue)
 export const projectName = ref('')
@@ -28,6 +29,12 @@ function doSort(arr: Tree[]) {
 
 watch(sortBy, () => nodes.value = doSort(nodes.value ?? []))
 
+function clearTreeCaches() {
+  childrenById.clear()
+  typesById.clear()
+  hotPathById.clear()
+}
+
 function handleMessage(e: MessageEvent<unknown>) {
   const parsed = Messages.message.safeParse(e.data)
   if (!parsed.success)
@@ -50,9 +57,16 @@ function handleMessage(e: MessageEvent<unknown>) {
       typesById.set(id, [...types, ...parsed.data.types])
       break
     }
+    case 'hotPathById': {
+      if (!parsed.data.nodes)
+        return
+      hotPathById.set(parsed.data.id, parsed.data.nodes)
+      break
+    }
     case 'showTree': {
       switch (parsed.data.step) {
         case 'start':
+          clearTreeCaches()
           nodes.value = []
           break
         case 'add':
@@ -84,6 +98,7 @@ function handleMessage(e: MessageEvent<unknown>) {
     case 'traceFileLoaded': {
       const data = parsed.data
       if (data.resetFileList) {
+        clearTreeCaches()
         files.value = []
         nodes.value = []
       }

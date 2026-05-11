@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
-import { getChildrenById, getTypesById, showTree } from './traceTree'
+import { getChildrenById, getHotPathById, getTypesById, showTree } from './traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
@@ -48,6 +48,10 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
     }
     case 'typesById': {
       postMessage({ ...data, types: getTypesById(data.id) })
+      break
+    }
+    case 'hotPathById': {
+      postMessage({ ...data, nodes: getHotPathById(data.id) })
       break
     }
 
