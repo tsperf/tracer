@@ -26,6 +26,9 @@ export const traceLine = z.object({
       pos: z.number().optional(),
       end: z.number().optional(),
       path: z.string().optional(),
+      typeId: z.number().optional(),
+      instantiationDepth: z.number().optional(),
+      instantiationCount: z.number().optional(),
       results: z
         .object({
           typeId: z.number().optional(),

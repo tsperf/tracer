@@ -66,7 +66,13 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
   }
 
   const diagnostics = []
-  stats.sort((a, b) => a.pos === b.pos ? (b.end - b.pos) - (a.end - a.pos) : b.pos - a.pos)
+  stats.sort((a, b) => {
+    if (a.pos !== b.pos)
+      return b.pos - a.pos
+
+    const depthLimitSort = Number(!!b.depthLimitEvents?.length) - Number(!!a.depthLimitEvents?.length)
+    return depthLimitSort || (b.end - b.pos) - (a.end - a.pos)
+  })
   let lastPos = -9999
   for (const stat of stats) {
     if (lastPos === stat.pos)
@@ -89,40 +95,60 @@ function relativeValue(value: number, average: number, averageThreshold: number)
   return value / (average || averageThreshold || 1)
 }
 
-function fileStatToRelativeDiagnostic({ pos, dur, types, totalTypes }: FileStat, document: vscode.TextDocument, averages: { dur: number, types: number, totalTypes: number }) {
-  if (!(types || totalTypes || dur))
+function fileStatToRelativeDiagnostic({ pos, dur, types, totalTypes, depthLimitEvents }: FileStat, document: vscode.TextDocument, averages: { dur: number, types: number, totalTypes: number }) {
+  if (!(types || totalTypes || dur || depthLimitEvents?.length))
     return undefined
 
   const relative = { dur: relativeValue(dur, averages.dur, averageThresholds.dur), types: relativeValue(types, averages.types, averageThresholds.types), totalTypes: relativeValue(totalTypes, averages.totalTypes, averageThresholds.totalTypes) }
 
-  const severity = Math.min(Math.min(getRelativeSeverity({ types: relative.types }), getRelativeSeverity({ totalTypes: relative.totalTypes })), getRelativeSeverity({ dur: relative.dur }))
+  const severity = Math.min(
+    getDepthLimitSeverity(depthLimitEvents),
+    Math.min(
+      Math.min(getRelativeSeverity({ types: relative.types }), getRelativeSeverity({ totalTypes: relative.totalTypes })),
+      getRelativeSeverity({ dur: relative.dur }),
+    ),
+  )
   if (severity > vscode.DiagnosticSeverity.Information)
     return
 
   const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes} ${relativeString(relative.types)} / ${relativeString(relative.totalTypes)}` : ''
 
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
+  const msg = `${depthLimitMessage(depthLimitEvents)}Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
   return new vscode.Diagnostic(range, msg, severity)
 }
 
-function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, document: vscode.TextDocument) {
-  if (!(types || totalTypes || dur))
+function fileStatToDiagnostic({ pos, dur, types, totalTypes, depthLimitEvents }: FileStat, document: vscode.TextDocument) {
+  if (!(types || totalTypes || dur || depthLimitEvents?.length))
     return undefined
 
-  const severity = Math.min(Math.min(getSeverity({ types }), getSeverity({ totalTypes })), getSeverity({ dur }))
+  const severity = Math.min(
+    getDepthLimitSeverity(depthLimitEvents),
+    Math.min(
+      Math.min(getSeverity({ types }), getSeverity({ totalTypes })),
+      getSeverity({ dur }),
+    ),
+  )
   if (severity > vscode.DiagnosticSeverity.Information)
     return
 
   const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes}` : ''
 
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${typeStr}`
+  const msg = `${depthLimitMessage(depthLimitEvents)}Check ms: ${Math.round(dur) / 1000} ${typeStr}`
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
   return new vscode.Diagnostic(range, msg, severity)
+}
+
+function getDepthLimitSeverity(depthLimitEvents?: string[]) {
+  return depthLimitEvents?.length ? vscode.DiagnosticSeverity.Warning : 99
+}
+
+function depthLimitMessage(depthLimitEvents?: string[]) {
+  return depthLimitEvents?.length ? `Depth limit reached: ${depthLimitEvents.join(', ')}. ` : ''
 }
 
 // yes, I should be using the vscode.DiagnosticSeverity but that's much more painful and they are unlikely to change
