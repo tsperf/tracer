@@ -2,3 +2,12 @@ packages:
   - playground
   - srcDev
   - ui
+
+ignoreWorkspaceRootCheck: true
+
+nodeLinker: hoisted
+
+allowBuilds:
+  esbuild: false
+  keytar: false
+  vue-demi: false
