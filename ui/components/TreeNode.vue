@@ -22,7 +22,7 @@ function fetchTypes() {
 function gotoPosition() {
   if ('name' in props.tree.line) {
     const { path, pos } = props.tree.line.args ?? { path: undefined, pos: undefined }
-    if (!path || !pos)
+    if (!path || pos === undefined)
       return
 
     sendMessage('gotoPosition', { fileName: path, pos })
