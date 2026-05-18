@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -72,6 +73,13 @@ describe('trace run metrics', () => {
 
   it('builds and writes a stable metrics artifact', async () => {
     const traceDir = await makeTempDir()
+    const stdout = `Files:                         8
+Types:                        83
+Instantiations:                0
+Memory used:              48895K
+Check time:                0.01s
+Total time:                0.59s
+`
     const metrics = buildTraceRunMetrics({
       command: 'npx tsc --noEmit --generateTrace trace',
       cwd: '/repo',
@@ -80,7 +88,7 @@ describe('trace run metrics', () => {
       endedAt: '2026-05-18T00:00:01.250Z',
       wallTimeMs: 1250,
       exitCode: 0,
-      stdout: 'ok',
+      stdout,
       stderr: '',
       traceJsonFiles: [{ fileName: 'trace.json', bytes: 2 }],
       parseSummary: { status: 'ok' },
@@ -93,11 +101,25 @@ describe('trace run metrics', () => {
       traceDir,
       wallTimeMs: 1250,
       exitCode: 0,
-      stdout: { bytes: 2, truncated: false, text: 'ok' },
+      stdout: {
+        bytes: Buffer.byteLength(stdout),
+        truncated: false,
+        text: stdout,
+      },
       stderr: { bytes: 0, truncated: false, text: '' },
+      extendedDiagnostics: {
+        files: 8,
+        types: 83,
+        instantiations: 0,
+        memoryUsedKb: 48895,
+        checkTimeMs: 10,
+        totalTimeMs: 590,
+      },
       traceJsonFiles: [{ fileName: 'trace.json', bytes: 2 }],
       parse: { status: 'ok' },
     })
+
+    expect(metrics.extendedDiagnostics?.metrics.checkTime).toEqual({ value: 10, unit: 'ms', raw: '0.01s' })
 
     await writeTraceRunMetrics(traceDir, metrics)
     await expect(readFile(join(traceDir, TRACE_RUN_METRICS_FILE), 'utf8'))
