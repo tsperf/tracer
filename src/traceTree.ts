@@ -1,6 +1,6 @@
 import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
-import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
+import { type TraceData, type TraceLine, type TypeLine, hasTypeTimestamp } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
@@ -27,6 +27,10 @@ function getRoot(): Tree {
 }
 
 let treeIndexes: Tree[] = []
+function hasTraceTimestamp(line: TraceData[number]): line is TraceLine | TypeLine & { ts: number } {
+  return 'cat' in line || ('id' in line && hasTypeTimestamp(line))
+}
+
 export function toTree(traceData: TraceData, workspacePath: string): Tree {
   const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
@@ -38,7 +42,7 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
 
   treeIndexes = [tree]
 
-  const data = traceData.filter(x => 'id' in x || ('cat' in x)).sort((a, b) => a.ts - b.ts)
+  const data = traceData.filter(hasTraceTimestamp).sort((a, b) => a.ts - b.ts)
   // const data = traceData.filter(x => 'id' in x || ('cat' in x && x.cat?.startsWith('check'))).sort((a, b) => a.ts - b.ts)
   for (const line of data) {
     if ('args' in line && line.args?.path && isAbsolute(line.args?.path))

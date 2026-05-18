@@ -6,7 +6,7 @@ export const typeLine = z.object({
   intrinsicName: z.string().optional(),
   recursionId: z.number().optional(),
   flags: z.array(z.string()).optional(),
-  ts: z.number(),
+  ts: z.number().optional(),
   dur: z.number().optional(),
   display: z.string().optional(),
 })
@@ -39,3 +39,29 @@ export type DataLine = TraceLine | TypeLine
 
 export type TraceData = z.infer<typeof traceData>
 export const traceData = z.array(typeLine.or(traceLine))
+
+export interface TraceDataSummary {
+  totalTypes: number
+  timestampedTypes: number
+  untimestampedTypes: number
+  parseWarning?: string
+}
+
+export function hasTypeTimestamp(line: TypeLine): line is TypeLine & { ts: number } {
+  return typeof line.ts === 'number'
+}
+
+export function getTraceDataSummary(data: TraceData): TraceDataSummary {
+  const typeLines = data.filter((line): line is TypeLine => 'id' in line)
+  const timestampedTypes = typeLines.filter(hasTypeTimestamp).length
+  const untimestampedTypes = typeLines.length - timestampedTypes
+
+  return {
+    totalTypes: typeLines.length,
+    timestampedTypes,
+    untimestampedTypes,
+    parseWarning: untimestampedTypes > 0
+      ? `${untimestampedTypes} type entr${untimestampedTypes === 1 ? 'y is' : 'ies are'} missing timestamps and cannot be attributed to trace spans.`
+      : undefined,
+  }
+}
