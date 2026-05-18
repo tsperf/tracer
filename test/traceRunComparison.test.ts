@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compareTraceRunMetrics } from '../src/traceRunComparison'
+import { compareTraceRunMetrics, formatTraceRunMetricsComparison } from '../src/traceRunComparison'
 import type { TraceRunMetrics } from '../src/traceRunMetrics'
 
 function makeMetrics(overrides: Partial<TraceRunMetrics> = {}): TraceRunMetrics {
@@ -48,6 +48,16 @@ describe('trace run comparison', () => {
       exitCode: { before: 0, after: 2, changed: true },
       traceFileCount: { before: 1, after: 3, delta: 2 },
       parseStatus: { before: 'ok', after: 'error', changed: true },
+      extendedDiagnostics: {
+        types: { before: undefined, after: undefined, delta: undefined, changed: false },
+        instantiations: { before: undefined, after: undefined, delta: undefined, changed: false },
+        memoryUsedKb: { before: undefined, after: undefined, delta: undefined, changed: false },
+        parseTimeMs: { before: undefined, after: undefined, delta: undefined, changed: false },
+        bindTimeMs: { before: undefined, after: undefined, delta: undefined, changed: false },
+        checkTimeMs: { before: undefined, after: undefined, delta: undefined, changed: false },
+        emitTimeMs: { before: undefined, after: undefined, delta: undefined, changed: false },
+        totalTimeMs: { before: undefined, after: undefined, delta: undefined, changed: false },
+      },
       stdout: {
         bytes: { before: 12, after: 24, delta: 12 },
         summaryLength: { before: 10, after: 18, delta: 8 },
@@ -90,5 +100,38 @@ describe('trace run comparison', () => {
     expect(comparison.parseStatus).toEqual({ before: 'warning', after: 'warning', changed: false })
     expect(comparison.stdout.summaryLength).toEqual({ before: 16, after: 5, delta: -11 })
     expect(comparison.stderr.summaryLength).toEqual({ before: 8, after: 0, delta: -8 })
+  })
+
+  it('compares and formats extended diagnostics deltas', () => {
+    const before = makeMetrics({
+      wallTimeMs: 1000,
+      extendedDiagnostics: {
+        types: 1400,
+        instantiations: 700,
+        memoryUsedKb: 120000,
+        checkTimeMs: 900,
+        totalTimeMs: 1200,
+        metrics: {},
+      },
+    })
+    const after = makeMetrics({
+      wallTimeMs: 850,
+      extendedDiagnostics: {
+        types: 1100,
+        instantiations: 450,
+        memoryUsedKb: 100000,
+        checkTimeMs: 650,
+        totalTimeMs: 950,
+        metrics: {},
+      },
+    })
+
+    const comparison = compareTraceRunMetrics(before, after)
+    const report = formatTraceRunMetricsComparison(comparison)
+
+    expect(comparison.extendedDiagnostics.types).toEqual({ before: 1400, after: 1100, delta: -300, changed: true })
+    expect(comparison.extendedDiagnostics.instantiations).toEqual({ before: 700, after: 450, delta: -250, changed: true })
+    expect(report).toContain('| Types | 1400 | 1100 | -300 |')
+    expect(report).toContain('| Check time ms | 900 | 650 | -250 |')
   })
 })

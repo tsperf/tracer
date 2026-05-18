@@ -298,6 +298,11 @@
         "category": "Tracer"
       },
       {
+        "title": "Compare trace metrics",
+        "command": "tsperf.tracer.compareTraceMetrics",
+        "category": "Tracer"
+      },
+      {
         "title": "Send Trace to Trace Viewer",
         "command": "tsperf.tracer.sendTrace",
         "category": "Tracer"

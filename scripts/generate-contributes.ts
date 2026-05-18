@@ -49,6 +49,9 @@ const commandRecord: Record<CommandId, Command> = {
       explorerContext: 'resourceFilename =~ /./',
     },
   },
+  'tsperf.tracer.compareTraceMetrics': {
+    title: 'Compare trace metrics',
+  },
   'tsperf.tracer.sendTrace': {
     title: 'Send Trace to Trace Viewer',
     when: {

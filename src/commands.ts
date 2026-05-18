@@ -4,6 +4,7 @@ import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import { createReadStream, existsSync, readdir as readdirC, statSync } from 'node:fs'
 import * as vscode from 'vscode'
+import { compareTraceRunMetrics, formatTraceRunMetricsComparison, readTraceRunMetricsFile } from './traceRunComparison'
 import { getStatsFromTree, processTraceFiles, showTree, treeIdNodes } from './traceTree'
 import { getTracePanel, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
@@ -22,6 +23,7 @@ const commandHandlers: Record<
   (context: vscode.ExtensionContext) => (...args: any[]) => void
   > = {
     'tsperf.tracer.runTrace': () => (...args: unknown[]) => runTrace(args),
+    'tsperf.tracer.compareTraceMetrics': () => () => compareTraceMetrics(),
     'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
     'tsperf.tracer.gotoTracePosition': (context: vscode.ExtensionContext) => () => gotoTracePosition(context),
     'tsperf.tracer.sendTrace': () => (event: unknown) => {
@@ -35,6 +37,43 @@ const commandHandlers: Record<
     'tsperf.tracer.openTerminal': () => () => openTerminal(),
     'tsperf.tracer.openTraceDirExternal': () => () => openTraceDirectoryExternal(),
   } as const
+
+async function pickMetricsFile(title: string): Promise<vscode.Uri | undefined> {
+  const uris = await vscode.window.showOpenDialog({
+    title,
+    canSelectFiles: true,
+    canSelectFolders: false,
+    canSelectMany: false,
+    filters: { JSON: ['json'] },
+  })
+
+  return uris?.[0]
+}
+
+async function compareTraceMetrics() {
+  const before = await pickMetricsFile('Select baseline metrics.json')
+  if (!before)
+    return
+
+  const after = await pickMetricsFile('Select comparison metrics.json')
+  if (!after)
+    return
+
+  try {
+    const comparison = compareTraceRunMetrics(
+      await readTraceRunMetricsFile(before.fsPath),
+      await readTraceRunMetricsFile(after.fsPath),
+    )
+    const document = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: formatTraceRunMetricsComparison(comparison),
+    })
+    await vscode.window.showTextDocument(document)
+  }
+  catch (error) {
+    vscode.window.showErrorMessage(error instanceof Error ? error.message : `${error}`)
+  }
+}
 
 async function sendTrace(dirName: string, fileName: string) {
   const fullFileName = join(dirName, fileName)
