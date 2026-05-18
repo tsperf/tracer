@@ -13,6 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { TRACE_RUN_METRICS_FILE, buildTraceRunMetrics, discoverTraceJsonFiles, summarizeTraceParse, writeTraceRunMetrics } from './traceRunMetrics'
 
 const readdir = promisify(readdirC)
 
@@ -148,21 +149,50 @@ async function runTrace(args?: unknown[]) {
     setStatusBarState('traceError', false)
 
     log(`shell: ${process.env.SHELL}`)
+    const startedAtMs = Date.now()
+    const startedAt = new Date(startedAtMs).toISOString()
     const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
 
     let err = ''
+    let out = ''
     cmdProcess.stderr.on('data', data => err += data.toString())
 
-    cmdProcess.stdout.on('data', data => log(data.toString()))
+    cmdProcess.stdout.on('data', (data) => {
+      const chunk = data.toString()
+      out += chunk
+      log(chunk)
+    })
 
-    cmdProcess.on('error', (error) => {
+    let metricsWritten = false
+    async function writeMetricsOnce(exitCode: number | null) {
+      if (metricsWritten)
+        return
+
+      metricsWritten = true
+      await writeRunMetrics({
+        command: fullCmd,
+        cwd: newProjectPath,
+        traceDir,
+        startedAt,
+        startedAtMs,
+        exitCode,
+        stdout: out,
+        stderr: err,
+      })
+    }
+
+    cmdProcess.on('error', async (error) => {
+      traceRunning.value = false
+      setStatusBarState('traceError', true)
       vscode.window.showErrorMessage(error.message)
+      await writeMetricsOnce(null)
     })
 
     cmdProcess.on('exit', async (code) => {
       log('---- trace stderr -----')
       log(err)
       traceRunning.value = false
+      await writeMetricsOnce(code)
       if (code) {
         setStatusBarState('traceError', true)
         vscode.window.showErrorMessage('error running trace')
@@ -174,6 +204,41 @@ async function runTrace(args?: unknown[]) {
   })
 }
 
+async function writeRunMetrics(input: {
+  command: string
+  cwd: string
+  traceDir: string
+  startedAt: string
+  startedAtMs: number
+  exitCode: number | null
+  stdout: string
+  stderr: string
+}) {
+  try {
+    const traceJsonFiles = existsSync(input.traceDir) ? await discoverTraceJsonFiles(input.traceDir) : []
+    const parseSummary = existsSync(input.traceDir)
+      ? await summarizeTraceParse(input.traceDir, traceJsonFiles)
+      : { status: 'missing' as const, topLevelWarning: 'Trace directory was not created.' }
+
+    await writeTraceRunMetrics(input.traceDir, buildTraceRunMetrics({
+      command: input.command,
+      cwd: input.cwd,
+      traceDir: input.traceDir,
+      startedAt: input.startedAt,
+      endedAt: new Date().toISOString(),
+      wallTimeMs: Date.now() - input.startedAtMs,
+      exitCode: input.exitCode,
+      stdout: input.stdout,
+      stderr: input.stderr,
+      traceJsonFiles,
+      parseSummary,
+    }))
+  }
+  catch (error) {
+    log(`error writing trace metrics: ${error instanceof Error ? error.message : `${error}`}`)
+  }
+}
+
 export async function sendTraceDir(traceDir: string) {
   try {
     if (!existsSync(traceDir)) {
@@ -182,6 +247,9 @@ export async function sendTraceDir(traceDir: string) {
 
     const fileNames = await readdir(traceDir)
     for (const fileName of fileNames) {
+      if (fileName === TRACE_RUN_METRICS_FILE)
+        continue
+
       sendTrace(traceDir, fileName)
     }
   }
