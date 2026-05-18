@@ -65,23 +65,22 @@ const metricKeysByLabel = new Map<string, string>([
   ['total time', 'totalTime'],
 ])
 
-const linePattern = /^\s*([^:]+):\s*(.+?)\s*$/
-const valuePattern = /^([+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*([a-zA-Z]+)?$/
+const valuePattern = /^([+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*([a-z]+)?$/i
 
 export function parseExtendedDiagnostics(text: string): ExtendedDiagnosticsSummary | undefined {
   const metrics: Record<string, ExtendedDiagnosticMetric> = {}
 
   for (const line of text.split(/\r?\n/)) {
-    const lineMatch = linePattern.exec(line)
-    if (!lineMatch)
+    const separatorIndex = line.indexOf(':')
+    if (separatorIndex === -1)
       continue
 
-    const label = lineMatch[1].trim().toLowerCase()
+    const label = line.slice(0, separatorIndex).trim().toLowerCase()
     const key = metricKeysByLabel.get(label)
     if (!key)
       continue
 
-    const metric = parseMetricValue(lineMatch[2])
+    const metric = parseMetricValue(line.slice(separatorIndex + 1))
     if (!metric)
       continue
 
