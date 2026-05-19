@@ -14,7 +14,17 @@ To avoid the overhead of launching a separate tsserver, it currently queries the
 
 The `Tracer: tsc trace` command can be run to gather accurate timings.  As with real-time metrics, these create diagnostics in the editor open files. It also opens an interface to browse trace files. Editor and UI commands enable navigating between locations in the editor and the trace.
 
-If the trace is run with a version of `tsc` that includes timestamps in `types.json`, type count metrics are also displayed. A PR to include these timestamps or tooling to automatically patch them in are works in progress.  See https://github.com/typeholes/TypeScript/tree/trace-data-5-4 for a version you can build yourself.
+Each trace run writes a `metrics.json` file next to the generated trace files. The artifact records the command, working directory, trace directory, start/end time, wall time, exit code, output summaries, discovered trace JSON files, parse status, and any parsed `--extendedDiagnostics` counters. This makes traces easier to compare across branches and machines without reopening the full trace viewer.
+
+Type count metrics are displayed when a timestamped `types.json` file is available. Stock TypeScript `types.json` files are also parsed safely, so a normal `npx tsc --generateTrace` run still reports the total type count even when per-span type attribution is unavailable.
+
+### Focused traces and comparisons
+
+- `Tracer: Trace current file` runs the configured trace command from the active TypeScript file context and saves the run under a workspace-relative trace name.
+- `Tracer: Compare trace metrics` opens two `metrics.json` files and renders a Markdown before/after report for wall time, exit code, trace file coverage, parse status, compiler diagnostics, and output deltas.
+- `Tracer: Open trace viewer` remains the main path for inspecting trace trees and jumping from expensive spans back to source.
+
+For a short reproducible demo path, see [docs/challenge-demo.md](./docs/challenge-demo.md).
 
 ### Use in mono repos
 
