@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { type ExtendedDiagnosticsSummary, parseExtendedDiagnostics } from './extendedDiagnostics'
 
 export const TRACE_RUN_METRICS_FILE = 'metrics.json'
 
@@ -49,6 +50,7 @@ export interface TraceRunMetrics {
   exitCode: number | null
   stdout: OutputSummary
   stderr: OutputSummary
+  extendedDiagnostics?: ExtendedDiagnosticsSummary
   traceJsonFiles: TraceJsonFile[]
   parse: TraceParseSummary
 }
@@ -67,6 +69,8 @@ export function summarizeOutput(text: string, limit = DEFAULT_OUTPUT_LIMIT): Out
 }
 
 export function buildTraceRunMetrics(input: TraceRunMetricsInput): TraceRunMetrics {
+  const extendedDiagnostics = parseExtendedDiagnostics(`${input.stdout}\n${input.stderr}`)
+
   return {
     version: 1,
     command: input.command,
@@ -78,6 +82,7 @@ export function buildTraceRunMetrics(input: TraceRunMetricsInput): TraceRunMetri
     exitCode: input.exitCode,
     stdout: summarizeOutput(input.stdout),
     stderr: summarizeOutput(input.stderr),
+    ...(extendedDiagnostics ? { extendedDiagnostics } : {}),
     traceJsonFiles: input.traceJsonFiles,
     parse: input.parseSummary,
   }
