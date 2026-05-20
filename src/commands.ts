@@ -13,6 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { measureSelectedExpression } from './miniTrace'
 
 const readdir = promisify(readdirC)
 
@@ -23,6 +24,7 @@ const commandHandlers: Record<
     'tsperf.tracer.runTrace': () => (...args: unknown[]) => runTrace(args),
     'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
     'tsperf.tracer.gotoTracePosition': (context: vscode.ExtensionContext) => () => gotoTracePosition(context),
+    'tsperf.tracer.measureSelection': () => () => measureSelectedExpression(),
     'tsperf.tracer.sendTrace': () => (event: unknown) => {
       if (!(Array.isArray(event) && event[0] instanceof vscode.Uri))
         return

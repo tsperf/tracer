@@ -23,6 +23,7 @@ export type ConfigKey = typeof configKeys[number]
 
 export const commandIds = [
   'tsperf.tracer.gotoTracePosition',
+  'tsperf.tracer.measureSelection',
   'tsperf.tracer.openInBrowser',
   'tsperf.tracer.runTrace',
   'tsperf.tracer.sendTrace',
