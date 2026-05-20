@@ -26,6 +26,7 @@ This package summarizes the challenge-ready branch for Algora's TSPerf Type Chal
 ## What To Evaluate
 
 - `metrics.json` records trace command, cwd, trace directory, timestamps, wall time, exit code, output summaries, trace JSON discovery, parse status, and parsed `--extendedDiagnostics` counters.
+- `docs/challenge-evidence.md` shows representative `metrics.json` and comparison-report output for quick review.
 - Stock TypeScript `types.json` files are handled without requiring tracer-specific timestamp fields.
 - Extended diagnostics expose high-signal type-system counters including `types`, `instantiations`, memory, parse time, bind time, check time, emit time, and total time.
 - The comparison command turns two trace runs into a compact before/after report suitable for branch, commit, or code-path comparisons.

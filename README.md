@@ -24,7 +24,7 @@ Type count metrics are displayed when a timestamped `types.json` file is availab
 - `Tracer: Compare trace metrics` opens two `metrics.json` files and renders a Markdown before/after report for wall time, exit code, trace file coverage, parse status, compiler diagnostics, and output deltas.
 - `Tracer: Open trace viewer` remains the main path for inspecting trace trees and jumping from expensive spans back to source.
 
-For a short reproducible demo path, see [docs/challenge-demo.md](./docs/challenge-demo.md). For challenge review and submission packaging, see [docs/tsperf-submission.md](./docs/tsperf-submission.md).
+For a short reproducible demo path, see [docs/challenge-demo.md](./docs/challenge-demo.md). For artifact examples, see [docs/challenge-evidence.md](./docs/challenge-evidence.md). For challenge review and submission packaging, see [docs/tsperf-submission.md](./docs/tsperf-submission.md).
 
 ### Use in mono repos
 

@@ -27,6 +27,8 @@ This is a short demo path for showing that Type Complexity Tracer now reports Ty
 6. Run a second trace after changing a type-heavy code path.
 7. Run `Tracer: Compare trace metrics`, select the baseline and comparison `metrics.json` files, and show the generated Markdown report.
 
+For example artifact shapes, see [challenge-evidence.md](./challenge-evidence.md).
+
 ## Submission Angle
 
 The branch demonstrates a complete measurement loop:
