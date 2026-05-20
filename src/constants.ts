@@ -7,6 +7,7 @@ export const configKeys = [
   'restartTsserverOnIteration',
   'allIdentifiers',
   'traceCmd',
+  'saveNameCommand',
   'traceTimeThresholds',
   'traceTypeThresholds',
   'traceTotalTypeThresholds',

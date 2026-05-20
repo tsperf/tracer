@@ -135,6 +135,14 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.saveNameCommand': {
+      type: 'string',
+      scope: 'machine',
+      default: '',
+      description: 'Shell command run in the workspace folder to choose the initial persistent save name. The first non-empty stdout line is used; empty or failed commands fall back to "default". For example: git branch --show-current',
+    },
+  },
+  {
     'tsperf.tracer.typescriptPath': {
       type: 'string',
       default: '',

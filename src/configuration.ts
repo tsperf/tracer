@@ -11,6 +11,7 @@ const currentConfig = {
   allIdentifiers: false,
   // eslint-disable-next-line no-template-curly-in-string
   traceCmd: 'npx tsc --noEmit --generateTrace ${traceDir}',
+  saveNameCommand: '',
   traceTimeThresholds: { info: 1, warning: -1, error: -1 },
   traceTypeThresholds: { info: 1, warning: -1, error: -1 },
   traceTotalTypeThresholds: { info: 1, warning: -1, error: -1 },
@@ -57,6 +58,7 @@ const configValidate = {
   restartTsserverOnIteration: isBoolean,
   allIdentifiers: isBoolean,
   traceCmd: isString,
+  saveNameCommand: isString,
   traceTimeThresholds: isThresholds,
   traceTypeThresholds: isThresholds,
   traceTotalTypeThresholds: isThresholds,
@@ -79,6 +81,7 @@ const configHandlers = {
   restartTsserverOnIteration: noop,
   allIdentifiers: noop,
   traceCmd: noop,
+  saveNameCommand: noop,
   traceTimeThresholds: noop,
   traceTypeThresholds: noop,
   traceTotalTypeThresholds: noop,
