@@ -13,6 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { traceSaveNameForFile } from './traceCommand'
 
 const readdir = promisify(readdirC)
 
@@ -21,6 +22,7 @@ const commandHandlers: Record<
   (context: vscode.ExtensionContext) => (...args: any[]) => void
   > = {
     'tsperf.tracer.runTrace': () => (...args: unknown[]) => runTrace(args),
+    'tsperf.tracer.runTraceActiveFile': () => () => runTraceActiveFile(),
     'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
     'tsperf.tracer.gotoTracePosition': (context: vscode.ExtensionContext) => () => gotoTracePosition(context),
     'tsperf.tracer.sendTrace': () => (event: unknown) => {
@@ -34,6 +36,20 @@ const commandHandlers: Record<
     'tsperf.tracer.openTerminal': () => () => openTerminal(),
     'tsperf.tracer.openTraceDirExternal': () => () => openTraceDirectoryExternal(),
   } as const
+
+async function runTraceActiveFile() {
+  const editor = vscode.window.activeTextEditor
+  if (!editor || editor.document.uri.scheme !== 'file') {
+    vscode.window.showWarningMessage('Open a TypeScript file before running a mini trace')
+    return
+  }
+
+  const workspacePath = state.workspacePath.value || getWorkspacePath()
+  await runTrace([], {
+    cwd: workspacePath,
+    saveName: traceSaveNameForFile(workspacePath, editor.document.uri.fsPath),
+  })
+}
 
 async function sendTrace(dirName: string, fileName: string) {
   const fullFileName = join(dirName, fileName)
@@ -97,7 +113,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   showTree('', relativePath, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1))
 }
 
-async function runTrace(args?: unknown[]) {
+async function runTrace(args?: unknown[], options?: { cwd?: string, saveName?: string }) {
   const workspacePath = state.workspacePath.value
   const { traceCmd } = getCurrentConfig()
 
@@ -114,7 +130,10 @@ async function runTrace(args?: unknown[]) {
     }
   }
 
-  if (dirName) {
+  if (options?.saveName) {
+    saveName.value = options.saveName
+  }
+  else if (dirName) {
     log(`dirName: ${dirName}`)
     saveName.value = relative(workspacePath, dirName)
   }
@@ -128,13 +147,14 @@ async function runTrace(args?: unknown[]) {
       return
     }
 
+    const traceCwd = options?.cwd ?? newDirName ?? workspacePath
     const quotedTraceDir = `'${traceDir}'`
     // eslint-disable-next-line no-template-curly-in-string
-    const fullCmd = `(cd '${newDirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
+    const fullCmd = `(cd '${traceCwd}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
 
     log(fullCmd)
 
-    const newProjectPath = newDirName ?? projectPath.value
+    const newProjectPath = traceCwd || projectPath.value
     if (!newProjectPath) {
       vscode.window.showErrorMessage('could not get project path from workspace folders')
       return
