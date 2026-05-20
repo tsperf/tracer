@@ -7,12 +7,14 @@ import * as vscode from 'vscode'
 import { getStatsFromTree, processTraceFiles, showTree, treeIdNodes } from './traceTree'
 import { getTracePanel, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
+import { getIncrementalTraceReason } from './incrementalTrace'
 import { log } from './logger'
 import type { CommandId } from './constants'
 import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { getParsedCommandLine } from './shared'
 
 const readdir = promisify(readdirC)
 
@@ -121,7 +123,7 @@ async function runTrace(args?: unknown[]) {
 
   const newDirName = dirName
   // TODO: use logic from real time metrics that get the tsconfig path
-  afterWatches(() => {
+  afterWatches(async () => {
     const traceDir = state.tracePath.value
     if (!traceDir) {
       vscode.window.showWarningMessage('No workspace or folder open')
@@ -139,6 +141,8 @@ async function runTrace(args?: unknown[]) {
       vscode.window.showErrorMessage('could not get project path from workspace folders')
       return
     }
+
+    await warnIfIncrementalTrace(traceCmd, newProjectPath)
 
     traceRunning.value = true
 
@@ -172,6 +176,24 @@ async function runTrace(args?: unknown[]) {
       await sendTraceDir(traceDir)
     })
   })
+}
+
+async function warnIfIncrementalTrace(traceCmd: string, projectPath: string) {
+  let compilerOptions = {}
+  try {
+    compilerOptions = (await getParsedCommandLine(projectPath))?.options ?? {}
+  }
+  catch (error) {
+    log(`Could not inspect tsconfig before tracing: ${error instanceof Error ? error.message : `${error}`}`)
+  }
+
+  const reason = getIncrementalTraceReason(traceCmd, compilerOptions)
+  if (!reason)
+    return
+
+  void vscode.window.showWarningMessage(
+    `Tracing while ${reason} is active can reuse incremental state and skew trace results. Consider disabling incremental/composite builds or deleting .tsbuildinfo before tracing.`,
+  )
 }
 
 export async function sendTraceDir(traceDir: string) {
