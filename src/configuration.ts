@@ -93,6 +93,18 @@ const configHandlers = {
 
 let configuration = vscode.workspace.getConfiguration(extPrefix)
 
+export async function updateWorkspaceConfigValue(key: ConfigKey, value: unknown) {
+  if (!configValidate[key](value)) {
+    vscode.window.showErrorMessage(`wrong type received for configuration item ${key}: ${value}`)
+    return false
+  }
+
+  await configuration.update(key, value, vscode.ConfigurationTarget.Workspace)
+  configuration = vscode.workspace.getConfiguration(extPrefix)
+  updateConfig({ force: [key] })
+  return true
+}
+
 const afterConfigHandlers: [keys: ConfigKey[], handler: (config: typeof currentConfig) => void][] = []
 
 export function updateConfig(opts?: { force?: ConfigKey[] }) {

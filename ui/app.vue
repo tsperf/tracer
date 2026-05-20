@@ -73,6 +73,7 @@ onMounted(() => {
           </template>
         </vscode-dropdown>
       </div>
+      <TraceSettings />
     </div>
     <hr class="m-2">
     <div>

@@ -10,6 +10,15 @@ export const projectName = ref('')
 export const saveName = ref('default')
 export const saveNames = ref(['default'] as string[])
 export const projectNames = ref([] as string[])
+export const traceConfig = ref({
+  traceDiagnosticsRelative: true,
+  traceTimeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTypeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTotalTypeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTimeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTypeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+  traceTotalTypeRelativeThresholds: { info: 1, warning: -1, error: -1 },
+})
 
 export const files = ref([] as { fileName: string, dirName: string }[])
 export const traceRunning = ref(false)
@@ -40,6 +49,16 @@ function handleMessage(e: MessageEvent<unknown>) {
       const id = parsed.data.id
       const children = childrenById.get(id) ?? []
       childrenById.set(id, [...children, ...parsed.data.children])
+      break
+    }
+    case 'configValues': {
+      const next = { ...traceConfig.value }
+      for (const key of Object.keys(next) as (keyof typeof next)[]) {
+        const value = parsed.data.values[key]
+        if (value !== undefined)
+          (next as any)[key] = value
+      }
+      traceConfig.value = next
       break
     }
     case 'typesById': {

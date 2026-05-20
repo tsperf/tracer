@@ -1,6 +1,9 @@
 import z from 'zod'
 import type { Tree } from '../../src/traceTree'
+import { configKeys } from '../../src/constants'
 import { traceLine, typeLine } from './traceData'
+
+const configKey = z.enum(configKeys)
 
 export const ping = z.object({
   message: z.literal('ping'),
@@ -88,6 +91,19 @@ export const log = z.object({
 })
 export type Log = z.infer<typeof log>
 
+export const configValues = z.object({
+  message: z.literal('configValues'),
+  values: z.record(z.string(), z.unknown()),
+})
+export type ConfigValues = z.infer<typeof configValues>
+
+export const updateConfig = z.object({
+  message: z.literal('updateConfig'),
+  key: configKey,
+  value: z.unknown(),
+})
+export type UpdateConfig = z.infer<typeof updateConfig>
+
 export const filterTree = z.object({
   message: z.literal('filterTree'),
   startsWith: z.string(),
@@ -161,6 +177,7 @@ export const message = z.union([
   ping,
   pong,
   childrenById,
+  configValues,
   deleteTraceFile,
   fileStats,
   filterTree,
@@ -178,6 +195,7 @@ export const message = z.union([
   traceFileLoaded,
   typesById,
   log,
+  updateConfig,
 ])
 
 export type MessageType = Message['message']
