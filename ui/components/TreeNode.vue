@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
+import { getTraceLineTone, getTraceLineToneStyle } from '../../src/traceTone'
 import { childrenById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
@@ -8,6 +9,8 @@ const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+const traceTone = computed(() => getTraceLineTone(props.tree))
+const traceToneStyle = computed(() => getTraceLineToneStyle(traceTone.value))
 
 function fetchChildren() {
   if (children.value.length === 0)
@@ -42,7 +45,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
         <!-- <div :class="insetClass" :style="{ minWidth: `${props.depth / 2}rem` }" /> -->
       </template>
       <template #label>
-        <div class="flex flex-row gap-5 w-full pl-1">
+        <div class="trace-line flex flex-row gap-5 w-full pl-1" :class="`trace-line--${traceTone}`" :style="traceToneStyle">
           <div class="flex flex-row justify-start gap-2 grow text-left">
             <span class="min-w-48">
               {{ tree.line.name }} ({{ tree.childCnt }}):
@@ -81,3 +84,21 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
     </UExpand>
   </div>
 </template>
+
+<style scoped>
+.trace-line {
+  border-left: 2px solid var(--trace-line-accent);
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--trace-line-accent) 8%, transparent);
+}
+
+.trace-line--default {
+  background-color: transparent;
+}
+
+@supports not (background-color: color-mix(in srgb, red 8%, transparent)) {
+  .trace-line {
+    background-color: transparent;
+  }
+}
+</style>
