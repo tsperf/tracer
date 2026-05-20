@@ -7,7 +7,7 @@ const sendMesage = useNuxtApp().$sendMessage
 
 const sortOptions = ['Timestamp', 'Duration', 'Types', 'Total Types'] as const
 
-const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
+const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '', excludePathIncludes: '' }))
 
 function setStartsWith(event: any) {
   filters.value.startsWith = event.target.value
@@ -21,13 +21,17 @@ function setPosition(event: any) {
   filters.value.position = +event.target.value
 }
 
+function setExcludePathIncludes(event: any) {
+  filters.value.excludePathIncludes = event.target.value
+}
+
 function handleMessage(e: MessageEvent<unknown>) {
   const message = Messages.message.safeParse(e.data)
   if (!message.success)
     return
 
   if (message.data.message === 'gotoTracePosition')
-    filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName }
+    filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName, excludePathIncludes: filters.value.excludePathIncludes }
 
   else if (message.data.message === 'filterTree')
     filters.value = message.data
@@ -59,6 +63,7 @@ onMounted(() => {
         <VTextField v-model="filters.startsWith" label="Trace Name" @change="setStartsWith" />
         <VTextField v-model="filters.sourceFileName" label="Source File" @change="setSourceFileName" />
         <VTextField v-model="filters.position" label="Position" type="number" @change="setPosition" />
+        <VTextField v-model="filters.excludePathIncludes" label="Exclude Paths" @change="setExcludePathIncludes" />
         <vscode-button class="w-full" @click="doFilters">
           Filter Trace <UIcon name="heroicons:magnifying-glass-circle" :dynamic="true" size="20" />
         </vscode-button>
