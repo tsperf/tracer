@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sortBy } from './src/appState'
+import { sortBy, traceInsights } from './src/appState'
 
 const Messages = useNuxtApp().$Messages
 
@@ -41,6 +41,20 @@ function doFilters() {
   sendMesage('filterTree', filters.value)
 }
 
+function analyzeTrace() {
+  sendMesage('traceInsights', {})
+}
+
+function selectInsight(insight: typeof traceInsights.value[number]) {
+  sendMesage('filterTree', {
+    startsWith: insight.name,
+    sourceFileName: insight.path ?? '',
+    position: insight.pos ?? '',
+  })
+  if (insight.path && insight.pos !== undefined)
+    sendMesage('gotoPosition', { fileName: insight.path, pos: insight.pos })
+}
+
 onMounted(() => {
   useNuxtApp().$initAppState()
   useNuxtApp().$initClient()
@@ -72,8 +86,30 @@ onMounted(() => {
             </vscode-option>
           </template>
         </vscode-dropdown>
+        <vscode-button class="mt-3 w-full" @click="analyzeTrace">
+          Analyze Trace
+        </vscode-button>
       </div>
     </div>
+    <section v-if="traceInsights.length" class="mx-2 mt-2 border border-[var(--vscode-panel-border)]">
+      <div class="grid grid-cols-[minmax(12rem,1.2fr)_minmax(10rem,1fr)_minmax(8rem,0.7fr)_minmax(14rem,1.6fr)] gap-2 border-b border-[var(--vscode-panel-border)] px-2 py-1 text-xs uppercase opacity-70">
+        <span>Trace node</span>
+        <span>Source</span>
+        <span>Why</span>
+        <span>Suggestion</span>
+      </div>
+      <button
+        v-for="insight of traceInsights"
+        :key="insight.id"
+        class="grid w-full grid-cols-[minmax(12rem,1.2fr)_minmax(10rem,1fr)_minmax(8rem,0.7fr)_minmax(14rem,1.6fr)] gap-2 border-b border-[var(--vscode-panel-border)] px-2 py-1 text-left hover:bg-[var(--vscode-list-hoverBackground)]"
+        @click="selectInsight(insight)"
+      >
+        <span class="truncate">{{ insight.name }}</span>
+        <span class="truncate">{{ insight.path ? `${insight.path}:${insight.pos ?? ''}` : '' }}</span>
+        <span class="truncate">{{ insight.reason }}</span>
+        <span class="truncate">{{ insight.suggestion }}</span>
+      </button>
+    </section>
     <hr class="m-2">
     <div>
       <tree-root />
