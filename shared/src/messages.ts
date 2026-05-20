@@ -105,6 +105,7 @@ const zodTree: z.ZodType<Tree> = z.lazy(() =>
     childTypeCnt: z.number(),
     childCnt: z.number(),
     typeCnt: z.number(),
+    resultType: typeLine.optional(),
   }),
 )
 

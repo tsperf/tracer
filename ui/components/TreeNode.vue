@@ -56,6 +56,15 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
               {{ tree.line.args?.path ?? '' }}
             </span>
           </div>
+          <div v-if="tree.resultType" class="min-w-64 max-w-96 truncate text-[var(--vscode-descriptionForeground)]" :title="tree.resultType.display ?? tree.resultType.intrinsicName ?? `type ${tree.resultType.id}`">
+            {{ `=> #${tree.resultType.id}` }}
+            <span v-if="tree.resultType.display">
+              {{ tree.resultType.display }}
+            </span>
+            <span v-else-if="tree.resultType.intrinsicName">
+              {{ tree.resultType.intrinsicName }}
+            </span>
+          </div>
           <div class="flex flex-row min-w-40">
             <button v-if="'args' in tree.line && tree.line.args?.pos !== undefined" class="mr-2 pb-1 mb-1 bg-[var(--vscode-button-background, green)] rounded-sm focus:ring-[var(--vscode-focusBorder, blue)] focus:outline-none focus:ring-1 " @click="gotoPosition">
               <UIcon primary name="i-heroicons-arrow-left-on-rectangle" class="relative top-1  hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
