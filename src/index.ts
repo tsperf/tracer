@@ -15,6 +15,7 @@ import { initDiagnostics } from './traceDiagnostics'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
 import { initAppState } from './appState'
+import { formatRealtimeDiagnosticMessage } from './diagnosticText'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -235,7 +236,6 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
 
     if (proportionalTime > 1) {
       const comparisonPercentage = Math.round(proportionalTime * 100) - 100
-      const sign = comparisonPercentage > 1 ? '+' : ''
       const logLevel = proportionalTime > 2
         ? vscode.DiagnosticSeverity.Error
         : proportionalTime > 1.2
@@ -246,10 +246,10 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
         new vscode.Position(benchmark.line, benchmark.start),
         new vscode.Position(benchmark.line, benchmark.end),
       )
-      const diagnostic = new vscode.Diagnostic(range, `${Math.round(duration)}ms (${sign}${comparisonPercentage}%)`, logLevel)
+      const diagnostic = new vscode.Diagnostic(range, formatRealtimeDiagnosticMessage(duration, comparisonPercentage), logLevel)
 
-      diagnostic.source = 'tsperf'
-      diagnostic.code = 102
+      diagnostic.source = 'tsperf realtime'
+      diagnostic.code = 'realtime'
 
       map[benchmark.fileName].push(diagnostic)
     }

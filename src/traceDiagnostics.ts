@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
 import { getStatsFromTree } from './traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
+import { formatTraceDiagnosticMessage, formatTraceRelativeDiagnosticMessage } from './diagnosticText'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -99,13 +100,14 @@ function fileStatToRelativeDiagnostic({ pos, dur, types, totalTypes }: FileStat,
   if (severity > vscode.DiagnosticSeverity.Information)
     return
 
-  const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes} ${relativeString(relative.types)} / ${relativeString(relative.totalTypes)}` : ''
-
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
+  const msg = formatTraceRelativeDiagnosticMessage(dur, relativeString(relative.dur), types, totalTypes, relativeString(relative.types), relativeString(relative.totalTypes))
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
-  return new vscode.Diagnostic(range, msg, severity)
+  const diagnostic = new vscode.Diagnostic(range, msg, severity)
+  diagnostic.source = 'tsperf trace'
+  diagnostic.code = 'trace'
+  return diagnostic
 }
 
 function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, document: vscode.TextDocument) {
@@ -116,13 +118,14 @@ function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, documen
   if (severity > vscode.DiagnosticSeverity.Information)
     return
 
-  const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes}` : ''
-
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${typeStr}`
+  const msg = formatTraceDiagnosticMessage(dur, types, totalTypes)
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
-  return new vscode.Diagnostic(range, msg, severity)
+  const diagnostic = new vscode.Diagnostic(range, msg, severity)
+  diagnostic.source = 'tsperf trace'
+  diagnostic.code = 'trace'
+  return diagnostic
 }
 
 // yes, I should be using the vscode.DiagnosticSeverity but that's much more painful and they are unlikely to change
