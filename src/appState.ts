@@ -8,6 +8,8 @@ import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
+import { afterConfigUpdate, getCurrentConfig } from './configuration'
+import { defaultSaveName, getGeneratedSaveName } from './saveNameCommand'
 
 export const afterWatches = nextTick
 
@@ -43,6 +45,7 @@ type StateType<K extends keyof State> = State[K] extends Ref<any> ? UnwrapRef<St
 
 let context: vscode.ExtensionContext
 let storagePath: string
+let saveNameCommandRunId = 0
 export async function initAppState(extensionContext: vscode.ExtensionContext) {
   context = extensionContext
   storagePath = context.globalStorageUri.fsPath
@@ -86,7 +89,7 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
     }
 
     getSaves(projectPath.value)
-    saveName.value = 'default'
+    void openInitialSaveName()
   }, name => postMessage({ message: 'projectOpen', name }))
 
   watchT('savePath', (path) => {
@@ -138,7 +141,9 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
 
   workspacePath.value = getWorkspacePath()
   projectName.value = getProjectName()
-  saveName.value = 'default'
+  afterConfigUpdate(['saveNameCommand'], () => {
+    void openInitialSaveName()
+  })
 }
 
 const triggers: Partial<Record<keyof State, { handler: ((arg: any) => void | Promise<void>), remoteHandler: (arg: any) => void }>> = {}
@@ -187,6 +192,13 @@ export function triggerAll(local: boolean, remote: boolean) {
 }
 
 export async function noop() {}
+
+async function openInitialSaveName() {
+  const runId = ++saveNameCommandRunId
+  const configuredName = await getGeneratedSaveName(getCurrentConfig().saveNameCommand, workspacePath.value)
+  if (runId === saveNameCommandRunId)
+    saveName.value = configuredName ?? defaultSaveName
+}
 
 function getProjectPath() {
   projectPath.value = join(storagePath, projectName.value)
