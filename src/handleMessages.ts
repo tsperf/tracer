@@ -6,10 +6,12 @@ import { log } from './logger'
 import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
 import { state, triggerAll } from './appState'
+import { getCurrentConfig, updateWorkspaceConfigValue } from './configuration'
 
 export function handleMessage(panel: vscode.WebviewPanel, message: unknown): void {
   if (message === 'init client') {
     triggerAll(false, true)
+    postMessage({ message: 'configValues', values: getCurrentConfig() })
     return
   }
 
@@ -33,6 +35,12 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       break
     case 'log':
       log(...data.value)
+      break
+    case 'updateConfig':
+      void updateWorkspaceConfigValue(data.key, data.value).then((updated) => {
+        if (updated)
+          postMessage({ message: 'configValues', values: getCurrentConfig() })
+      })
       break
     case 'filterTree': {
       showTree(data.startsWith, data.sourceFileName, data.position, false)
