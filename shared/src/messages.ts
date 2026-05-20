@@ -93,6 +93,7 @@ export const filterTree = z.object({
   startsWith: z.string(),
   sourceFileName: z.string(),
   position: z.literal('').or(z.number()),
+  excludePathIncludes: z.string().default(''),
 })
 export type FilterTree = z.infer<typeof filterTree>
 

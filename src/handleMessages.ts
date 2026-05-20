@@ -35,7 +35,7 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       log(...data.value)
       break
     case 'filterTree': {
-      showTree(data.startsWith, data.sourceFileName, data.position, false)
+      showTree(data.startsWith, data.sourceFileName, data.position, false, data.excludePathIncludes)
       break
     }
     case 'saveOpen': {
