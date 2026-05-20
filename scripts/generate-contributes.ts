@@ -32,6 +32,12 @@ const commandRecord: Record<CommandId, Command> = {
   'tsperf.tracer.gotoTracePosition': {
     title: 'Goto position in trace',
   },
+  'tsperf.tracer.measureSelection': {
+    title: 'Measure selected expression',
+    when: {
+      pallete: '!notebookEditorFocused && (editorLangId == \'typescript\' || editorLangId == \'typescriptreact\')',
+    },
+  },
   'tsperf.tracer.openInBrowser': {
     title: 'Open trace viewer',
     icon: {
