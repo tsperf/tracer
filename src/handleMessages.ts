@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
-import { getChildrenById, getTypesById, showTree } from './traceTree'
+import { getTypesById, showTree, streamChildrenById } from './traceTree'
 import { log } from './logger'
 import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
@@ -43,7 +43,7 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       break
     }
     case 'childrenById': {
-      postMessage({ ...data, children: getChildrenById(data.id) }) // TODO: stream these
+      streamChildrenById(data.id)
       break
     }
     case 'typesById': {

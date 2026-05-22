@@ -100,14 +100,40 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
 
 export const treeIdNodes = new Map<number, Tree>()
 let showTreeInterval: undefined | ReturnType<typeof setInterval>
+const childTreeIntervals = new Map<number, ReturnType<typeof setInterval>>()
+
+const treeChunkSize = 10
+const treeChunkIntervalMs = 30
+const childTreeChunkSize = 10
+const childTreeChunkIntervalMs = 30
+
+function toSkinnyNode(node: Tree): Tree {
+  return { ...node, children: [], types: [] }
+}
+
+function stopChildTreeInterval(id: number) {
+  const interval = childTreeIntervals.get(id)
+  if (!interval)
+    return
+
+  clearInterval(interval)
+  childTreeIntervals.delete(id)
+}
+
+function stopChildTreeIntervals() {
+  for (const id of childTreeIntervals.keys())
+    stopChildTreeInterval(id)
+}
+
 export function showTree(startsWith: string, sourceFileName: string, position: number | '', updateUi = true, tree = traceTree) {
   if (showTreeInterval) {
     clearInterval(showTreeInterval)
     showTreeInterval = undefined
   }
+  stopChildTreeIntervals()
 
   const nodes = filterTree(startsWith, sourceFileName, position, tree)
-  const skinnyNodes = nodes.map(x => ({ ...x, children: [], types: [] }))
+  const skinnyNodes = nodes.map(toSkinnyNode)
   if (updateUi)
     postMessage({ message: 'filterTree', startsWith, sourceFileName, position })
 
@@ -120,14 +146,14 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
     if (!showTreeInterval)
       return
 
-    postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + 10), step: 'add' })
-    i += 10
+    postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + treeChunkSize), step: 'add' })
+    i += treeChunkSize
     if (i >= skinnyNodes.length) {
       clearInterval(showTreeInterval)
       showTreeInterval = undefined
       postMessage({ message: 'showTree', nodes: [], step: 'done' })
     }
-  }, 30)
+  }, treeChunkIntervalMs)
 
   nodes.forEach(node => treeIdNodes.set(node.id, node))
   return nodes
@@ -138,9 +164,33 @@ export function getChildrenById(id: number) {
   const ret: typeof nodes = []
   nodes.forEach((node) => {
     treeIdNodes.set(node.id, node)
-    ret.push({ ...node, children: [], types: [] })
+    ret.push(toSkinnyNode(node))
   })
   return ret
+}
+
+export function streamChildrenById(id: number) {
+  if (childTreeIntervals.has(id))
+    return
+
+  const children = getChildrenById(id)
+  if (children.length === 0) {
+    postMessage({ message: 'childrenById', id, children: [] })
+    return
+  }
+
+  let i = 0
+  const sendNext = () => {
+    postMessage({ message: 'childrenById', id, children: children.slice(i, i + childTreeChunkSize) })
+    i += childTreeChunkSize
+
+    if (i >= children.length)
+      stopChildTreeInterval(id)
+  }
+
+  const interval = setInterval(sendNext, childTreeChunkIntervalMs)
+  childTreeIntervals.set(id, interval)
+  sendNext()
 }
 
 export function getTypesById(id: number) {

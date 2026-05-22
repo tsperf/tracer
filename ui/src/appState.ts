@@ -54,6 +54,8 @@ function handleMessage(e: MessageEvent<unknown>) {
       switch (parsed.data.step) {
         case 'start':
           nodes.value = []
+          childrenById.clear()
+          typesById.clear()
           break
         case 'add':
           nodes.value = doSort([...nodes.value, ...parsed.data.nodes])
