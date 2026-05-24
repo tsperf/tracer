@@ -6,23 +6,15 @@ import * as vscode from 'vscode'
 import type { FormatDiagnosticsHost } from 'typescript'
 
 import { log } from './logger'
+import { findClosestTsconfig } from './tsconfigSelection'
 
-export async function getTsconfigFile(path: string) {
-  let files = await vscode.workspace.findFiles('**/tsconfig.json', '**​/node_modules/**')
-  files = files.sort((a, b) => b.fsPath.length - a.fsPath.length)
-    .filter(p => !p.fsPath.includes('node_modules'))
+export async function getTsconfigFile(filePath: string) {
+  const files = await vscode.workspace.findFiles('**/tsconfig.json', '**​/node_modules/**')
+  const tsconfigPath = findClosestTsconfig(filePath, files.map(file => file.fsPath))
 
-  log({ path, files })
+  log({ path: filePath, files, tsconfigPath })
 
-  const pathSegments = path.split('/')
-  for (let i = pathSegments.length; i > 0; i--) {
-    const path = pathSegments.slice(0, i).join('/')
-    const tsConfigFile = files.find(file => file.fsPath.startsWith(path))
-    if (tsConfigFile)
-      return tsConfigFile
-  }
-
-  return files[0]
+  return files.find(file => file.fsPath === tsconfigPath) ?? files[0]
 }
 
 const formatDiagnosticsHost: FormatDiagnosticsHost = {
