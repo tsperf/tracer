@@ -15,6 +15,10 @@ import { initDiagnostics } from './traceDiagnostics'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
 import { initAppState } from './appState'
+import { initInlineDecorations, updateInlineDecorations, clearInlineDecorations, setInlineDecorationsEnabled } from './inlineDecorations'
+import { initComplexityOverview, updateComplexityOverview, type ComplexityEntry } from './complexityOverview'
+import { updateMetricsBar } from './statusBar'
+import { registerSuggestionCodeActions } from './suggestions'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -60,6 +64,13 @@ export async function activate(context: vscode.ExtensionContext) {
   registerCommands(context)
   initStatusBar(context)
   initDiagnostics(context)
+  initInlineDecorations(context)
+  initComplexityOverview(context)
+  registerSuggestionCodeActions(context)
+
+  afterConfigUpdate(['enableRealtimeMetrics'], (config) => {
+    setInlineDecorationsEnabled(config.enableRealtimeMetrics)
+  })
 }
 
 export function deactivate() {}
@@ -225,6 +236,7 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
   const baseline = allMeasures.reduce((a, b) => a + b, 0) / allMeasures.length
 
   const map: Record<string, vscode.Diagnostic[]> = {}
+  const overviewEntries: ComplexityEntry[] = []
   for (const benchmark of benchmarks) {
     map[benchmark.fileName] ||= []
     log(benchmark)
@@ -252,12 +264,41 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
       diagnostic.code = 102
 
       map[benchmark.fileName].push(diagnostic)
+
+      overviewEntries.push({
+        fileName: benchmark.fileName,
+        line: benchmark.line,
+        identifier: benchmark.identifierText,
+        durationMs: duration,
+        proportionalTime,
+      })
     }
   }
 
   for (const file in map) {
     const uri = vscode.Uri.file(file)
     collection.set(uri, map[file])
+  }
+
+  for (const editor of vscode.window.visibleTextEditors) {
+    const editorEntries = overviewEntries.filter(e => e.fileName === editor.document.uri.fsPath)
+    if (editorEntries.length > 0) {
+      updateInlineDecorations(editor, editorEntries)
+    }
+  }
+
+  updateComplexityOverview(overviewEntries)
+
+  if (overviewEntries.length > 0) {
+    const durations = overviewEntries.map(e => e.durationMs)
+    updateMetricsBar({
+      slowTypes: overviewEntries.length,
+      avgDuration: durations.reduce((a, b) => a + b, 0) / durations.length,
+      worstDuration: Math.max(...durations),
+    })
+  }
+  else {
+    updateMetricsBar({ slowTypes: 0, avgDuration: 0, worstDuration: 0 })
   }
 
   log('updated benchmarks')

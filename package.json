@@ -2,7 +2,7 @@
   "publisher": "tsperf",
   "name": "tracer",
   "displayName": "Type Complexity Tracer",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "private": true,
   "packageManager": "pnpm@11.1.2",
   "description": "A VSCode extension to measure type complexity within a project.",
@@ -126,7 +126,7 @@
           },
           "description": "todo",
           "order": 9,
-          "markdownDescription": "# Trace Time Thresholds\n\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
+          "markdownDescription": "# Trace Time Thresholds\r\n\r\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\r\n\r\n* -1 will disable diagnostics of that severity\r\n"
         },
         "tsperf.tracer.traceTypeThresholds": {
           "type": "object",
@@ -154,7 +154,7 @@
           },
           "description": "todo",
           "order": 10,
-          "markdownDescription": "# Trace Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created locally in this check call exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
+          "markdownDescription": "# Trace Type Thresholds\r\n\r\nTrigger diagnostics from trace files when the number of types created locally in this check call exceeds these thresholds.\r\n\r\n* -1 will disable diagnostics of that severity\r\n"
         },
         "tsperf.tracer.traceTotalTypeThresholds": {
           "type": "object",
@@ -182,7 +182,7 @@
           },
           "description": "todo",
           "order": 11,
-          "markdownDescription": "# Trace Total Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created in this check call stack exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
+          "markdownDescription": "# Trace Total Type Thresholds\r\n\r\nTrigger diagnostics from trace files when the number of types created in this check call stack exceeds these thresholds.\r\n\r\n* -1 will disable diagnostics of that severity\r\n"
         },
         "tsperf.tracer.traceDiagnosticsRelative": {
           "type": "boolean",

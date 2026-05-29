@@ -13,6 +13,8 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { setInlineDecorationsEnabled } from './inlineDecorations'
+import { getSuggestions } from './suggestions'
 
 const readdir = promisify(readdirC)
 
@@ -33,6 +35,22 @@ const commandHandlers: Record<
     },
     'tsperf.tracer.openTerminal': () => () => openTerminal(),
     'tsperf.tracer.openTraceDirExternal': () => () => openTraceDirectoryExternal(),
+    'tsperf.tracer.toggleInlineDecorations': () => () => {
+      const config = vscode.workspace.getConfiguration('tsperf.tracer')
+      const current = config.get<boolean>('enableRealtimeMetrics', true)
+      config.update('enableRealtimeMetrics', !current, vscode.ConfigurationTarget.Global)
+      setInlineDecorationsEnabled(!current)
+      vscode.window.showInformationMessage(`TsPerf inline decorations ${!current ? 'enabled' : 'disabled'}`)
+    },
+    'tsperf.tracer.showComplexityTips': () => () => {
+      const suggestions = getSuggestions(100, 2.5, 'example', 200, 800)
+      if (suggestions.length === 0) {
+        vscode.window.showInformationMessage('No optimization suggestions for this type.')
+        return
+      }
+      const items = suggestions.map(s => ({ label: s.message, detail: s.detail, type: s.type }))
+      vscode.window.showQuickPick(items, { placeHolder: 'Type complexity optimization tips', title: 'TsPerf Suggestions' })
+    },
   } as const
 
 async function sendTrace(dirName: string, fileName: string) {
@@ -128,9 +146,15 @@ async function runTrace(args?: unknown[]) {
       return
     }
 
-    const quotedTraceDir = `'${traceDir}'`
+    const isWindows = process.platform === 'win32'
+    const quote = isWindows ? '"' : "'"
+    const quotedTraceDir = `${quote}${traceDir}${quote}`
     // eslint-disable-next-line no-template-curly-in-string
-    const fullCmd = `(cd '${newDirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
+    const traceCmdResolved = traceCmd.replace('${traceDir}', isWindows ? `"${traceDir}"` : `'${traceDir}'`)
+    const cdDir = newDirName ?? workspacePath
+    const fullCmd = isWindows
+      ? `cd /d "${cdDir}" && ${traceCmdResolved}`
+      : `(cd '${cdDir}'; ${traceCmdResolved})`
 
     log(fullCmd)
 
