@@ -20,6 +20,7 @@ const currentConfig = {
   traceTotalTypeRelativeThresholds: { info: 1, warning: -1, error: -1 },
   enableTraceMetrics: true,
   enableRealtimeMetrics: true,
+  enableInlineDecorations: true,
   fileBrowserExecutable: '',
 } satisfies Record<ConfigKey, any>
 
@@ -66,6 +67,7 @@ const configValidate = {
   traceTotalTypeRelativeThresholds: isThresholds,
   enableTraceMetrics: isBoolean,
   enableRealtimeMetrics: isBoolean,
+  enableInlineDecorations: isBoolean,
   fileBrowserExecutable: isString,
 } satisfies Record<ConfigKey, any>
 
@@ -88,6 +90,7 @@ const configHandlers = {
   traceTotalTypeRelativeThresholds: noop,
   enableTraceMetrics: noop,
   enableRealtimeMetrics: noop,
+  enableInlineDecorations: noop,
   fileBrowserExecutable: noop,
 } satisfies Record<ConfigKey, any>
 

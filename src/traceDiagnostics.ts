@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
 import { getStatsFromTree } from './traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
+import { clearDecorations, updateDecorations } from './decorations'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -23,8 +24,9 @@ vscode.window.onDidChangeActiveTextEditor((event) => {
     addTraceDiagnostics(fileName, getStatsFromTree(fileName))
 })
 
-export function clearTaceDiagnostics() {
+export function clearTraceDiagnostics() {
   fileStatus.clear()
+  clearDecorations()
   if (diagnosticCollection)
     diagnosticCollection.clear()
 }
@@ -79,6 +81,11 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
     lastPos = stat.pos
   }
   diagnosticCollection.set(uri, diagnostics)
+
+  // Update inline decorations for visible editors
+  const editor = vscode.window.visibleTextEditors.find(e => e.document.fileName === fileName)
+  if (editor)
+    updateDecorations(editor, stats)
 }
 
 function relativeString(value: number) {
