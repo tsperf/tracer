@@ -1,6 +1,6 @@
 import z from 'zod'
 import type { Tree } from '../../src/traceTree'
-import { traceLine, typeLine } from './traceData'
+import { traceLine, traceSeverity, typeLine } from './traceData'
 
 export const ping = z.object({
   message: z.literal('ping'),
@@ -105,6 +105,9 @@ const zodTree: z.ZodType<Tree> = z.lazy(() =>
     childTypeCnt: z.number(),
     childCnt: z.number(),
     typeCnt: z.number(),
+    timeSeverity: traceSeverity.optional(),
+    typeSeverity: traceSeverity.optional(),
+    totalTypeSeverity: traceSeverity.optional(),
   }),
 )
 

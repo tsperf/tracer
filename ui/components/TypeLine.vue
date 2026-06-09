@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import type { TypeLine } from '../../shared/src/traceData'
+import type { TraceSeverity, TypeLine } from '../../shared/src/traceData'
 
 const props = defineProps<{ line: TypeLine }>()
+function severityClass(severity: TraceSeverity | undefined) {
+  return {
+    error: 'text-[var(--vscode-errorForeground)]',
+    warning: 'text-[var(--vscode-editorWarning-foreground)]',
+    info: 'text-[var(--vscode-editorInfo-foreground)]',
+  }[severity ?? '']
+}
 </script>
 
 <template>
@@ -10,7 +17,7 @@ const props = defineProps<{ line: TypeLine }>()
       <div class="col-1">
         ts: {{ Math.round(line.ts ?? 0) }}
       </div>
-      <div class="col-1">
+      <div class="col-1" :class="severityClass(line.timeSeverity)">
         dur: {{ Math.round(line.dur ?? 0) }}
       </div>
       <div class="col-1">

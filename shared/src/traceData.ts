@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+export type TraceSeverity = z.infer<typeof traceSeverity>
+export const traceSeverity = z.enum(['error', 'warning', 'info'])
+
 export type TypeLine = z.infer<typeof typeLine>
 export const typeLine = z.object({
   id: z.number(),
@@ -9,6 +12,7 @@ export const typeLine = z.object({
   ts: z.number(),
   dur: z.number().optional(),
   display: z.string().optional(),
+  timeSeverity: traceSeverity.optional(),
 })
 
 export type TraceLine = z.infer<typeof traceLine>

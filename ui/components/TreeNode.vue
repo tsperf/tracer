@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TraceSeverity } from '../../shared/src/traceData'
 import type { Tree } from '../../src/traceTree'
 import { childrenById, typesById } from '~/src/appState'
 
@@ -8,6 +9,13 @@ const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+function severityClass(severity: TraceSeverity | undefined) {
+  return {
+    error: 'text-[var(--vscode-errorForeground)]',
+    warning: 'text-[var(--vscode-editorWarning-foreground)]',
+    info: 'text-[var(--vscode-editorInfo-foreground)]',
+  }[severity ?? '']
+}
 
 function fetchChildren() {
   if (children.value.length === 0)
@@ -46,8 +54,8 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
           <div class="flex flex-row justify-start gap-2 grow text-left">
             <span class="min-w-48">
               {{ tree.line.name }} ({{ tree.childCnt }}):
-            </span><span>
-              {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
+            </span><span :class="severityClass(tree.timeSeverity)">
+              {{ Math.round((props.tree.line.dur ?? 0) / 1000) }}ms
             </span>
             <div class="grow opacity-20 hover:opacity-100 h-full">
               <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />
@@ -67,7 +75,14 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
           <div class="flex flex-row justify-self-end justify-evenly">
             <UExpand v-if="props.tree.typeCnt > 0" class="min-w-40" @expand="fetchTypes">
               <template #label>
-                <span class="pl-1">{{ `Types: ${props.tree.typeCnt}` }} {{ `${props.tree.childTypeCnt || props.tree.typeCnt ? `/ ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
+                <span class="pl-1">
+                  Types:
+                  <span :class="severityClass(props.tree.typeSeverity)">{{ props.tree.typeCnt }}</span>
+                  <template v-if="props.tree.childTypeCnt || props.tree.typeCnt">
+                    /
+                    <span :class="severityClass(props.tree.totalTypeSeverity)">{{ props.tree.childTypeCnt + props.tree.typeCnt }}</span>
+                  </template>
+                </span>
               </template>
               <TypeTable class="relative -left-auto right-auto" :types="types" />
             </UExpand>

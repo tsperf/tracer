@@ -1,11 +1,23 @@
 import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
-import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
+import type { TraceData, TraceLine, TraceSeverity, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import { getCurrentConfig } from './configuration'
 
-export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
+export interface Tree {
+  id: number
+  line: TraceLine
+  children: Tree[]
+  types: TypeLine[]
+  childCnt: number
+  childTypeCnt: number
+  typeCnt: number
+  timeSeverity?: TraceSeverity
+  typeSeverity?: TraceSeverity
+  totalTypeSeverity?: TraceSeverity
+}
 function getRoot(): Tree {
   return {
     id: 0,
@@ -29,6 +41,7 @@ function getRoot(): Tree {
 let treeIndexes: Tree[] = []
 export function toTree(traceData: TraceData, workspacePath: string): Tree {
   const tree: Tree = { ...getRoot() }
+  const config = getCurrentConfig()
   let endTs = Number.MAX_SAFE_INTEGER
   let curr = tree
   let maxDur = 0
@@ -58,6 +71,7 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
     }
 
     if ('id' in line) {
+      line.timeSeverity = getThresholdSeverity((line.dur ?? 0) / 1000, config.traceTimeThresholds)
       curr.typeCnt = curr.types.push(line)
     }
     else if (line.dur) {
@@ -71,7 +85,25 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
   }
 
   tree.line.dur = maxDur
+  annotateTreeSeverity(tree, config)
   return tree
+}
+
+function getThresholdSeverity(value: number, thresholds: { info: number, warning: number, error: number }): TraceSeverity | undefined {
+  if (thresholds.error >= 0 && value >= thresholds.error)
+    return 'error'
+  if (thresholds.warning >= 0 && value >= thresholds.warning)
+    return 'warning'
+  if (thresholds.info >= 0 && value >= thresholds.info)
+    return 'info'
+  return undefined
+}
+
+function annotateTreeSeverity(tree: Tree, config: ReturnType<typeof getCurrentConfig>) {
+  tree.timeSeverity = getThresholdSeverity((tree.line.dur ?? 0) / 1000, config.traceTimeThresholds)
+  tree.typeSeverity = getThresholdSeverity(tree.typeCnt, config.traceTypeThresholds)
+  tree.totalTypeSeverity = getThresholdSeverity(tree.typeCnt + tree.childTypeCnt, config.traceTotalTypeThresholds)
+  tree.children.forEach(child => annotateTreeSeverity(child, config))
 }
 
 let traceTree: Tree | undefined
