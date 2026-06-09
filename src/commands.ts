@@ -13,6 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { getIncrementalBuildWarning } from './incrementalBuildWarning'
 
 const readdir = promisify(readdirC)
 
@@ -170,8 +171,17 @@ async function runTrace(args?: unknown[]) {
       }
 
       await sendTraceDir(traceDir)
+      const warning = getIncrementalBuildWarning(getTypeScript(), newProjectPath, workspacePath)
+      if (warning)
+        vscode.window.showWarningMessage(warning)
     })
   })
+}
+
+function getTypeScript() {
+  const tsPath = join(dirname(vscode.extensions.getExtension('vscode.typescript-language-features')!.extensionPath), 'node_modules/typescript')
+  // eslint-disable-next-line ts/no-require-imports, ts/no-var-requires
+  return require(tsPath) as typeof import('typescript')
 }
 
 export async function sendTraceDir(traceDir: string) {
