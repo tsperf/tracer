@@ -2,6 +2,8 @@ import z from 'zod'
 import type { Tree } from '../../src/traceTree'
 import { traceLine, typeLine } from './traceData'
 
+const treeSortBy = z.enum(['Timestamp', 'Duration', 'Types', 'Total Types'])
+
 export const ping = z.object({
   message: z.literal('ping'),
   text: z.string().optional(),
@@ -145,7 +147,12 @@ export type SaveNames = z.infer<typeof saveNames>
 export const childrenById = z.object({
   message: z.literal('childrenById'),
   id: z.number(),
+  sortBy: treeSortBy.default('Timestamp'),
+  offset: z.number().default(0),
+  limit: z.number().default(200),
   children: z.array(zodTree).optional(),
+  total: z.number().optional(),
+  nextOffset: z.number().optional(),
 })
 export type ChildrenById = z.infer<typeof childrenById>
 

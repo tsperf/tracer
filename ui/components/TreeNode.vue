@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
-import { childrenById, typesById } from '~/src/appState'
+import { childPageInfoById, childrenById, sortBy, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
 const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
+const childPageInfo = computed(() => childPageInfoById.get(props.tree.id))
+const hiddenChildren = computed(() => Math.max((childPageInfo.value?.total ?? props.tree.childCnt) - children.value.length, 0))
 const types = computed(() => typesById.get(props.tree.id) ?? [])
 
-function fetchChildren() {
+function fetchChildren(offset = children.value.length) {
+  sendMessage('childrenById', { id: props.tree.id, sortBy: sortBy.value, offset })
+}
+
+function fetchFirstChildren() {
   if (children.value.length === 0)
-    sendMessage('childrenById', { id: props.tree.id })
+    fetchChildren(0)
 }
 
 function fetchTypes() {
@@ -34,7 +40,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
 
 <template>
   <div class="m-0 p-0 flex flex-col gap-0 justify-start w-screen ">
-    <UExpand class="w-full min-h-1.5" :expandable="tree.childCnt > 0" @expand="fetchChildren">
+    <UExpand class="w-full min-h-1.5" :expandable="tree.childCnt > 0" @expand="fetchFirstChildren">
       <template #inset>
         <template v-for="n in depth" :key="n">
           <div :class="insetClass" />
@@ -78,6 +84,13 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
       <template v-for="(node, idx) of children" :key="idx">
         <TreeNode :depth="depth + 1" :tree="node" />
       </template>
+      <button
+        v-if="hiddenChildren > 0"
+        class="ml-8 mt-1 w-fit px-2 py-1 text-xs bg-[var(--vscode-button-secondaryBackground,var(--vscode-button-background,green))] text-[var(--vscode-button-secondaryForeground,var(--vscode-button-foreground,white))] rounded-sm focus:ring-[var(--vscode-focusBorder,blue)] focus:outline-none focus:ring-1"
+        @click="fetchChildren()"
+      >
+        Load {{ Math.min(hiddenChildren, 200) }} more of {{ hiddenChildren }}
+      </button>
     </UExpand>
   </div>
 </template>

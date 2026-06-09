@@ -4,8 +4,11 @@ import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import type { TreeSortBy } from './treeChildren'
+import { pageTreeNodes, sortTreeNodes } from './treeChildren'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
+
 function getRoot(): Tree {
   return {
     id: 0,
@@ -133,14 +136,24 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
   return nodes
 }
 
-export function getChildrenById(id: number) {
-  const nodes = treeIdNodes.get(id)?.children ?? []
+export function getChildrenById(
+  id: number,
+  sortBy: TreeSortBy = 'Timestamp',
+  offset = 0,
+  limit = 200,
+) {
+  const nodes = sortTreeNodes(treeIdNodes.get(id)?.children ?? [], sortBy)
+  const page = pageTreeNodes(nodes, offset, limit)
   const ret: typeof nodes = []
-  nodes.forEach((node) => {
+  page.children.forEach((node) => {
     treeIdNodes.set(node.id, node)
     ret.push({ ...node, children: [], types: [] })
   })
-  return ret
+  return {
+    children: ret,
+    total: page.total,
+    nextOffset: page.nextOffset,
+  }
 }
 
 export function getTypesById(id: number) {
