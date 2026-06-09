@@ -6,6 +6,10 @@
 
 🚧 It is a work in progress - help is wanted! 🚧
 
+## Project origin
+
+This extension began as part of the [TSPerf Type Challenge](https://console.algora.io/challenges/tsperf), an Algora challenge to build better tools for finding and understanding expensive TypeScript types. The project focuses on surfacing type-checking costs inside VS Code so maintainers can spot slow paths, compare trace runs, and improve type performance without leaving their editor.
+
 ## Real-time type checking estimates
 
 To avoid the overhead of launching a separate tsserver, it currently queries the VSCode language server to get information about tokens in an open file, and uses the timings of the responses as a proxy for the complexity of the types, following the pattern of [`@definitelytyped/perf`](https://github.com/microsoft/DefinitelyTyped-tools/blob/41ba894ba571e55fa91ef0bb0d44d6eb6d201943/packages/perf).
@@ -22,7 +26,7 @@ Better support for mono repos is on the roadmap. For now you can run traces for 
 
 ## Credits
 
-We are grateful to [Algora](https://console.algora.io/) for creating the [TSPerf Type Challenge](https://console.algora.io/challenges/tsperf) and to its sponsors.
+We are grateful to [Algora](https://console.algora.io/) for creating the TSPerf Type Challenge and to its sponsors.
 
 ## Help wanted
 
