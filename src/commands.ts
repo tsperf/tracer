@@ -13,6 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { buildTraceShellCommand } from './shellCommand'
 
 const readdir = promisify(readdirC)
 
@@ -128,9 +129,7 @@ async function runTrace(args?: unknown[]) {
       return
     }
 
-    const quotedTraceDir = `'${traceDir}'`
-    // eslint-disable-next-line no-template-curly-in-string
-    const fullCmd = `(cd '${newDirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
+    const fullCmd = buildTraceShellCommand(newDirName ?? workspacePath, traceCmd, traceDir)
 
     log(fullCmd)
 
