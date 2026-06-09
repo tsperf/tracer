@@ -1,13 +1,15 @@
 import { mkdirSync, readdirSync, statSync } from 'node:fs'
-import { basename, dirname, join, relative } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative } from 'node:path'
 import { log } from 'node:console'
 import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
-import type * as vscode from 'vscode'
+import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
+import { getCurrentConfig } from './configuration'
+import { toGitSaveName } from './gitSaveName'
 
 export const afterWatches = nextTick
 
@@ -138,7 +140,8 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
 
   workspacePath.value = getWorkspacePath()
   projectName.value = getProjectName()
-  saveName.value = 'default'
+  await afterWatches()
+  saveName.value = await getInitialSaveName()
 }
 
 const triggers: Partial<Record<keyof State, { handler: ((arg: any) => void | Promise<void>), remoteHandler: (arg: any) => void }>> = {}
@@ -192,4 +195,33 @@ function getProjectPath() {
   projectPath.value = join(storagePath, projectName.value)
   mkdirSync(projectPath.value, { recursive: true })
   return projectPath.value
+}
+
+async function getInitialSaveName() {
+  if (!getCurrentConfig().useGitBranchSaveName)
+    return 'default'
+
+  return await getGitSaveName(workspacePath.value) ?? 'default'
+}
+
+async function getGitSaveName(workspacePath: string) {
+  const gitExtension = vscode.extensions.getExtension('vscode.git')
+  if (!gitExtension)
+    return undefined
+
+  const git = gitExtension.isActive ? gitExtension.exports : await gitExtension.activate()
+  const gitApi = git.getAPI(1)
+  const repository = gitApi.repositories.find((repo: any) => isWorkspaceRepository(repo, workspacePath)) ?? gitApi.repositories[0]
+  const head = repository?.state?.HEAD
+
+  return toGitSaveName(head?.name ?? (head?.commit ? `detached-${String(head.commit).slice(0, 7)}` : undefined))
+}
+
+function isWorkspaceRepository(repository: any, workspacePath: string) {
+  const repoPath = repository?.rootUri?.fsPath
+  if (!repoPath)
+    return false
+
+  const rel = relative(repoPath, workspacePath)
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))
 }

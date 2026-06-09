@@ -16,6 +16,7 @@ export const configKeys = [
   'traceTotalTypeRelativeThresholds',
   'enableTraceMetrics',
   'enableRealtimeMetrics',
+  'useGitBranchSaveName',
   'fileBrowserExecutable',
 ] as const
 

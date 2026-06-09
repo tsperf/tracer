@@ -177,6 +177,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.useGitBranchSaveName': {
+      type: 'boolean',
+      default: false,
+      description: 'Use the current Git branch or detached HEAD as the default save name',
+    },
+  },
+  {
     'tsperf.tracer.fileBrowserExecutable': {
       type: 'string',
       default: '',
