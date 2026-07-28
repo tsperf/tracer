@@ -2,6 +2,7 @@ import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
 import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
+import { pageItems } from './childPaging'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
 
@@ -27,6 +28,7 @@ function getRoot(): Tree {
 }
 
 let treeIndexes: Tree[] = []
+const DEFAULT_CHILD_BATCH_SIZE = 100
 export function toTree(traceData: TraceData, workspacePath: string): Tree {
   const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
@@ -133,14 +135,18 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
   return nodes
 }
 
-export function getChildrenById(id: number) {
+export function getChildrenById(id: number, offset = 0, limit = DEFAULT_CHILD_BATCH_SIZE) {
   const nodes = treeIdNodes.get(id)?.children ?? []
-  const ret: typeof nodes = []
-  nodes.forEach((node) => {
+  const { items, ...meta } = pageItems(nodes, offset, limit)
+  const children: typeof items = []
+  items.forEach((node) => {
     treeIdNodes.set(node.id, node)
-    ret.push({ ...node, children: [], types: [] })
+    children.push({ ...node, children: [], types: [] })
   })
-  return ret
+  return {
+    children,
+    ...meta,
+  }
 }
 
 export function getTypesById(id: number) {

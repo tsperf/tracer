@@ -3,6 +3,7 @@ import type { Tree } from '../../src/traceTree'
 import * as Messages from '../../shared/src/messages'
 
 export const childrenById = shallowReactive(new Map<number, Tree[]>())
+export const loadingChildrenById = shallowReactive(new Map<number, boolean>())
 export const typesById = shallowReactive(new Map<number, TypeLine[]>())
 export const nodes = ref([] as Tree[])
 export const sortBy = ref('Timestamp' as keyof typeof sortValue)
@@ -39,7 +40,9 @@ function handleMessage(e: MessageEvent<unknown>) {
         return
       const id = parsed.data.id
       const children = childrenById.get(id) ?? []
-      childrenById.set(id, [...children, ...parsed.data.children])
+      const next = parsed.data.offset === 0 ? [...parsed.data.children] : [...children, ...parsed.data.children]
+      childrenById.set(id, next)
+      loadingChildrenById.set(id, false)
       break
     }
     case 'typesById': {
@@ -86,6 +89,9 @@ function handleMessage(e: MessageEvent<unknown>) {
       if (data.resetFileList) {
         files.value = []
         nodes.value = []
+        childrenById.clear()
+        loadingChildrenById.clear()
+        typesById.clear()
       }
       if (parsed.data.fileName && !files.value.some(x => x.fileName === data.fileName && x.dirName === data.dirName))
         files.value.push(parsed.data)

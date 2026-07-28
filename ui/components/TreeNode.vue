@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
-import { childrenById, typesById } from '~/src/appState'
+import { childrenById, loadingChildrenById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
+const CHILDREN_BATCH_SIZE = 100
 
 const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+const isLoadingChildren = computed(() => loadingChildrenById.get(props.tree.id) ?? false)
+const hasMoreChildren = computed(() => children.value.length < props.tree.childCnt)
 
-function fetchChildren() {
-  if (children.value.length === 0)
-    sendMessage('childrenById', { id: props.tree.id })
+function fetchChildren(loadMore = false) {
+  if (isLoadingChildren.value)
+    return
+  if (!loadMore && children.value.length > 0)
+    return
+
+  loadingChildrenById.set(props.tree.id, true)
+  sendMessage('childrenById', { id: props.tree.id, offset: children.value.length, limit: CHILDREN_BATCH_SIZE })
 }
 
 function fetchTypes() {
@@ -75,9 +83,14 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
           </div>
         </div>
       </template>
-      <template v-for="(node, idx) of children" :key="idx">
+      <template v-for="node of children" :key="node.id">
         <TreeNode :depth="depth + 1" :tree="node" />
       </template>
+      <div v-if="hasMoreChildren" class="flex flex-row pl-1">
+        <button :disabled="isLoadingChildren" class="mt-1 mb-1 rounded-sm px-2 py-1 text-xs bg-[var(--vscode-button-background)] text-[var(--vscode-button-foreground)] disabled:opacity-60 focus:ring-[var(--vscode-focusBorder, blue)] focus:outline-none focus:ring-1" @click="fetchChildren(true)">
+          {{ isLoadingChildren ? 'Loading children…' : `Load more children (${props.tree.childCnt - children.length} left)` }}
+        </button>
+      </div>
     </UExpand>
   </div>
 </template>

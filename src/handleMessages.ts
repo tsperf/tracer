@@ -43,7 +43,7 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       break
     }
     case 'childrenById': {
-      postMessage({ ...data, children: getChildrenById(data.id) }) // TODO: stream these
+      postMessage({ ...data, ...getChildrenById(data.id, data.offset, data.limit) })
       break
     }
     case 'typesById': {

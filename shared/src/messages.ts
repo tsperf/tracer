@@ -145,7 +145,10 @@ export type SaveNames = z.infer<typeof saveNames>
 export const childrenById = z.object({
   message: z.literal('childrenById'),
   id: z.number(),
+  offset: z.number().int().min(0).default(0),
+  limit: z.number().int().positive().optional(),
   children: z.array(zodTree).optional(),
+  hasMore: z.boolean().optional(),
 })
 export type ChildrenById = z.infer<typeof childrenById>
 
