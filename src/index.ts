@@ -15,6 +15,7 @@ import { initDiagnostics } from './traceDiagnostics'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
 import { initAppState } from './appState'
+import { toTsserverLocation } from './tsserverLocation'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -168,12 +169,13 @@ async function createLanguageServiceTestMatrix(
           positionMap.set(start, benchmark)
         }
         const benchmark = positionMap.get(start)!
+        const tsserverLocation = toTsserverLocation(benchmark.line, benchmark.offset)
         inputs.push({
           commandLine,
           fileName,
           start,
-          line: benchmark.line,
-          offset: benchmark.offset,
+          line: tsserverLocation.line,
+          offset: tsserverLocation.offset,
           tsPath,
           packageDirectory,
         })
