@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
 import { getStatsFromTree } from './traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
+import { createTraceDiagnosticFilter } from './traceDiagnosticFilter'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -49,6 +50,8 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
   fileStatus.set(fileName, 'clean')
 
   const document = await vscode.workspace.openTextDocument(uri)
+  const sourceText = document.getText()
+  const shouldSuppressTraceDiagnostic = createTraceDiagnosticFilter(document.fileName, sourceText)
 
   let averages
 
@@ -71,6 +74,9 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
   for (const stat of stats) {
     if (lastPos === stat.pos)
       continue // do not create diagnostics for further checks at the same starting position
+
+    if (shouldSuppressTraceDiagnostic(stat.pos))
+      continue
 
     const diagnostic = toDiagnistic(stat, document, averages!)
     if (diagnostic)
