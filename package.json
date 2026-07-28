@@ -73,7 +73,7 @@
         "tsperf.tracer.restartTsserverOnIteration": {
           "type": "boolean",
           "default": false,
-          "description": "Restart tsserver on each iteration to avoid caching influincing measurements",
+          "description": "Restart tsserver on each iteration to avoid caching influencing measurements",
           "order": 4
         },
         "tsperf.tracer.allIdentifiers": {
