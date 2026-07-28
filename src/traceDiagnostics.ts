@@ -23,7 +23,7 @@ vscode.window.onDidChangeActiveTextEditor((event) => {
     addTraceDiagnostics(fileName, getStatsFromTree(fileName))
 })
 
-export function clearTaceDiagnostics() {
+export function clearTraceDiagnostics() {
   fileStatus.clear()
   if (diagnosticCollection)
     diagnosticCollection.clear()
@@ -52,7 +52,7 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
 
   let averages
 
-  let toDiagnistic: typeof fileStatToDiagnostic | typeof fileStatToRelativeDiagnostic = fileStatToDiagnostic
+  let toDiagnostic: typeof fileStatToDiagnostic | typeof fileStatToRelativeDiagnostic = fileStatToDiagnostic
   if (relative) {
     const durations = stats.map(x => x.dur).filter(x => x >= averageThresholds.dur)
     const types = stats.map(x => x.types).filter(x => x >= averageThresholds.types)
@@ -62,7 +62,7 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
       types: types.length ? types.reduce((a, b) => a + b, 0) / types.length : 0,
       totalTypes: totalTypes.length ? totalTypes.reduce((a, b) => a + b, 0) / totalTypes.length : 0,
     }
-    toDiagnistic = fileStatToRelativeDiagnostic
+    toDiagnostic = fileStatToRelativeDiagnostic
   }
 
   const diagnostics = []
@@ -72,7 +72,7 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
     if (lastPos === stat.pos)
       continue // do not create diagnostics for further checks at the same starting position
 
-    const diagnostic = toDiagnistic(stat, document, averages!)
+    const diagnostic = toDiagnostic(stat, document, averages!)
     if (diagnostic)
       diagnostics.push(diagnostic)
 
