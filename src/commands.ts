@@ -13,6 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { getTracePositionFromEditorOffset } from './editorTracePosition'
 
 const readdir = promisify(readdirC)
 
@@ -94,7 +95,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   const relativePath = relative(workspacePth, editor.document.fileName)
 
   getTracePanel(context)?.reveal()
-  showTree('', relativePath, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1))
+  showTree('', relativePath, getTracePositionFromEditorOffset(editor.document.getText(), startOffset))
 }
 
 async function runTrace(args?: unknown[]) {
