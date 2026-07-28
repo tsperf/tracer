@@ -6,9 +6,10 @@ import * as vscode from 'vscode'
 import type { FormatDiagnosticsHost } from 'typescript'
 
 import { log } from './logger'
+import { tsconfigExcludeGlob, tsconfigIncludeGlob } from './tsconfigSearch'
 
 export async function getTsconfigFile(path: string) {
-  let files = await vscode.workspace.findFiles('**/tsconfig.json', '**​/node_modules/**')
+  let files = await vscode.workspace.findFiles(tsconfigIncludeGlob, tsconfigExcludeGlob)
   files = files.sort((a, b) => b.fsPath.length - a.fsPath.length)
     .filter(p => !p.fsPath.includes('node_modules'))
 
