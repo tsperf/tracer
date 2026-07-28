@@ -1,11 +1,21 @@
 import { isAbsolute, join, relative } from 'node:path'
 import type { FileStat } from '../shared/src/messages'
-import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
+import { getTraceLineTypeRefs } from '../shared/src/traceData'
+import type { TraceData, TraceLine, TraceTypeRef, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
 
-export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
+export interface Tree {
+  id: number
+  line: TraceLine
+  children: Tree[]
+  types: TypeLine[]
+  typeRefs: TraceTypeRef[]
+  childCnt: number
+  childTypeCnt: number
+  typeCnt: number
+}
 function getRoot(): Tree {
   return {
     id: 0,
@@ -20,6 +30,7 @@ function getRoot(): Tree {
     },
     children: [],
     types: [],
+    typeRefs: [],
     childCnt: 0,
     childTypeCnt: 0,
     typeCnt: 0,
@@ -35,6 +46,12 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
   let id = 0
 
   const stack: Tree[] = []
+  const typeById = new Map<number, TypeLine>()
+
+  for (const line of traceData) {
+    if ('id' in line)
+      typeById.set(line.id, line)
+  }
 
   treeIndexes = [tree]
 
@@ -62,7 +79,16 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
     }
     else if (line.dur) {
       endTs = line.ts + (line.dur ?? 0)
-      const child = { id: ++id, line, children: [], types: [], childTypeCnt: 0, childCnt: 0, typeCnt: 0 }
+      const child = {
+        id: ++id,
+        line,
+        children: [],
+        types: [],
+        typeRefs: getTraceLineTypeRefs(line, typeById),
+        childTypeCnt: 0,
+        childCnt: 0,
+        typeCnt: 0,
+      }
       treeIndexes[id] = child
       curr.childCnt = curr.children.push(child)
       stack.push(curr)
