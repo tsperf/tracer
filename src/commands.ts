@@ -45,7 +45,7 @@ async function sendTrace(dirName: string, fileName: string) {
   stream.on('end', () => {
     addTraceFile(fileName, fileContents)
     processTraceFiles().then(() => {
-      showTree('check', '', 0)
+      showTree('check', '', '')
 
       clearTaceDiagnostics()
       for (const editor of vscode.window.visibleTextEditors) {
