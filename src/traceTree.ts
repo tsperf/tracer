@@ -4,6 +4,7 @@ import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import { getTraceSuggestions } from './traceSuggestions'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -78,6 +79,7 @@ let traceTree: Tree | undefined
 export async function processTraceFiles() {
   const workspacePath = await getWorkspacePath()
   traceTree = toTree(Object.values(traceFiles.value).flat(1), workspacePath)
+  postMessage({ message: 'traceSuggestions', suggestions: getTraceSuggestions(traceTree) })
 }
 
 export function filterTree(startsWith: string, sourceFileName: string, position: number | '', tree = traceTree): Tree[] {

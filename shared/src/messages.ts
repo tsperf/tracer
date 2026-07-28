@@ -72,6 +72,18 @@ export const fileStats = z.object({
 })
 export type FileStats = z.infer<typeof fileStats>
 
+export const traceSuggestion = z.object({
+  kind: z.string(),
+  title: z.string(),
+  detail: z.string(),
+  severity: z.enum(['info', 'warning', 'error']),
+  fileName: z.string().optional(),
+  pos: z.number().optional(),
+  traceName: z.string().optional(),
+  nodeId: z.number().optional(),
+})
+export type TraceSuggestion = z.infer<typeof traceSuggestion>
+
 export const traceStart = z.object({
   message: z.literal('traceStart'),
 })
@@ -156,6 +168,12 @@ export const typesById = z.object({
 })
 export type TypesById = z.infer<typeof typesById>
 
+export const traceSuggestions = z.object({
+  message: z.literal('traceSuggestions'),
+  suggestions: z.array(traceSuggestion),
+})
+export type TraceSuggestions = z.infer<typeof traceSuggestions>
+
 export type Message = z.infer<typeof message>
 export const message = z.union([
   ping,
@@ -176,6 +194,7 @@ export const message = z.union([
   traceStart,
   traceStop,
   traceFileLoaded,
+  traceSuggestions,
   typesById,
   log,
 ])
