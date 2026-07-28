@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
 import { childrenById, typesById } from '~/src/appState'
+import { formatTraceDurationMs } from '~/src/traceDuration'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
@@ -47,7 +48,7 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
             <span class="min-w-48">
               {{ tree.line.name }} ({{ tree.childCnt }}):
             </span><span>
-              {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
+              {{ formatTraceDurationMs(props.tree.line.dur) }}
             </span>
             <div class="grow opacity-20 hover:opacity-100 h-full">
               <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />
