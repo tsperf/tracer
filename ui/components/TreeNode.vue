@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
 import { childrenById, typesById } from '~/src/appState'
+import { hasTracePosition } from '~/src/tracePosition'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
@@ -22,7 +23,7 @@ function fetchTypes() {
 function gotoPosition() {
   if ('name' in props.tree.line) {
     const { path, pos } = props.tree.line.args ?? { path: undefined, pos: undefined }
-    if (!path || !pos)
+    if (!hasTracePosition(path, pos))
       return
 
     sendMessage('gotoPosition', { fileName: path, pos })
