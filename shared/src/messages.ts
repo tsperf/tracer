@@ -26,7 +26,7 @@ export const gotoLocation = z.object({
   line: z.number(),
   character: z.number(),
 })
-export type GotoLocation = z.infer<typeof gotoPosition>
+export type GotoLocation = z.infer<typeof gotoLocation>
 
 export const deleteTraceFile = z.object({
   message: z.literal('deletTraceFile'),
