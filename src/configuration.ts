@@ -9,6 +9,7 @@ const currentConfig = {
   benchmarkIterations: 3,
   restartTsserverOnIteration: false,
   allIdentifiers: false,
+  saveNameCommand: '',
   // eslint-disable-next-line no-template-curly-in-string
   traceCmd: 'npx tsc --noEmit --generateTrace ${traceDir}',
   traceTimeThresholds: { info: 1, warning: -1, error: -1 },
@@ -56,6 +57,7 @@ const configValidate = {
   benchmarkIterations: isNumber,
   restartTsserverOnIteration: isBoolean,
   allIdentifiers: isBoolean,
+  saveNameCommand: isString,
   traceCmd: isString,
   traceTimeThresholds: isThresholds,
   traceTypeThresholds: isThresholds,
@@ -78,6 +80,7 @@ const configHandlers = {
   benchmarkIterations: noop,
   restartTsserverOnIteration: noop,
   allIdentifiers: noop,
+  saveNameCommand: noop,
   traceCmd: noop,
   traceTimeThresholds: noop,
   traceTypeThresholds: noop,

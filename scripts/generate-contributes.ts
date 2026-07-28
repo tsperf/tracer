@@ -127,6 +127,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.saveNameCommand': {
+      type: 'string',
+      default: '',
+      description: 'Optional shell command used to generate the default save name. The first line of stdout is used; empty output or command failures fall back to "default".',
+    },
+  },
+  {
     'tsperf.tracer.traceCmd': {
       type: 'string',
       // eslint-disable-next-line no-template-curly-in-string
