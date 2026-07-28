@@ -4,6 +4,7 @@ import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import { getTraceRootDuration } from './traceDuration'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -31,7 +32,7 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
   const tree: Tree = { ...getRoot() }
   let endTs = Number.MAX_SAFE_INTEGER
   let curr = tree
-  let maxDur = 0
+  let maxEndTs = 0
   let id = 0
 
   const stack: Tree[] = []
@@ -44,8 +45,7 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
     if ('args' in line && line.args?.path && isAbsolute(line.args?.path))
       line.args.path = relative(workspacePath, line.args.path)
 
-    if (line.dur !== Number.MAX_SAFE_INTEGER && (line.dur ?? 0) > maxDur)
-      maxDur = line.ts
+    maxEndTs = getTraceRootDuration(maxEndTs, line)
 
     while (line.ts > endTs) {
       if (stack.length === 0)
@@ -70,7 +70,7 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
     }
   }
 
-  tree.line.dur = maxDur
+  tree.line.dur = maxEndTs
   return tree
 }
 
