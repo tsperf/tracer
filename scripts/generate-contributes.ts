@@ -62,7 +62,15 @@ const commandRecord: Record<CommandId, Command> = {
   'tsperf.tracer.openTraceDirExternal': {
     title: 'Open trace directory in file browser',
   },
-
+  'tsperf.tracer.traceExpression': {
+    title: 'Trace expression at cursor',
+  },
+  'tsperf.tracer.selectTsconfig': {
+    title: 'Select tsconfig for tracing',
+  },
+  'tsperf.tracer.showMetrics': {
+    title: 'Show metrics overview',
+  },
 }
 
 const includeExperimental = env.TraceExperimental === 'true'
@@ -185,6 +193,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     },
   },
   {
+    'tsperf.tracer.enableInlineDecorations': {
+      type: 'boolean',
+      default: true,
+      description: 'Show inline decorations for type complexity hotspots',
+    },
+  },
+  {
     'tsperf.tracer.traceTimeThresholds': threshold(),
   },
   {
@@ -233,6 +248,23 @@ pkg.contributes = {
   menus: {
     'commandPalette': menuEntries('pallete'),
     'explorer/context': menuEntries('explorerContext'),
+  },
+  viewsContainers: {
+    activitybar: [
+      {
+        id: 'tsperf-tracer',
+        title: 'TSPerf Tracer',
+        icon: 'res/icon.svg',
+      },
+    ],
+  },
+  views: {
+    'tsperf-tracer': [
+      {
+        id: 'tsperf-tracer-hotspots',
+        name: 'Hot Spots',
+      },
+    ],
   },
 }
 

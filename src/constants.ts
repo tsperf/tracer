@@ -16,6 +16,7 @@ export const configKeys = [
   'traceTotalTypeRelativeThresholds',
   'enableTraceMetrics',
   'enableRealtimeMetrics',
+  'enableInlineDecorations',
   'fileBrowserExecutable',
 ] as const
 
@@ -28,6 +29,9 @@ export const commandIds = [
   'tsperf.tracer.sendTrace',
   'tsperf.tracer.openTerminal',
   'tsperf.tracer.openTraceDirExternal',
+  'tsperf.tracer.traceExpression',
+  'tsperf.tracer.selectTsconfig',
+  'tsperf.tracer.showMetrics',
 ] as const
 
 export type CommandId = typeof commandIds[number]

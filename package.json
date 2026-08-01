@@ -21,7 +21,8 @@
   "main": "./dist/index.js",
   "icon": "res/icon.png",
   "files": [
-    "dist"
+    "dist",
+    "res"
   ],
   "engines": {
     "vscode": "^1.70.0"
@@ -100,6 +101,12 @@
           "description": "command to open your preferred file browser. Use the ${traceDir} substitution variable",
           "order": 8
         },
+        "tsperf.tracer.enableInlineDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline decorations for type complexity hotspots",
+          "order": 9
+        },
         "tsperf.tracer.traceTimeThresholds": {
           "type": "object",
           "properties": {
@@ -125,7 +132,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 9,
+          "order": 10,
           "markdownDescription": "# Trace Time Thresholds\n\nTrigger diagnostics from trace files when check time in ms exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTypeThresholds": {
@@ -153,7 +160,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 10,
+          "order": 11,
           "markdownDescription": "# Trace Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created locally in this check call exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceTotalTypeThresholds": {
@@ -181,14 +188,14 @@
             "error": -1
           },
           "description": "todo",
-          "order": 11,
+          "order": 12,
           "markdownDescription": "# Trace Total Type Thresholds\n\nTrigger diagnostics from trace files when the number of types created in this check call stack exceeds these thresholds.\n\n* -1 will disable diagnostics of that severity\n"
         },
         "tsperf.tracer.traceDiagnosticsRelative": {
           "type": "boolean",
           "default": false,
           "description": "Use measurements relative to the average for trace diagnostics",
-          "order": 12
+          "order": 13
         },
         "tsperf.tracer.traceTimeRelativeThresholds": {
           "type": "object",
@@ -215,7 +222,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 13
+          "order": 14
         },
         "tsperf.tracer.traceTypeRelativeThresholds": {
           "type": "object",
@@ -242,7 +249,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 14
+          "order": 15
         },
         "tsperf.tracer.traceTotalTypeRelativeThresholds": {
           "type": "object",
@@ -269,7 +276,7 @@
             "error": -1
           },
           "description": "todo",
-          "order": 15
+          "order": 16
         }
       }
     },
@@ -311,6 +318,21 @@
         "title": "Open trace directory in file browser",
         "command": "tsperf.tracer.openTraceDirExternal",
         "category": "Tracer"
+      },
+      {
+        "title": "Trace expression at cursor",
+        "command": "tsperf.tracer.traceExpression",
+        "category": "Tracer"
+      },
+      {
+        "title": "Select tsconfig for tracing",
+        "command": "tsperf.tracer.selectTsconfig",
+        "category": "Tracer"
+      },
+      {
+        "title": "Show metrics overview",
+        "command": "tsperf.tracer.showMetrics",
+        "category": "Tracer"
       }
     ],
     "menus": {
@@ -340,6 +362,23 @@
           "category": "Tracer"
         }
       ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tsperf-tracer",
+          "title": "TSPerf Tracer",
+          "icon": "res/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "tsperf-tracer": [
+        {
+          "id": "tsperf-tracer-hotspots",
+          "name": "Hot Spots"
+        }
+      ]
     }
   },
   "scripts": {
@@ -349,7 +388,7 @@
     "build": "nr generate:contributes && nr srcDev:build && nr ui:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
     "ui:dev": "nuxt dev ui",
-    "ui:build": "nuxt build ui",
+    "ui:build": "npx nuxt build ui",
     "srcDev:dev": "nr build --filter ./srcDev --watch --srcmap",
     "srcDev:build": "cd srcDev && rollup -c && cd ..",
     "lint": "eslint .",
@@ -375,6 +414,7 @@
     "d3": "^7.9.0",
     "d3-flame-graph": "^4.1.3",
     "eslint": "^9.3.0",
+    "jiti": "^2.7.0",
     "open": "^10.1.0",
     "perfect-debounce": "^1.0.0",
     "rollup": "^4.18.0",

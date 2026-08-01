@@ -10,7 +10,7 @@ import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import type { CommandId } from './constants'
 import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
-import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
+import { addTraceDiagnostics, clearTraceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
 
@@ -47,7 +47,7 @@ async function sendTrace(dirName: string, fileName: string) {
     processTraceFiles().then(() => {
       showTree('check', '', 0)
 
-      clearTaceDiagnostics()
+      clearTraceDiagnostics()
       for (const editor of vscode.window.visibleTextEditors) {
         const visibleFileName = editor.document.fileName
         addTraceDiagnostics(visibleFileName, getStatsFromTree(visibleFileName))

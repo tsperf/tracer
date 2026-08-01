@@ -12,6 +12,12 @@ import { afterConfigUpdate, getCurrentConfig, updateConfig } from './configurati
 import { getTsPath } from './tsUtil'
 import { registerCommands } from './commands'
 import { initDiagnostics } from './traceDiagnostics'
+import { initDecorations } from './decorations'
+import { initSidebar } from './sidebar/sidebarProvider'
+import { initTraceExpression } from './commands/traceExpression'
+import { initMultiRoot } from './multiRoot'
+import { initIncrementalMetrics } from './incrementalMetrics'
+import { initSuggestionProvider } from './suggestions/suggestionProvider'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
 import { initAppState } from './appState'
@@ -60,6 +66,12 @@ export async function activate(context: vscode.ExtensionContext) {
   registerCommands(context)
   initStatusBar(context)
   initDiagnostics(context)
+  initDecorations(context)
+  initSidebar(context)
+  initTraceExpression(context)
+  initMultiRoot(context)
+  initIncrementalMetrics(context)
+  initSuggestionProvider(context)
 }
 
 export function deactivate() {}
