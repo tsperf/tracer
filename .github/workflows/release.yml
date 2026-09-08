@@ -16,11 +16,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: corepack enable
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
         with:
-          node-version: lts/-1
-          cache: pnpm
+          runtime: node@22
+          cache: true
+          install: false
 
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
@@ -38,11 +38,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: corepack enable
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
         with:
-          node-version: lts/-1
-          cache: pnpm
+          runtime: node@22
+          cache: true
+          install: false
 
       - run: npx changelogithub
         env:
