@@ -13,6 +13,7 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { buildTraceCommand } from './shell'
 
 const readdir = promisify(readdirC)
 
@@ -128,9 +129,7 @@ async function runTrace(args?: unknown[]) {
       return
     }
 
-    const quotedTraceDir = `'${traceDir}'`
-    // eslint-disable-next-line no-template-curly-in-string
-    const fullCmd = `(cd '${newDirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
+    const fullCmd = buildTraceCommand(traceCmd, traceDir)
 
     log(fullCmd)
 
@@ -148,7 +147,7 @@ async function runTrace(args?: unknown[]) {
     setStatusBarState('traceError', false)
 
     log(`shell: ${process.env.SHELL}`)
-    const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
+    const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL || true })
 
     let err = ''
     cmdProcess.stderr.on('data', data => err += data.toString())
