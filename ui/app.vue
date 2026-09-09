@@ -6,8 +6,20 @@ const Messages = useNuxtApp().$Messages
 const sendMesage = useNuxtApp().$sendMessage
 
 const sortOptions = ['Timestamp', 'Duration', 'Types', 'Total Types'] as const
+const pathFilterPresets = [
+  { label: 'No preset', value: '' },
+  { label: 'Dependencies', value: 'node_modules' },
+  { label: 'TypeScript libs', value: 'node_modules/typescript/lib\nlib.dom.d.ts\nlib.es' },
+  { label: 'Generated output', value: 'dist\nbuild\ncoverage\n.generated\ngenerated' },
+] as const
 
-const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
+const filters = useState('treeFilters', () => ({
+  startsWith: 'check',
+  sourceFileName: '',
+  position: 0 as number | '',
+  childStartsWith: '',
+  excludePathIncludes: '',
+}))
 
 function setStartsWith(event: any) {
   filters.value.startsWith = event.target.value
@@ -21,24 +33,48 @@ function setPosition(event: any) {
   filters.value.position = +event.target.value
 }
 
+function setChildStartsWith(event: any) {
+  filters.value.childStartsWith = event.target.value
+}
+
+function setExcludePathIncludes(event: any) {
+  filters.value.excludePathIncludes = event.target.value
+}
+
 function handleMessage(e: MessageEvent<unknown>) {
   const message = Messages.message.safeParse(e.data)
   if (!message.success)
     return
 
-  if (message.data.message === 'gotoTracePosition')
-    filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName }
+  if (message.data.message === 'gotoTracePosition') {
+    filters.value = {
+      startsWith: '',
+      position: message.data.position,
+      sourceFileName: message.data.fileName,
+      childStartsWith: filters.value.childStartsWith,
+      excludePathIncludes: filters.value.excludePathIncludes,
+    }
+  }
 
-  else if (message.data.message === 'filterTree')
+  else if (message.data.message === 'filterTree') {
     filters.value = message.data
+  }
 }
 
 function updateSort(event: any) {
-  if (event?.target?.value)
+  if (event?.target?.value) {
     sortBy.value = event.target.value
+  }
 }
 function doFilters() {
   sendMesage('filterTree', filters.value)
+}
+
+function updatePathFilterPreset(event: any) {
+  const value = event?.target?.value
+  if (value !== undefined) {
+    filters.value.excludePathIncludes = value
+  }
 }
 
 onMounted(() => {
@@ -59,6 +95,18 @@ onMounted(() => {
         <VTextField v-model="filters.startsWith" label="Trace Name" @change="setStartsWith" />
         <VTextField v-model="filters.sourceFileName" label="Source File" @change="setSourceFileName" />
         <VTextField v-model="filters.position" label="Position" type="number" @change="setPosition" />
+        <VTextField v-model="filters.childStartsWith" label="Child Trace Name" @change="setChildStartsWith" />
+        <VTextField v-model="filters.excludePathIncludes" label="Exclude Paths" @change="setExcludePathIncludes" />
+        <div class="dropdown-container">
+          <label for="path-filter-preset">Path Preset</label>
+          <vscode-dropdown id="path-filter-preset" @change="updatePathFilterPreset">
+            <template v-for="preset of pathFilterPresets" :key="preset.label">
+              <vscode-option :value="preset.value">
+                {{ preset.label }}
+              </vscode-option>
+            </template>
+          </vscode-dropdown>
+        </div>
         <vscode-button class="w-full" @click="doFilters">
           Filter Trace <UIcon name="heroicons:magnifying-glass-circle" :dynamic="true" size="20" />
         </vscode-button>

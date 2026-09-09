@@ -4,6 +4,7 @@ import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import { getVisibleChildren, isPathExcluded, parseFilterList } from './treeFilters'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -80,11 +81,30 @@ export async function processTraceFiles() {
   traceTree = toTree(Object.values(traceFiles.value).flat(1), workspacePath)
 }
 
-export function filterTree(startsWith: string, sourceFileName: string, position: number | '', tree = traceTree): Tree[] {
+let activeChildFilters = { childStartsWith: '', excludePathIncludes: '' }
+
+function getSkinnyNode(node: Tree): Tree {
+  return {
+    ...node,
+    children: [],
+    types: [],
+    childCnt: getVisibleChildren(node, activeChildFilters).length,
+  }
+}
+
+export function filterTree(startsWith: string, sourceFileName: string, position: number | '', _childStartsWith = '', excludePathIncludes = '', tree = traceTree): Tree[] {
   if (position === '')
     position = 0
 
+  const pathExcludes = parseFilterList(excludePathIncludes)
+  return filterTreeInner(startsWith, sourceFileName, position, pathExcludes, tree)
+}
+
+function filterTreeInner(startsWith: string, sourceFileName: string, position: number, pathExcludes: readonly string[], tree = traceTree): Tree[] {
   if (!tree)
+    return []
+
+  if (isPathExcluded(tree.line.args?.path, pathExcludes))
     return []
 
   if (
@@ -95,21 +115,22 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
     return [tree]
   }
 
-  return tree.children.map(child => filterTree(startsWith, sourceFileName, position, child)).flat()
+  return tree.children.map(child => filterTreeInner(startsWith, sourceFileName, position, pathExcludes, child)).flat()
 }
 
 export const treeIdNodes = new Map<number, Tree>()
 let showTreeInterval: undefined | ReturnType<typeof setInterval>
-export function showTree(startsWith: string, sourceFileName: string, position: number | '', updateUi = true, tree = traceTree) {
+export function showTree(startsWith: string, sourceFileName: string, position: number | '', updateUi = true, childStartsWith = '', excludePathIncludes = '', tree = traceTree) {
   if (showTreeInterval) {
     clearInterval(showTreeInterval)
     showTreeInterval = undefined
   }
 
-  const nodes = filterTree(startsWith, sourceFileName, position, tree)
-  const skinnyNodes = nodes.map(x => ({ ...x, children: [], types: [] }))
+  const nodes = filterTree(startsWith, sourceFileName, position, childStartsWith, excludePathIncludes, tree)
+  activeChildFilters = { childStartsWith, excludePathIncludes }
+  const skinnyNodes = nodes.map(getSkinnyNode)
   if (updateUi)
-    postMessage({ message: 'filterTree', startsWith, sourceFileName, position })
+    postMessage({ message: 'filterTree', startsWith, sourceFileName, position, childStartsWith, excludePathIncludes })
 
   postMessage({ message: 'showTree', nodes: [], step: 'start' })
 
@@ -134,11 +155,12 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
 }
 
 export function getChildrenById(id: number) {
-  const nodes = treeIdNodes.get(id)?.children ?? []
+  const node = treeIdNodes.get(id)
+  const nodes = node ? getVisibleChildren(node, activeChildFilters) : []
   const ret: typeof nodes = []
   nodes.forEach((node) => {
     treeIdNodes.set(node.id, node)
-    ret.push({ ...node, children: [], types: [] })
+    ret.push(getSkinnyNode(node))
   })
   return ret
 }
