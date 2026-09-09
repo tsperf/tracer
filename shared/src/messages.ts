@@ -72,6 +72,27 @@ export const fileStats = z.object({
 })
 export type FileStats = z.infer<typeof fileStats>
 
+export const hotPathNode = z.object({
+  id: z.number(),
+  name: z.string(),
+  dur: z.number(),
+  typeCnt: z.number(),
+  childTypeCnt: z.number(),
+  totalTypeCnt: z.number(),
+  childCnt: z.number(),
+  path: z.string().optional(),
+  pos: z.number().optional(),
+  end: z.number().optional(),
+})
+export type HotPathNode = z.infer<typeof hotPathNode>
+
+export const hotPathById = z.object({
+  message: z.literal('hotPathById'),
+  id: z.number(),
+  nodes: z.array(hotPathNode).optional(),
+})
+export type HotPathById = z.infer<typeof hotPathById>
+
 export const traceStart = z.object({
   message: z.literal('traceStart'),
 })
@@ -167,6 +188,7 @@ export const message = z.union([
   gotoLocation,
   gotoPosition,
   gotoTracePosition,
+  hotPathById,
   positionTypeCounts,
   projectNames,
   projectOpen,

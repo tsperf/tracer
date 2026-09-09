@@ -33,6 +33,7 @@ function iconName() {
       </button>
       <slot name="label" />
     </div>
+    <slot name="panel" />
     <div v-if="expanded">
       <slot />
     </div>

@@ -4,6 +4,7 @@ import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import { getHotPathFromTree } from './hotPath'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -145,6 +146,11 @@ export function getChildrenById(id: number) {
 
 export function getTypesById(id: number) {
   return treeIdNodes.get(id)?.types ?? []
+}
+
+export function getHotPathById(id: number) {
+  const startNode = treeIdNodes.get(id) ?? (id === 0 ? traceTree : undefined)
+  return getHotPathFromTree(startNode)
 }
 
 export function getStatsFromTree(fileName: string) {
