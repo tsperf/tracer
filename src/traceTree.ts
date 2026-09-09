@@ -4,6 +4,7 @@ import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import { matchesTracePositionFilter } from './traceFilter'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -81,16 +82,13 @@ export async function processTraceFiles() {
 }
 
 export function filterTree(startsWith: string, sourceFileName: string, position: number | '', tree = traceTree): Tree[] {
-  if (position === '')
-    position = 0
-
   if (!tree)
     return []
 
   if (
     ('name' in tree.line && tree.line.name.startsWith(startsWith))
     && (!sourceFileName || ((tree.line.args?.path ?? '').endsWith(sourceFileName)))
-    && (!(position > 0) || ((tree.line.args?.pos ?? 0) === position))
+    && matchesTracePositionFilter(tree.line.args?.pos, position)
   ) {
     return [tree]
   }
@@ -174,7 +172,7 @@ export function getStatsFromTree(fileName: string) {
     node.children.forEach(visit)
   }
 
-  const fileNodes = filterTree('', relative(workspacePath, fileName), 0)
+  const fileNodes = filterTree('', relative(workspacePath, fileName), '')
   fileNodes.forEach(visit)
 
   return stats

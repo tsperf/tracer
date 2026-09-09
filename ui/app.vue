@@ -7,7 +7,7 @@ const sendMesage = useNuxtApp().$sendMessage
 
 const sortOptions = ['Timestamp', 'Duration', 'Types', 'Total Types'] as const
 
-const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: 0 as number | '' }))
+const filters = useState('treeFilters', () => ({ startsWith: 'check', sourceFileName: '', position: '' as number | '' }))
 
 function setStartsWith(event: any) {
   filters.value.startsWith = event.target.value
@@ -18,7 +18,8 @@ function setSourceFileName(event: any) {
 }
 
 function setPosition(event: any) {
-  filters.value.position = +event.target.value
+  const value = event.target.value
+  filters.value.position = value === '' ? '' : +value
 }
 
 function handleMessage(e: MessageEvent<unknown>) {
