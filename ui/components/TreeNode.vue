@@ -1,17 +1,29 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
-import { childrenById, typesById } from '~/src/appState'
+import { childrenById, childrenTotalById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
 
 const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
+const totalChildren = computed(() => childrenTotalById.get(props.tree.id))
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+
+// Pagination state
+const offset = ref(0)
+const limit = 50
 
 function fetchChildren() {
   if (children.value.length === 0)
-    sendMessage('childrenById', { id: props.tree.id })
+    sendMessage('childrenById', { id: props.tree.id, limit, offset: offset.value })
+}
+
+function loadMoreChildren() {
+  // Load next batch of children
+  const newOffset = offset.value + limit
+  offset.value = newOffset
+  sendMessage('childrenById', { id: props.tree.id, limit, offset: newOffset })
 }
 
 function fetchTypes() {
@@ -78,6 +90,11 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
       <template v-for="(node, idx) of children" :key="idx">
         <TreeNode :depth="depth + 1" :tree="node" />
       </template>
+      <div v-if="totalChildren !== undefined && children.length + offset < totalChildren" class="flex justify-center py-2 pl-8">
+        <button class="px-4 py-1 bg-[var(--vscode-button-background)] text-[var(--vscode-button-foreground)] rounded hover:opacity-80 transition-opacity text-sm" @click="loadMoreChildren">
+          Load More ({{ children.length + offset }}/{{ totalChildren }})
+        </button>
+      </div>
     </UExpand>
   </div>
 </template>
