@@ -1,8 +1,9 @@
 import { mkdirSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
 import { log } from 'node:console'
+import { debounce } from 'perfect-debounce'
 import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatch, ref, shallowRef } from '@vue/runtime-core'
-import type * as vscode from 'vscode'
+import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
@@ -43,6 +44,12 @@ type StateType<K extends keyof State> = State[K] extends Ref<any> ? UnwrapRef<St
 
 let context: vscode.ExtensionContext
 let storagePath: string
+let tracePathWatcher: vscode.FileSystemWatcher | undefined
+const refreshTraceDir = debounce(async () => {
+  if (tracePath.value)
+    await sendTraceDir(tracePath.value)
+}, 500)
+
 export async function initAppState(extensionContext: vscode.ExtensionContext) {
   context = extensionContext
   storagePath = context.globalStorageUri.fsPath
@@ -101,6 +108,12 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
       return
 
     mkdirSync(path, { recursive: true })
+    tracePathWatcher?.dispose()
+    tracePathWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(path, '*.json'))
+    tracePathWatcher.onDidCreate(refreshTraceDir)
+    tracePathWatcher.onDidChange(refreshTraceDir)
+    tracePathWatcher.onDidDelete(refreshTraceDir)
+    context.subscriptions.push(tracePathWatcher)
   }, noop)
 
   watchT('saveName', (name) => {
