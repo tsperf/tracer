@@ -18,12 +18,8 @@ jobs:
 
       - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+          require-lockfile: true
 
       - name: 🚀 Publish package
         run: pnpm run publish
@@ -40,7 +36,6 @@ jobs:
 
       - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          runtime: node@22
           cache: true
           install: false
 

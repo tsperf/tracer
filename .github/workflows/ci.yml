@@ -19,12 +19,8 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+          require-lockfile: true
 
       - name: 🔠 Lint project
         run: pnpm lint
@@ -35,12 +31,8 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+          require-lockfile: true
 
       - name: 💪 Test types
         run: pnpm typecheck
@@ -57,12 +49,8 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          runtime: node@22
           cache: true
-          install: false
-
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+          require-lockfile: true
 
       - name: 🛠 Build project
         run: pnpm build
