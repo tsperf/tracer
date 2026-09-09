@@ -62,6 +62,7 @@ export const fileStat = z.object({
   dur: z.number(),
   types: z.number(),
   totalTypes: z.number(),
+  depthLimitEvents: z.array(z.string()).optional(),
 })
 export type FileStat = z.infer<typeof fileStat>
 

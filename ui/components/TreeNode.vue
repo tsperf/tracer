@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
+import { isDepthLimitTraceName } from '../../shared/src/traceEvents'
 import { childrenById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
@@ -8,6 +9,15 @@ const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+const isDepthLimitTrace = computed(() => isDepthLimitTraceName(props.tree.line.name))
+const depthLimitStyle = computed(() =>
+  isDepthLimitTrace.value
+    ? {
+        backgroundColor: 'var(--vscode-inputValidation-warningBackground)',
+        borderLeftColor: 'var(--vscode-inputValidation-warningBorder)',
+      }
+    : undefined,
+)
 
 function fetchChildren() {
   if (children.value.length === 0)
@@ -42,8 +52,14 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
         <!-- <div :class="insetClass" :style="{ minWidth: `${props.depth / 2}rem` }" /> -->
       </template>
       <template #label>
-        <div class="flex flex-row gap-5 w-full pl-1">
+        <div class="flex flex-row gap-5 w-full pl-1 border-l-2 border-transparent" :style="depthLimitStyle">
           <div class="flex flex-row justify-start gap-2 grow text-left">
+            <UIcon
+              v-if="isDepthLimitTrace"
+              name="i-heroicons-exclamation-triangle"
+              class="relative top-0.5 text-[var(--vscode-inputValidation-warningBorder)]"
+              title="TypeScript hit a trace depth limit"
+            />
             <span class="min-w-48">
               {{ tree.line.name }} ({{ tree.childCnt }}):
             </span><span>

@@ -1,9 +1,10 @@
-import { isAbsolute, join, relative } from 'node:path'
-import type { FileStat } from '../shared/src/messages'
+import { isAbsolute, relative } from 'node:path'
 import type { TraceData, TraceLine, TypeLine } from '../shared/src/traceData'
+import { isDepthLimitTraceName } from '../shared/src/traceEvents'
 import { getWorkspacePath } from './storage'
 import { postMessage } from './webview'
 import { traceFiles } from './appState'
+import { getFileStatsFromTraceNodes } from './traceStats'
 
 export interface Tree { id: number, line: TraceLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -60,13 +61,15 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
     if ('id' in line) {
       curr.typeCnt = curr.types.push(line)
     }
-    else if (line.dur) {
-      endTs = line.ts + (line.dur ?? 0)
+    else if (line.dur !== undefined || isDepthLimitTraceName(line.name)) {
       const child = { id: ++id, line, children: [], types: [], childTypeCnt: 0, childCnt: 0, typeCnt: 0 }
       treeIndexes[id] = child
       curr.childCnt = curr.children.push(child)
-      stack.push(curr)
-      curr = child
+      if (line.dur !== undefined) {
+        endTs = line.ts + line.dur
+        stack.push(curr)
+        curr = child
+      }
     }
   }
 
@@ -149,35 +152,12 @@ export function getTypesById(id: number) {
 
 export function getStatsFromTree(fileName: string) {
   const workspacePath = getWorkspacePath()
+  return getStatsFromTreeForFile(fileName, workspacePath)
+}
 
-  const stats: FileStat[] = []
-  function visit(node: Tree) {
-    if ('name' in node.line) {
-      const line = node.line
-      if (
-        line.dur
-        && line.args?.path
-        && join(workspacePath, line.args.path) === fileName
-        && line.args?.pos
-        && line.args?.end
-      ) {
-        const types = node.types.length
-        stats.push({
-          dur: line.dur,
-          pos: line.args.pos,
-          end: line.args.end,
-          types,
-          totalTypes: types + node.childTypeCnt,
-        })
-      }
-    }
-    node.children.forEach(visit)
-  }
-
-  const fileNodes = filterTree('', relative(workspacePath, fileName), 0)
-  fileNodes.forEach(visit)
-
-  return stats
+export function getStatsFromTreeForFile(fileName: string, workspacePath: string, tree = traceTree) {
+  const fileNodes = filterTree('', relative(workspacePath, fileName), 0, tree)
+  return getFileStatsFromTraceNodes(fileNodes, fileName, workspacePath)
 }
 
 export function getTreeAtIndex(idx: number) {
