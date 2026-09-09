@@ -309,6 +309,11 @@
         "category": "Tracer"
       },
       {
+        "title": "Trace current file",
+        "command": "tsperf.tracer.runTraceActiveFile",
+        "category": "Tracer"
+      },
+      {
         "title": "Send Trace to Trace Viewer",
         "command": "tsperf.tracer.sendTrace",
         "category": "Tracer"
