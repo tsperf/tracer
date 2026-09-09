@@ -5,7 +5,7 @@ import { type Ref, type ShallowRef, type UnwrapRef, nextTick, watch as plainWatc
 import type * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
-import { getProjectName, getWorkspacePath } from './storage'
+import { getDefaultSaveName, getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
 
@@ -86,7 +86,7 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
     }
 
     getSaves(projectPath.value)
-    saveName.value = 'default'
+    void openDefaultSaveName()
   }, name => postMessage({ message: 'projectOpen', name }))
 
   watchT('savePath', (path) => {
@@ -138,7 +138,11 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
 
   workspacePath.value = getWorkspacePath()
   projectName.value = getProjectName()
-  saveName.value = 'default'
+  void openDefaultSaveName()
+}
+
+async function openDefaultSaveName() {
+  saveName.value = await getDefaultSaveName()
 }
 
 const triggers: Partial<Record<keyof State, { handler: ((arg: any) => void | Promise<void>), remoteHandler: (arg: any) => void }>> = {}

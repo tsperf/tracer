@@ -1,11 +1,16 @@
+import { exec } from 'node:child_process'
 import { readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { env } from 'node:process'
+import { promisify } from 'node:util'
 import * as vscode from 'vscode'
 import { traceData } from '../shared/src/traceData'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
+import { DEFAULT_SAVE_NAME, normalizeSaveName } from './saveName'
 import { state } from './appState'
+
+const execAsync = promisify(exec)
 
 export function getProjectName(): string {
   if (state.projectName.value)
@@ -24,6 +29,26 @@ export function getProjectName(): string {
   }
 
   return state.projectName.value
+}
+
+export async function getDefaultSaveName(): Promise<string> {
+  const command = getCurrentConfig().saveNameCommand.trim()
+  if (!command)
+    return DEFAULT_SAVE_NAME
+
+  try {
+    const { stdout } = await execAsync(command, {
+      cwd: state.workspacePath.value || getWorkspacePath(),
+      timeout: 5000,
+      windowsHide: true,
+    })
+    const [firstLine = ''] = stdout.trim().split(/\r?\n/)
+    return normalizeSaveName(firstLine)
+  }
+  catch (e) {
+    log(`saveNameCommand failed: ${e}`)
+    return DEFAULT_SAVE_NAME
+  }
 }
 
 export function getSavePath(): string {
