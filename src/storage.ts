@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { env } from 'node:process'
 import * as vscode from 'vscode'
@@ -6,6 +6,7 @@ import { traceData } from '../shared/src/traceData'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import { state } from './appState'
+import { getTraceFilesToDelete } from './traceFileDeletion'
 
 export function getProjectName(): string {
   if (state.projectName.value)
@@ -137,18 +138,6 @@ function simpleHash(str: string) {
 
 export async function deleteTraceFiles(fileName: string, dirName?: string) {
   const deleteDirName = dirName ?? await getTraceDir()
-  if (fileName === '*') {
-    const files = readdirSync(deleteDirName)
-    for (const file of files) {
-      if (!file.endsWith('.json'))
-        continue
-      const stat = statSync(file)
-      if (stat.isFile()) {
-        rmSync(join(deleteDirName, file))
-      }
-    }
-  }
-  else if (fileName.endsWith('.json')) {
-    rmSync(join(deleteDirName, fileName))
-  }
+  for (const filePath of getTraceFilesToDelete(deleteDirName, fileName))
+    rmSync(filePath)
 }
