@@ -1,0 +1,3 @@
+# pnpm splits the multi-document lockfile on LF, so a CRLF checkout on Windows
+# fails with ERR_PNPM_BROKEN_LOCKFILE.
+pnpm-lock.yaml text eol=lf

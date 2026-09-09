@@ -16,14 +16,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: corepack enable
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version: lts/-1
-          cache: pnpm
-
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+          cache: true
+          require-lockfile: true
 
       - name: 🚀 Publish package
         run: pnpm run publish
@@ -38,11 +34,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: corepack enable
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version: lts/-1
-          cache: pnpm
+          cache: true
+          install: false
 
       - run: npx changelogithub
         env:
