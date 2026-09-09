@@ -233,7 +233,10 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
     const duration = durations.reduce((a, b) => a + b, 0) / durations.length
     const proportionalTime = duration / baseline
 
-    if (proportionalTime > 1) {
+    const config = vscode.workspace.getConfiguration('tsperf.tracer')
+    const slowThreshold = config.get<number>('slowTypeThresholdMs', 100)
+
+    if (proportionalTime > 1 || duration > slowThreshold) {
       const comparisonPercentage = Math.round(proportionalTime * 100) - 100
       const sign = comparisonPercentage > 1 ? '+' : ''
       const logLevel = proportionalTime > 2

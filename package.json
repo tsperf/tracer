@@ -111,6 +111,12 @@
           "description": "command to open your preferred file browser. Use the ${traceDir} substitution variable",
           "order": 8
         },
+        "tsperf.tracer.slowTypeThresholdMs": {
+          "type": "number",
+          "default": 100,
+          "description": "Types taking longer than this many milliseconds will be highlighted as slow/complex",
+          "order": 9
+        },
         "tsperf.tracer.traceTimeThresholds": {
           "type": "object",
           "properties": {
