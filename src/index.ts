@@ -15,6 +15,7 @@ import { initDiagnostics } from './traceDiagnostics'
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
 import { initAppState } from './appState'
+import { getTestFileNames } from './testFiles'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -66,13 +67,6 @@ export function deactivate() {}
 
 // Large portions of the following code have been taken from
 // https://github.com/microsoft/DefinitelyTyped-tools/blob/41ba894ba571e55fa91ef0bb0d44d6eb6d201943/packages/perf
-
-function getTestFileNames(fileNames: readonly string[]) {
-  return fileNames.filter((name) => {
-    const ext = path.extname(name)
-    return (ext === ts.Extension.Ts || ext === ts.Extension.Tsx) && !name.endsWith(ts.Extension.Dts)
-  })
-}
 
 function getIdentifiers(sourceFile: SourceFile) {
   const { allIdentifiers } = getCurrentConfig()
