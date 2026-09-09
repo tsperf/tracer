@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Tree } from '../../src/traceTree'
+import { getTraceDurationColor, getTraceLineStyle } from '~/src/traceLineStyle'
 import { childrenById, typesById } from '~/src/appState'
 
 const props = defineProps<{ tree: Tree, depth: number }>()
@@ -8,6 +9,8 @@ const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+const traceLineStyle = computed(() => getTraceLineStyle(props.tree.line))
+const durationStyle = computed(() => ({ color: getTraceDurationColor(props.tree.line.dur) }))
 
 function fetchChildren() {
   if (children.value.length === 0)
@@ -42,11 +45,14 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
         <!-- <div :class="insetClass" :style="{ minWidth: `${props.depth / 2}rem` }" /> -->
       </template>
       <template #label>
-        <div class="flex flex-row gap-5 w-full pl-1">
+        <div class="flex flex-row gap-5 w-full pl-1 border-l-2" :style="traceLineStyle">
           <div class="flex flex-row justify-start gap-2 grow text-left">
+            <span class="rounded-sm px-1 text-xs opacity-80" :title="tree.line.cat">
+              {{ tree.line.cat }}
+            </span>
             <span class="min-w-48">
               {{ tree.line.name }} ({{ tree.childCnt }}):
-            </span><span>
+            </span><span :style="durationStyle">
               {{ Math.round(props.tree.line.dur ?? 0 / 1000) / 1000 }}ms
             </span>
             <div class="grow opacity-20 hover:opacity-100 h-full">
