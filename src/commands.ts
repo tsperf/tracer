@@ -9,10 +9,12 @@ import { getTracePanel, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
 import type { CommandId } from './constants'
+import { getParsedCommandLine } from './shared'
 import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { getIncrementalTraceWarning } from './incrementalBuild'
 
 const readdir = promisify(readdirC)
 
@@ -121,7 +123,7 @@ async function runTrace(args?: unknown[]) {
 
   const newDirName = dirName
   // TODO: use logic from real time metrics that get the tsconfig path
-  afterWatches(() => {
+  afterWatches(async () => {
     const traceDir = state.tracePath.value
     if (!traceDir) {
       vscode.window.showWarningMessage('No workspace or folder open')
@@ -138,6 +140,16 @@ async function runTrace(args?: unknown[]) {
     if (!newProjectPath) {
       vscode.window.showErrorMessage('could not get project path from workspace folders')
       return
+    }
+
+    try {
+      const parsedCommandLine = await getParsedCommandLine(newDirName ?? workspacePath)
+      const warning = getIncrementalTraceWarning(parsedCommandLine.options)
+      if (warning)
+        vscode.window.showWarningMessage(warning)
+    }
+    catch (e) {
+      log(`could not check incremental build settings: ${e}`)
     }
 
     traceRunning.value = true
