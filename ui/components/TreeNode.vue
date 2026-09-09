@@ -8,6 +8,7 @@ const sendMessage = useNuxtApp().$sendMessage
 
 const children = computed(() => childrenById.get(props.tree.id) ?? [])
 const types = computed(() => typesById.get(props.tree.id) ?? [])
+const typeRefs = computed(() => props.tree.typeRefs ?? [])
 
 function fetchChildren() {
   if (children.value.length === 0)
@@ -65,6 +66,13 @@ const insetClass = `border-e min-w-2 border-[var(--vscode-tree-inactiveIndentGui
           </div>
 
           <div class="flex flex-row justify-self-end justify-evenly">
+            <UExpand v-if="typeRefs.length > 0" class="min-w-40" :expandable="true">
+              <template #label>
+                <span class="pl-1">{{ `Type refs: ${typeRefs.length}` }}</span>
+              </template>
+              <TraceTypeRefs :refs="typeRefs" />
+            </UExpand>
+            <div v-else class="min-w-40" />
             <UExpand v-if="props.tree.typeCnt > 0" class="min-w-40" @expand="fetchTypes">
               <template #label>
                 <span class="pl-1">{{ `Types: ${props.tree.typeCnt}` }} {{ `${props.tree.childTypeCnt || props.tree.typeCnt ? `/ ${props.tree.childTypeCnt + props.tree.typeCnt}` : ''}` }}</span>
