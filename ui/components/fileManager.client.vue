@@ -4,7 +4,7 @@ import { files, traceRunning } from '../src/appState'
 const sendMessage = useNuxtApp().$sendMessage
 
 function deleteTraceFile(fileName: string, dirName: string) {
-  sendMessage('deletTraceFile', { fileName, dirName })
+  sendMessage('deleteTraceFile', { fileName, dirName })
   const newFiles = files.value.filter(x => !(x.dirName === dirName && x.fileName === fileName))
   files.value = newFiles
 }

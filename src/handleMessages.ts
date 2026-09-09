@@ -51,6 +51,7 @@ export function handleMessage(panel: vscode.WebviewPanel, message: unknown): voi
       break
     }
 
+    case 'deleteTraceFile':
     case 'deletTraceFile': {
       deleteTraceFiles(data.fileName, data.dirName)
     }

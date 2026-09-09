@@ -29,7 +29,7 @@ export const gotoLocation = z.object({
 export type GotoLocation = z.infer<typeof gotoPosition>
 
 export const deleteTraceFile = z.object({
-  message: z.literal('deletTraceFile'),
+  message: z.literal('deleteTraceFile').or(z.literal('deletTraceFile')),
   fileName: z.string(),
   dirName: z.string(),
 })
