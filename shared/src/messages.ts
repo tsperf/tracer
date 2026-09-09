@@ -51,7 +51,7 @@ export const gotoTracePosition = z.object({
 export type GotoTracePosition = z.infer<typeof gotoTracePosition>
 
 export const positionTypeCounts = z.object({
-  message: z.literal('postionTypeCounts'),
+  message: z.literal('positionTypeCounts').or(z.literal('postionTypeCounts')),
   counts: z.record(z.string(), z.record(z.string(), z.number())),
 })
 export type PositionTypeCounts = z.infer<typeof positionTypeCounts>
