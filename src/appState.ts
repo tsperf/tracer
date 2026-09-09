@@ -8,6 +8,7 @@ import { getTracePanel, isTraceViewAlive, postMessage } from './webview'
 import { getProjectName, getWorkspacePath } from './storage'
 import { setStatusBarState } from './statusBar'
 import { sendTraceDir } from './commands'
+import { readProjectSettings, writeProjectSettings } from './projectSettings'
 
 export const afterWatches = nextTick
 
@@ -86,7 +87,10 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
     }
 
     getSaves(projectPath.value)
-    saveName.value = 'default'
+    const projectSettings = readProjectSettings(projectPath.value)
+    saveName.value = projectSettings.lastSaveName && saveNames.value.includes(projectSettings.lastSaveName)
+      ? projectSettings.lastSaveName
+      : 'default'
   }, name => postMessage({ message: 'projectOpen', name }))
 
   watchT('savePath', (path) => {
@@ -116,6 +120,7 @@ export async function initAppState(extensionContext: vscode.ExtensionContext) {
 
     setStatusBarState('saveName', saveName.value)
     tracePath.value = join(projectPath.value, name, 'traces')
+    writeProjectSettings(projectPath.value, { lastSaveName: name })
 
     void sendTraceDir(tracePath.value)
   }, (name) => {
