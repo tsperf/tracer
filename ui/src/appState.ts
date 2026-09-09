@@ -1,4 +1,5 @@
 import type { TypeLine } from '../../shared/src/traceData'
+import type { TraceSuggestion } from '../../shared/src/messages'
 import type { Tree } from '../../src/traceTree'
 import * as Messages from '../../shared/src/messages'
 
@@ -10,6 +11,7 @@ export const projectName = ref('')
 export const saveName = ref('default')
 export const saveNames = ref(['default'] as string[])
 export const projectNames = ref([] as string[])
+export const traceSuggestions = ref([] as TraceSuggestion[])
 
 export const files = ref([] as { fileName: string, dirName: string }[])
 export const traceRunning = ref(false)
@@ -86,11 +88,16 @@ function handleMessage(e: MessageEvent<unknown>) {
       if (data.resetFileList) {
         files.value = []
         nodes.value = []
+        traceSuggestions.value = []
       }
       if (parsed.data.fileName && !files.value.some(x => x.fileName === data.fileName && x.dirName === data.dirName))
         files.value.push(parsed.data)
       break
     }
+
+    case 'traceSuggestions':
+      traceSuggestions.value = parsed.data.suggestions
+      break
 
     case 'traceStart': {
       traceRunning.value = true
