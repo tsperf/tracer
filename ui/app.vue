@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sortBy } from './src/appState'
+import { sortBy, traceSuggestions } from './src/appState'
 
 const Messages = useNuxtApp().$Messages
 
@@ -75,6 +75,9 @@ onMounted(() => {
       </div>
     </div>
     <hr class="m-2">
+    <div class="px-2 pb-2">
+      <TraceSuggestions :suggestions="traceSuggestions" />
+    </div>
     <div>
       <tree-root />
     </div>

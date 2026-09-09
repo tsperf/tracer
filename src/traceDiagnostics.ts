@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import type { FileStat } from '../shared/src/messages'
 import { getStatsFromTree } from './traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
+import { formatRelativeTraceDiagnosticMessage, formatTraceDiagnosticMessage } from './traceDiagnosticMessage'
 
 let diagnosticCollection: vscode.DiagnosticCollection
 
@@ -81,10 +82,6 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
   diagnosticCollection.set(uri, diagnostics)
 }
 
-function relativeString(value: number) {
-  return `(${value > 0 ? '+' : ''}${Math.round(10000 * value) / 100}%)`
-}
-
 function relativeValue(value: number, average: number, averageThreshold: number) {
   return value / (average || averageThreshold || 1)
 }
@@ -99,13 +96,14 @@ function fileStatToRelativeDiagnostic({ pos, dur, types, totalTypes }: FileStat,
   if (severity > vscode.DiagnosticSeverity.Information)
     return
 
-  const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes} ${relativeString(relative.types)} / ${relativeString(relative.totalTypes)}` : ''
-
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${relativeString(relative.dur)} ${typeStr}`
+  const msg = formatRelativeTraceDiagnosticMessage({ dur, types, totalTypes }, averages)
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
-  return new vscode.Diagnostic(range, msg, severity)
+  const diagnostic = new vscode.Diagnostic(range, msg, severity)
+  diagnostic.source = 'trace'
+  diagnostic.code = 'trace-metric'
+  return diagnostic
 }
 
 function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, document: vscode.TextDocument) {
@@ -116,13 +114,14 @@ function fileStatToDiagnostic({ pos, dur, types, totalTypes }: FileStat, documen
   if (severity > vscode.DiagnosticSeverity.Information)
     return
 
-  const typeStr = types || totalTypes ? ` Types: ${types} / ${totalTypes}` : ''
-
-  const msg = `Check ms: ${Math.round(dur) / 1000} ${typeStr}`
+  const msg = formatTraceDiagnosticMessage({ dur, types, totalTypes })
   const startPos = document.positionAt(pos + 1)
   const range = new vscode.Range(startPos, startPos)
 
-  return new vscode.Diagnostic(range, msg, severity)
+  const diagnostic = new vscode.Diagnostic(range, msg, severity)
+  diagnostic.source = 'trace'
+  diagnostic.code = 'trace-metric'
+  return diagnostic
 }
 
 // yes, I should be using the vscode.DiagnosticSeverity but that's much more painful and they are unlikely to change
