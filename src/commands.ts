@@ -4,6 +4,7 @@ import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import { createReadStream, existsSync, readdir as readdirC, statSync } from 'node:fs'
 import * as vscode from 'vscode'
+import { compareTraceRunMetrics, formatTraceRunMetricsComparison, readTraceRunMetricsFile } from './traceRunComparison'
 import { getStatsFromTree, processTraceFiles, showTree, treeIdNodes } from './traceTree'
 import { getTracePanel, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
@@ -13,6 +14,8 @@ import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExterna
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
 import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { TRACE_RUN_METRICS_FILE, buildTraceRunMetrics, discoverTraceJsonFiles, summarizeTraceParse, writeTraceRunMetrics } from './traceRunMetrics'
+import { traceSaveNameForFile } from './traceCommand'
 
 const readdir = promisify(readdirC)
 
@@ -21,6 +24,8 @@ const commandHandlers: Record<
   (context: vscode.ExtensionContext) => (...args: any[]) => void
   > = {
     'tsperf.tracer.runTrace': () => (...args: unknown[]) => runTrace(args),
+    'tsperf.tracer.runTraceActiveFile': () => () => runTraceActiveFile(),
+    'tsperf.tracer.compareTraceMetrics': () => () => compareTraceMetrics(),
     'tsperf.tracer.openInBrowser': (context: vscode.ExtensionContext) => () => prepareWebView(context),
     'tsperf.tracer.gotoTracePosition': (context: vscode.ExtensionContext) => () => gotoTracePosition(context),
     'tsperf.tracer.sendTrace': () => (event: unknown) => {
@@ -34,6 +39,58 @@ const commandHandlers: Record<
     'tsperf.tracer.openTerminal': () => () => openTerminal(),
     'tsperf.tracer.openTraceDirExternal': () => () => openTraceDirectoryExternal(),
   } as const
+
+async function pickMetricsFile(title: string): Promise<vscode.Uri | undefined> {
+  const uris = await vscode.window.showOpenDialog({
+    title,
+    canSelectFiles: true,
+    canSelectFolders: false,
+    canSelectMany: false,
+    filters: { JSON: ['json'] },
+  })
+
+  return uris?.[0]
+}
+
+async function compareTraceMetrics() {
+  const before = await pickMetricsFile('Select baseline metrics.json')
+  if (!before)
+    return
+
+  const after = await pickMetricsFile('Select comparison metrics.json')
+  if (!after)
+    return
+
+  try {
+    const comparison = compareTraceRunMetrics(
+      await readTraceRunMetricsFile(before.fsPath),
+      await readTraceRunMetricsFile(after.fsPath),
+    )
+    const document = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: formatTraceRunMetricsComparison(comparison),
+    })
+    await vscode.window.showTextDocument(document)
+  }
+  catch (error) {
+    vscode.window.showErrorMessage(error instanceof Error ? error.message : `${error}`)
+  }
+}
+
+async function runTraceActiveFile() {
+  const editor = vscode.window.activeTextEditor
+  if (!editor || editor.document.uri.scheme !== 'file') {
+    vscode.window.showWarningMessage('Open a TypeScript file before running a mini trace')
+    return
+  }
+
+  const workspacePath = state.workspacePath.value || getWorkspacePath()
+  const targetSaveName = traceSaveNameForFile(workspacePath, editor.document.uri.fsPath)
+  await runTrace([], {
+    cwd: workspacePath,
+    saveName: targetSaveName,
+  })
+}
 
 async function sendTrace(dirName: string, fileName: string) {
   const fullFileName = join(dirName, fileName)
@@ -97,7 +154,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   showTree('', relativePath, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1))
 }
 
-async function runTrace(args?: unknown[]) {
+async function runTrace(args?: unknown[], options?: { cwd?: string, saveName?: string }) {
   const workspacePath = state.workspacePath.value
   const { traceCmd } = getCurrentConfig()
 
@@ -114,7 +171,10 @@ async function runTrace(args?: unknown[]) {
     }
   }
 
-  if (dirName) {
+  if (options?.saveName) {
+    saveName.value = options.saveName
+  }
+  else if (dirName) {
     log(`dirName: ${dirName}`)
     saveName.value = relative(workspacePath, dirName)
   }
@@ -128,13 +188,14 @@ async function runTrace(args?: unknown[]) {
       return
     }
 
+    const traceCwd = options?.cwd ?? newDirName ?? workspacePath
     const quotedTraceDir = `'${traceDir}'`
     // eslint-disable-next-line no-template-curly-in-string
-    const fullCmd = `(cd '${newDirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
+    const fullCmd = `(cd '${traceCwd}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
 
     log(fullCmd)
 
-    const newProjectPath = newDirName ?? projectPath.value
+    const newProjectPath = traceCwd || projectPath.value
     if (!newProjectPath) {
       vscode.window.showErrorMessage('could not get project path from workspace folders')
       return
@@ -148,21 +209,50 @@ async function runTrace(args?: unknown[]) {
     setStatusBarState('traceError', false)
 
     log(`shell: ${process.env.SHELL}`)
+    const startedAtMs = Date.now()
+    const startedAt = new Date(startedAtMs).toISOString()
     const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
 
     let err = ''
+    let out = ''
     cmdProcess.stderr.on('data', data => err += data.toString())
 
-    cmdProcess.stdout.on('data', data => log(data.toString()))
+    cmdProcess.stdout.on('data', (data) => {
+      const chunk = data.toString()
+      out += chunk
+      log(chunk)
+    })
 
-    cmdProcess.on('error', (error) => {
+    let metricsWritten = false
+    async function writeMetricsOnce(exitCode: number | null) {
+      if (metricsWritten)
+        return
+
+      metricsWritten = true
+      await writeRunMetrics({
+        command: fullCmd,
+        cwd: newProjectPath,
+        traceDir,
+        startedAt,
+        startedAtMs,
+        exitCode,
+        stdout: out,
+        stderr: err,
+      })
+    }
+
+    cmdProcess.on('error', async (error) => {
+      traceRunning.value = false
+      setStatusBarState('traceError', true)
       vscode.window.showErrorMessage(error.message)
+      await writeMetricsOnce(null)
     })
 
     cmdProcess.on('exit', async (code) => {
       log('---- trace stderr -----')
       log(err)
       traceRunning.value = false
+      await writeMetricsOnce(code)
       if (code) {
         setStatusBarState('traceError', true)
         vscode.window.showErrorMessage('error running trace')
@@ -174,6 +264,41 @@ async function runTrace(args?: unknown[]) {
   })
 }
 
+async function writeRunMetrics(input: {
+  command: string
+  cwd: string
+  traceDir: string
+  startedAt: string
+  startedAtMs: number
+  exitCode: number | null
+  stdout: string
+  stderr: string
+}) {
+  try {
+    const traceJsonFiles = existsSync(input.traceDir) ? await discoverTraceJsonFiles(input.traceDir) : []
+    const parseSummary = existsSync(input.traceDir)
+      ? await summarizeTraceParse(input.traceDir, traceJsonFiles)
+      : { status: 'missing' as const, topLevelWarning: 'Trace directory was not created.' }
+
+    await writeTraceRunMetrics(input.traceDir, buildTraceRunMetrics({
+      command: input.command,
+      cwd: input.cwd,
+      traceDir: input.traceDir,
+      startedAt: input.startedAt,
+      endedAt: new Date().toISOString(),
+      wallTimeMs: Date.now() - input.startedAtMs,
+      exitCode: input.exitCode,
+      stdout: input.stdout,
+      stderr: input.stderr,
+      traceJsonFiles,
+      parseSummary,
+    }))
+  }
+  catch (error) {
+    log(`error writing trace metrics: ${error instanceof Error ? error.message : `${error}`}`)
+  }
+}
+
 export async function sendTraceDir(traceDir: string) {
   try {
     if (!existsSync(traceDir)) {
@@ -182,6 +307,9 @@ export async function sendTraceDir(traceDir: string) {
 
     const fileNames = await readdir(traceDir)
     for (const fileName of fileNames) {
+      if (fileName === TRACE_RUN_METRICS_FILE)
+        continue
+
       sendTrace(traceDir, fileName)
     }
   }

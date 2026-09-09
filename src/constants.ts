@@ -25,6 +25,8 @@ export const commandIds = [
   'tsperf.tracer.gotoTracePosition',
   'tsperf.tracer.openInBrowser',
   'tsperf.tracer.runTrace',
+  'tsperf.tracer.runTraceActiveFile',
+  'tsperf.tracer.compareTraceMetrics',
   'tsperf.tracer.sendTrace',
   'tsperf.tracer.openTerminal',
   'tsperf.tracer.openTraceDirExternal',
