@@ -152,7 +152,7 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
     'tsperf.tracer.restartTsserverOnIteration': {
       type: 'boolean',
       default: false,
-      description: 'Restart tsserver on each iteration to avoid caching influincing measurements',
+      description: 'Restart tsserver on each iteration to avoid caching influencing measurements',
     },
   },
   {
