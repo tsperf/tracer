@@ -25,6 +25,8 @@ export function initWebviewPanel(extensionContext: vscode.ExtensionContext) {
     if (panel)
       panel.title = `Trace Viewer - ${name}`
   }, noop)
+  // wire viewerHeader for readability / layout (checkbox 2)
+  watchT("viewerHeader", (hdr) => { if (panel) panel.title = hdr || `Trace Viewer - ${name}`; }, noop)
   holdContext = extensionContext
 
   // You have to export TRACER_DEV from your shell source file

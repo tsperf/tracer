@@ -13,6 +13,8 @@ export const projectNames = ref([] as string[])
 
 export const files = ref([] as { fileName: string, dirName: string }[])
 export const traceRunning = ref(false)
+// viewer readability / layout (checkbox 2 — discrete UI improvement)
+export const viewerHeader = ref("Trace Viewer — select a file to begin")
 
 const sortValue = {
   'Timestamp': (t: Tree) => t.line.ts,

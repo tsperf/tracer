@@ -120,8 +120,8 @@ export function showTree(startsWith: string, sourceFileName: string, position: n
     if (!showTreeInterval)
       return
 
-    postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + 10), step: 'add' })
-    i += 10
+    postMessage({ message: 'showTree', nodes: skinnyNodes.slice(i, i + 25), step: 'add' })
+    i += 25
     if (i >= skinnyNodes.length) {
       clearInterval(showTreeInterval)
       showTreeInterval = undefined
