@@ -1,5 +1,4 @@
 import { basename, dirname, join, relative } from 'node:path'
-import * as process from 'node:process'
 import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import { createReadStream, existsSync, readdir as readdirC, statSync } from 'node:fs'
@@ -8,11 +7,12 @@ import { getStatsFromTree, processTraceFiles, showTree, treeIdNodes } from './tr
 import { getTracePanel, prepareWebView } from './webview'
 import { getCurrentConfig } from './configuration'
 import { log } from './logger'
+import { createTraceInvocation } from './traceInvocation'
 import type { CommandId } from './constants'
 import { addTraceFile, getWorkspacePath, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
 import { addTraceDiagnostics, clearTaceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
-import { afterWatches, projectPath, saveName, state, traceFiles, traceRunning } from './appState'
+import { afterWatches, saveName, state, traceFiles, traceRunning } from './appState'
 
 const readdir = promisify(readdirC)
 
@@ -128,17 +128,14 @@ async function runTrace(args?: unknown[]) {
       return
     }
 
-    const quotedTraceDir = `'${traceDir}'`
-    // eslint-disable-next-line no-template-curly-in-string
-    const fullCmd = `(cd '${newDirName ?? workspacePath}'; ${traceCmd.replace('${traceDir}', quotedTraceDir)})`
-
-    log(fullCmd)
-
-    const newProjectPath = newDirName ?? projectPath.value
-    if (!newProjectPath) {
+    const invocation = createTraceInvocation({ traceCmd, traceDir, workspacePath, directory: newDirName })
+    if (!invocation) {
       vscode.window.showErrorMessage('could not get project path from workspace folders')
       return
     }
+
+    const { command: fullCmd, cwd, shell } = invocation
+    log(fullCmd)
 
     traceRunning.value = true
 
@@ -147,8 +144,9 @@ async function runTrace(args?: unknown[]) {
 
     setStatusBarState('traceError', false)
 
-    log(`shell: ${process.env.SHELL}`)
-    const cmdProcess = spawn(fullCmd, [], { cwd: newProjectPath, shell: process.env.SHELL })
+    log(`cwd: ${cwd}`)
+    log(`shell: ${shell === true ? 'default' : shell}`)
+    const cmdProcess = spawn(fullCmd, [], { cwd, shell })
 
     let err = ''
     cmdProcess.stderr.on('data', data => err += data.toString())
